@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Fluid Ripple Effect</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+    }
+    .instructions {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: rgba(255, 255, 255, 0.7);
+      font-family: sans-serif;
+      font-size: 14px;
+      pointer-events: none;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="instructions">Move your cursor or touch the screen to create ripples</div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Configuration
+    const config = {
+      damping: 0.98,
+      rippleStrength: 0.6,
+      rippleRadius: 3,
+      rippleSpread: 0.2,
+      colorIntensity: 150,
+      backgroundColor: '#4a4a4a',
+      rippleColors: {
+        r: [70, 180],  // Range for red
+        g: [140, 220], // Range for green
+        b: [180, 240]  // Range for blue
+      },
+      initialRippleRadius: 30,
+      initialRippleStrength: 3
+    };
+
+    // Set canvas size
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      init();
+    }
+
+    // Arrays for current and previous state
+    let current;
+    let previous;
+
+    // Initialize the simulation
+    function init() {
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      current = new Array(width * height).fill(0);
+      previous = new Array(width * height).fill(0);
+      
+      // Create initial big ripple
+      createBigRipple(width / 2, height / 2);
+    }
+
+    // Create a big initial ripple
+    function createBigRipple(x, y) {
+      x = Math.floor(x);
+      y = Math.floor(y);
+      
+      const radius = config.initialRippleRadius;
+      
+      for (let i = -radius; i <= radius; i++) {
+        for (let j = -radius; j <= radius; j++) {
+          const distance = Math.sqrt(i * i + j * j);
+          
+          if (distance <= radius) {
+            const effectX = x + i;
+            const effectY = y + j;
+            
+            if (effectX > 0 && effectX < canvas.width && effectY > 0 && effectY < canvas.height) {
+              const index = effectX + effectY * canvas.width;
+              const strength = (1 - (distance / radius)) * config.initialRippleStrength;
+              
+              // Create a wave pattern for the initial ripple
+              if (distance > radius * 0.7 && distance < radius * 0.9) {
+                previous[index] += strength * 1.5;
+              } else {
+                previous[index] += strength;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Animate the fluid
+    function animate() {
+      // Draw background
+      ctx.fillStyle = config.backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Create image data
+      const imageData = ctx.createImageData(canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Update simulation
+      for (let i = 1; i < canvas.width - 1; i++) {
+        for (let j = 1; j < canvas.height - 1; j++) {
+          const index = i + j * canvas.width;
+          
+          // Calculate new height based on neighbors
+          current[index] = (
+            previous[index - 1] + 
+            previous[index + 1] + 
+            previous[index - canvas.width] + 
+            previous[index + canvas.width]
+          ) / 2 - current[index];
+          
+          // Apply damping
+          current[index] *= config.damping;
+          
+          // Calculate color based on height
+          const pixel = (i + j * canvas.width) * 4;
+          const height = Math.abs(current[index]);
+          const intensity = height * config.colorIntensity;
+          
+          // Water color mapping - use the height to interpolate between color ranges
+          const normalized = Math.min(Math.max(height * 2, 0), 1);
+          const r = Math.floor(config.rippleColors.r[0] + normalized * (config.rippleColors.r[1] - config.rippleColors.r[0]));
+          const g = Math.floor(config.rippleColors.g[0] + normalized * (config.rippleColors.g[1] - config.rippleColors.g[0]));
+          const b = Math.floor(config.rippleColors.b[0] + normalized * (config.rippleColors.b[1] - config.rippleColors.b[0]));
+          
+          // Apply semi-transparency to blend with background
+          const alpha = Math.min(intensity * 1.5, 255);
+          
+          data[pixel] = r;      // Red
+          data[pixel + 1] = g;  // Green
+          data[pixel + 2] = b;  // Blue
+          data[pixel + 3] = alpha;  // Alpha
+        }
+      }
+      
+      // Swap buffers
+      [current, previous] = [previous, current];
+      
+      // Update canvas with semi-transparent overlay
+      ctx.putImageData(imageData, 0, 0);
+      
+      requestAnimationFrame(animate);
+    }
+
+    // Create ripple at point
+    function createRipple(x, y) {
+      x = Math.floor(x);
+      y = Math.floor(y);
+      
+      if (x < 1 || x >= canvas.width - 1 || y < 1 || y >= canvas.height - 1) return;
+      
+      for (let i = -config.rippleRadius; i <= config.rippleRadius; i++) {
+        for (let j = -config.rippleRadius; j <= config.rippleRadius; j++) {
+          const distance = Math.sqrt(i * i + j * j);
+          
+          if (distance <= config.rippleRadius) {
+            const effectX = x + i;
+            const effectY = y + j;
+            
+            if (effectX > 0 && effectX < canvas.width && effectY > 0 && effectY < canvas.height) {
+              const index = effectX + effectY * canvas.width;
+              const strength = (1 - (distance / config.rippleRadius)) * config.rippleStrength;
+              previous[index] += strength;
+            }
+          }
+        }
+      }
+    }
+
+    // Create periodic ripples
+    function createPeriodicRipple() {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      createRipple(x, y);
+      
+      // Schedule next ripple
+      setTimeout(createPeriodicRipple, 2000 + Math.random() * 3000);
+    }
+
+    // Event listeners
+    function handlePointerMove(e) {
+      createRipple(e.clientX, e.clientY);
+    }
+    
+    function handleTouchMove(e) {
+      e.preventDefault();
+      for (let i = 0; i < e.touches.length; i++) {
+        createRipple(e.touches[i].clientX, e.touches[i].clientY);
+      }
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('touchmove', handleTouchMove);
+    canvas.addEventListener('pointerdown', handlePointerMove);
+    canvas.addEventListener('touchstart', handleTouchMove);
+
+    // Initialize and start animation
+    resizeCanvas();
+    animate();
+    
+    // Start periodic ripples after a delay
+    setTimeout(createPeriodicRipple, 3000);
+  </script>
+</body>
+</html>
