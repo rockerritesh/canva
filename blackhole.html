@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Hole Radiation Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="simulation" width="800" height="600"></canvas>
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('simulation');
+        const ctx = canvas.getContext('2d');
+        
+        // Constants
+        const cx = canvas.width / 2;       // Center x
+        const cy = canvas.height / 2;      // Center y
+        const bhRadius = 50;               // Black hole radius (event horizon)
+        const diskThickness = 30;          // Thickness of accretion disk
+        const innerRadius = bhRadius;      // Inner edge of accretion disk
+        const outerRadius = bhRadius + diskThickness; // Outer edge
+        
+        // Generate background stars
+        const stars = [];
+        for (let i = 0; i < 100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+            });
+        }
+        
+        // Particle class for Hawking radiation
+        class Particle {
+            constructor() {
+                // Start particle just outside event horizon
+                const theta = Math.random() * 2 * Math.PI;
+                this.position = {
+                    x: cx + innerRadius * Math.cos(theta),
+                    y: cy + innerRadius * Math.sin(theta)
+                };
+                // Velocity with some randomness for flame-like motion
+                const speed = 2 + Math.random();
+                const delta = (Math.random() - 0.5) * Math.PI / 4; // Random deviation
+                this.velocity = {
+                    vx: speed * Math.cos(theta + delta),
+                    vy: speed * Math.sin(theta + delta)
+                };
+                // History for trail effect
+                this.history = [{ x: this.position.x, y: this.position.y }];
+                this.maxHistory = 10;
+            }
+            
+            update() {
+                this.position.x += this.velocity.vx;
+                this.position.y += this.velocity.vy;
+                this.history.push({ x: this.position.x, y: this.position.y });
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+            }
+            
+            draw() {
+                // Draw trail with color gradient
+                for (let i = 1; i < this.history.length; i++) {
+                    const t = (i - 1) / (this.history.length - 2);
+                    const r = 255; // Red constant
+                    const g = Math.floor(255 * t); // Green increases
+                    const b = Math.floor(255 * t); // Blue increases
+                    const a = 0.1 + 0.9 * t; // Alpha from faint to bright
+                    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+                    ctx.beginPath();
+                    ctx.moveTo(this.history[i-1].x, this.history[i-1].y);
+                    ctx.lineTo(this.history[i].x, this.history[i].y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        let particles = [];
+        
+        // Animation loop
+        function animate() {
+            // Probabilistic particle creation for quantum-like emission
+            if (Math.random() < 0.1) { // Adjust for desired frequency
+                particles.push(new Particle());
+            }
+            
+            // Update particles
+            particles.forEach(particle => particle.update());
+            
+            // Remove particles that travel too far
+            particles = particles.filter(particle => {
+                const dx = particle.position.x - cx;
+                const dy = particle.position.y - cy;
+                return dx * dx + dy * dy < (outerRadius + 100) ** 2;
+            });
+            
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw stars
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, 1, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // Draw accretion disk
+            const gradient = ctx.createRadialGradient(cx, cy, innerRadius, cx, cy, outerRadius);
+            gradient.addColorStop(0, 'white');     // Hot inner edge
+            gradient.addColorStop(0.5, 'yellow');  // Transition
+            gradient.addColorStop(1, 'red');       // Cooler outer edge
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerRadius, 0, 2 * Math.PI);         // Outer circle
+            ctx.arc(cx, cy, innerRadius, 0, 2 * Math.PI, true);   // Inner circle (counterclockwise)
+            ctx.fill();
+            
+            // Draw black hole
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(cx, cy, bhRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw event horizon outline
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, bhRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Draw particles
+            particles.forEach(particle => particle.draw());
+            
+            // Next frame
+            requestAnimationFrame(animate);
+        }
+        
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
