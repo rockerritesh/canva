@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy Cluster Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="simulation" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('simulation');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Mouse position (starts at center)
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+
+        // Class to represent each body in the cluster
+        class Body {
+            constructor(x, y) {
+                this.position = { x, y };
+                this.velocity = { x: 0, y: 0 };
+                this.acceleration = { x: 0, y: 0 };
+                this.size = 2; // Size of the body (radius in pixels)
+            }
+
+            // Apply gravitational force to the body
+            applyForce(force) {
+                this.acceleration.x += force.x;
+                this.acceleration.y += force.y;
+            }
+
+            // Update position based on velocity and acceleration
+            update() {
+                this.velocity.x += this.acceleration.x;
+                this.velocity.y += this.acceleration.y;
+                this.position.x += this.velocity.x;
+                this.position.y += this.velocity.y;
+                this.acceleration.x = 0; // Reset acceleration after applying
+                this.acceleration.y = 0;
+            }
+
+            // Draw the body on the canvas
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.position.x, this.position.y, this.size, 0, 2 * Math.PI);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+            }
+        }
+
+        // Create the cluster with 100 bodies
+        const bodies = [];
+        const numBodies = 100;
+        for (let i = 0; i < numBodies; i++) {
+            const x = width / 2 + (Math.random() - 0.5) * 200; // Random x near center
+            const y = height / 2 + (Math.random() - 0.5) * 200; // Random y near center
+            bodies.push(new Body(x, y));
+        }
+
+        // Track cursor movement
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+        });
+
+        // Animation loop to update and render the simulation
+        function animate() {
+            // Clear the canvas with a black background
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+
+            // Update each body
+            bodies.forEach(body => {
+                // Calculate direction and distance to the cursor
+                const dx = mouseX - body.position.x;
+                const dy = mouseY - body.position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 0) {
+                    // Simplified gravity: force = constant / distance^2
+                    const forceMagnitude = 1000 / (distance * distance);
+                    const force = {
+                        x: (dx / distance) * forceMagnitude,
+                        y: (dy / distance) * forceMagnitude
+                    };
+                    body.applyForce(force);
+                }
+
+                // Update and draw the body
+                body.update();
+                body.draw();
+            });
+
+            // Keep the animation running
+            requestAnimationFrame(animate);
+        }
+
+        // Start the simulation
+        animate();
+    </script>
+</body>
+</html>
