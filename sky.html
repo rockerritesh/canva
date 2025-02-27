@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesmerizing Night Sky</title>
+    <style>
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="nightSky" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('nightSky');
+        const ctx = canvas.getContext('2d');
+
+        // Track mouse position for interactive labels
+        let mouseX = 0;
+        let mouseY = 0;
+
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = event.clientX - rect.left;
+            mouseY = event.clientY - rect.top;
+        });
+
+        // Define astronomical objects with name, type, position, color, and size
+        const objects = [
+            // Stars in the Big Dipper
+            { name: "Dubhe", type: "star", x: 200, y: 200, color: "white", size: 2 },
+            { name: "Merak", type: "star", x: 250, y: 250, color: "white", size: 2 },
+            { name: "Phecda", type: "star", x: 300, y: 300, color: "white", size: 2 },
+            { name: "Megrez", type: "star", x: 350, y: 250, color: "white", size: 2 },
+            { name: "Alioth", type: "star", x: 400, y: 200, color: "white", size: 2 },
+            { name: "Mizar", type: "star", x: 450, y: 150, color: "white", size: 2 },
+            { name: "Alkaid", type: "star", x: 500, y: 100, color: "white", size: 2 },
+            // Other notable stars
+            { name: "Polaris", type: "star", x: 400, y: 50, color: "white", size: 2 },
+            { name: "Sirius", type: "star", x: 100, y: 500, color: "white", size: 2 },
+            { name: "Betelgeuse", type: "star", x: 600, y: 300, color: "white", size: 2 },
+            { name: "Vega", type: "star", x: 700, y: 200, color: "white", size: 2 },
+            { name: "Alpha Centauri", type: "star", x: 300, y: 100, color: "white", size: 2 },
+            // Planets along the ecliptic (y = 400)
+            { name: "Mercury", type: "planet", x: 150, y: 400, color: "gray", size: 3 },
+            { name: "Venus", type: "planet", x: 250, y: 400, color: "yellow", size: 3 },
+            { name: "Mars", type: "planet", x: 350, y: 400, color: "red", size: 3 },
+            { name: "Jupiter", type: "planet", x: 550, y: 400, color: "orange", size: 4 },
+            { name: "Saturn", type: "planet", x: 650, y: 400, color: "yellow", size: 4 },
+            // Other objects
+            { name: "Moon", type: "moon", x: 270, y: 420, color: "gray", size: 2 },
+            { name: "Andromeda Galaxy", type: "galaxy", x: 700, y: 100, color: "lightblue", size: 5 },
+            { name: "Orion Nebula", type: "nebula", x: 150, y: 500, color: "pink", size: 4 },
+            { name: "Pleiades", type: "cluster", x: 500, y: 300, color: "lightblue", size: 3 }
+        ];
+
+        // Add 100 faint background stars
+        for (let i = 0; i < 100; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            objects.push({
+                name: "", // No label for faint stars
+                type: "star",
+                x: x,
+                y: y,
+                color: "rgba(255,255,255,0.5)",
+                size: 1
+            });
+        }
+
+        // Define constellation lines (Big Dipper)
+        const constellationLines = [
+            { from: "Dubhe", to: "Merak" },
+            { from: "Merak", to: "Phecda" },
+            { from: "Phecda", to: "Megrez" },
+            { from: "Megrez", to: "Alioth" },
+            { from: "Alioth", to: "Mizar" },
+            { from: "Mizar", to: "Alkaid" }
+        ];
+
+        let frame = 0; // For animation timing
+
+        // Draw the ecliptic line (planet path)
+        function drawEcliptic() {
+            ctx.beginPath();
+            ctx.moveTo(0, 400);
+            ctx.lineTo(canvas.width, 400);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.stroke();
+        }
+
+        // Draw constellation lines
+        function drawConstellations() {
+            constellationLines.forEach(line => {
+                const fromObj = objects.find(obj => obj.name === line.from);
+                const toObj = objects.find(obj => obj.name === line.to);
+                if (fromObj && toObj) {
+                    ctx.beginPath();
+                    ctx.moveTo(fromObj.x, fromObj.y);
+                    ctx.lineTo(toObj.x, toObj.y);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.stroke();
+                }
+            });
+        }
+
+        // Animation loop
+        function animate() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background elements
+            drawEcliptic();
+            drawConstellations();
+
+            // Add glow effect to objects and labels
+            ctx.shadowColor = 'white';
+            ctx.shadowBlur = 3;
+
+            // Draw all objects
+            objects.forEach(obj => {
+                let size = obj.size;
+                // Make named stars twinkle
+                if (obj.type === 'star' && obj.name !== "") {
+                    const twinkle = 1 + 0.2 * Math.sin((frame + obj.x + obj.y) * 0.05);
+                    size *= twinkle;
+                }
+                // Draw the object
+                ctx.beginPath();
+                ctx.arc(obj.x, obj.y, size, 0, 2 * Math.PI);
+                ctx.fillStyle = obj.color;
+                ctx.fill();
+
+                // Draw Saturn's ring
+                if (obj.name === "Saturn") {
+                    ctx.beginPath();
+                    ctx.arc(obj.x, obj.y, obj.size + 2, 0, 2 * Math.PI);
+                    ctx.strokeStyle = 'yellow';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+
+                // Draw label if mouse is near
+                if (obj.name) {
+                    const dx = mouseX - obj.x;
+                    const dy = mouseY - obj.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 20) {
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = 'white';
+                        ctx.fillText(obj.name, obj.x + obj.size + 2, obj.y);
+                    }
+                }
+            });
+
+            // Reset glow effect
+            ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+
+            // Add instructional text
+            ctx.font = '14px Arial';
+            ctx.fillStyle = 'white';
+            ctx.fillText('Move mouse near objects to see names', 10, canvas.height - 10);
+
+            // Update frame and request next animation
+            frame++;
+            requestAnimationFrame(animate);
+        }
+
+        // Start the animation
+        animate();
+    </script>
+</body>
+</html>
