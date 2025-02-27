@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Animation</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #330000, #000000);
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #heart {
+            animation: beat 1s infinite;
+            transform-origin: center;
+            filter: drop-shadow(0 0 5px red);
+        }
+        @keyframes beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        #message {
+            color: white;
+            font-size: 24px;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg id="heart" width="100" height="100" viewBox="0 0 100 100">
+            <path d="M20 30 A20 20 0 0 1 50 30 A20 20 0 0 1 80 30 Q80 50 50 70 Q20 50 20 30 Z" fill="red" />
+        </svg>
+        <p id="message">I Love You</p>
+    </div>
+</body>
+</html>
