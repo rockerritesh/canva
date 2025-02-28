@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romantic Night</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #2c0047, #0d0011);
+            overflow: hidden;
+            font-family: 'Brush Script MT', cursive;
+        }
+
+        .container {
+            position: relative;
+            height: 100vh;
+        }
+
+        .sky {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite;
+        }
+
+        .moon {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            background: #f8f3d6;
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(248, 243, 214, 0.5);
+        }
+
+        .message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .heart-btn {
+            background: #ff3366;
+            border: none;
+            padding: 15px 30px;
+            color: white;
+            font-size: 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-top: 20px;
+        }
+
+        .heart-btn:hover {
+            transform: scale(1.1);
+            background: #ff1a55;
+        }
+
+        .hidden-message {
+            display: none;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        /* Falling hearts animation */
+        .heart {
+            position: absolute;
+            color: #ff3366;
+            font-size: 20px;
+            animation: fall 10s linear infinite;
+        }
+
+        @keyframes fall {
+            from { top: -10%; }
+            to { top: 110%; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .message-box {
+                width: 80%;
+                font-size: 14px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sky" id="sky"></div>
+        <div class="moon"></div>
+        
+        <div class="message-box">
+            <h1>💖 Our Special Night 💖</h1>
+            <p>"In your light I learn how to love.<br>
+                In your beauty, how to make poems.<br>
+                You dance inside my chest,<br>
+                where no one sees you..."</p>
+            <button class="heart-btn" onclick="showMessage()">Click for a Surprise ❤️</button>
+            <div id="hiddenMessage" class="hidden-message">
+                You make every moment magical. Forever yours...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create stars
+        function createStars() {
+            const sky = document.getElementById('sky');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 1.5 + 's';
+                sky.appendChild(star);
+            }
+        }
+
+        // Create falling hearts
+        function createHearts() {
+            const container = document.querySelector('.container');
+            for (let i = 0; i < 20; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = '❤';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 10 + 's';
+                container.appendChild(heart);
+            }
+        }
+
+        // Show hidden message
+        function showMessage() {
+            const message = document.getElementById('hiddenMessage');
+            message.style.display = 'block';
+            createHearts();
+        }
+
+        // Initialize
+        window.onload = function() {
+            createStars();
+        }
+    </script>
+</body>
+</html>
