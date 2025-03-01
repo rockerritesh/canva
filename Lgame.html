@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romantic Heart Maze</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: #5a3d5c;
+        }
+
+        .game-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 28px;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            color: #9b4f88;
+        }
+
+        .instructions {
+            max-width: 600px;
+            margin: 10px auto 20px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.4;
+            color: #5a3d5c;
+        }
+        
+        canvas {
+            cursor: pointer;
+        }
+        
+        .win-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 100;
+        }
+        
+        .win-message h2 {
+            color: #d8456b;
+            margin-bottom: 10px;
+        }
+        
+        .win-message p {
+            margin-bottom: 15px;
+        }
+        
+        .restart-btn {
+            background-color: #d8456b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .restart-btn:hover {
+            background-color: #c13d62;
+        }
+        
+        .hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">Path to My Heart</h1>
+    <div class="instructions">
+        Find your way to the center of the heart maze. Click on valid paths to move through the maze. 
+        Start from the outside edge and reach the pink heart in the center.
+    </div>
+    
+    <div class="game-container">
+        <canvas id="mazeCanvas" width="600" height="600"></canvas>
+    </div>
+    
+    <div class="win-message" id="winMessage">
+        <h2>❤️ You Found My Heart! ❤️</h2>
+        <p>Love always finds a way...</p>
+        <button class="restart-btn" id="restartButton">Play Again</button>
+    </div>
+    
+    <div class="hearts" id="heartBackground"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('mazeCanvas');
+            const ctx = canvas.getContext('2d');
+            const winMessage = document.getElementById('winMessage');
+            const restartButton = document.getElementById('restartButton');
+            const heartBackground = document.getElementById('heartBackground');
+            
+            // Game variables
+            const rows = 15;
+            const cols = 15;
+            const cellSize = canvas.width / cols;
+            let playerX = 0;
+            let playerY = 7;
+            const goalX = Math.floor(cols / 2);
+            const goalY = Math.floor(rows / 2);
+            let gameWon = false;
+            
+            // Generate the heart-shaped maze
+            const maze = generateHeartMaze(rows, cols);
+            
+            // Set player's starting position
+            maze[playerY][playerX] = 2;
+            
+            // Create falling hearts in the background
+            createFallingHearts();
+            
+            // Draw the initial maze
+            drawMaze();
+            
+            // Add event listener for player clicks
+            canvas.addEventListener('click', handleClick);
+            
+            // Restart button event listener
+            restartButton.addEventListener('click', restartGame);
+            
+            function generateHeartMaze(rows, cols) {
+                // Initialize with walls (0)
+                let maze = Array(rows).fill().map(() => Array(cols).fill(0));
+                
+                // Create the heart shape and paths
+                const centerX = Math.floor(cols / 2);
+                const centerY = Math.floor(rows / 2);
+                const radius = Math.min(rows, cols) / 2 - 2;
+                
+                // Create some paths (1) through the maze
+                // First create a heart shape
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        // Heart shape formula (simplified)
+                        const dx = (x - centerX) / radius;
+                        const dy = (y - centerY) / radius;
+                        
+                        // Create heart outline
+                        if (isOnHeartBoundary(dx, dy, 0.8)) {
+                            maze[y][x] = 1; // Path
+                        }
+                        
+                        // Create internal paths
+                        if (isInsideHeart(dx, dy, 0.8) && (x % 2 === 0 || y % 2 === 0)) {
+                            // Create some random paths inside
+                            if (Math.random() > 0.7) {
+                                maze[y][x] = 1;
+                            }
+                        }
+                    }
+                }
+                
+                // Create paths from edges to heart
+                // Left path to heart
+                for (let y = 0; y < rows; y++) {
+                    if (y === Math.floor(rows / 2)) {
+                        for (let x = 0; x < centerX - radius; x++) {
+                            maze[y][x] = 1;
+                        }
+                    }
+                }
+                
+                // Right path to heart
+                for (let y = 0; y < rows; y++) {
+                    if (y === Math.floor(rows / 2)) {
+                        for (let x = centerX + radius + 1; x < cols; x++) {
+                            maze[y][x] = 1;
+                        }
+                    }
+                }
+                
+                // Top path to heart
+                for (let x = 0; x < cols; x++) {
+                    if (x === centerX) {
+                        for (let y = 0; y < centerY - radius; y++) {
+                            maze[y][x] = 1;
+                        }
+                    }
+                }
+                
+                // Bottom path to heart
+                for (let x = 0; x < cols; x++) {
+                    if (x === centerX) {
+                        for (let y = centerY + radius + 1; y < rows; y++) {
+                            maze[y][x] = 1;
+                        }
+                    }
+                }
+                
+                // Connect some of the paths randomly to make the maze solvable
+                for (let i = 0; i < 20; i++) {
+                    const x = Math.floor(Math.random() * cols);
+                    const y = Math.floor(Math.random() * rows);
+                    
+                    if (x > 0 && x < cols - 1 && y > 0 && y < rows - 1) {
+                        maze[y][x] = 1;
+                    }
+                }
+                
+                // Center of heart is the goal
+                maze[centerY][centerX] = 3; // Goal
+                
+                // Left edge, middle should be a path (starting point)
+                maze[Math.floor(rows / 2)][0] = 1;
+                
+                return maze;
+            }
+            
+            function isOnHeartBoundary(dx, dy, scale) {
+                // Checks if a point is on the boundary of a heart
+                const d = Math.sqrt(dx * dx + dy * dy);
+                
+                // Heart formula (approximation)
+                const heartFormula = Math.pow(dx * dx + Math.pow(dy - 0.25 * scale, 2) - 0.45 * scale, 3) - 
+                                   dx * dx * Math.pow(dy - 0.25 * scale, 3);
+                
+                return Math.abs(heartFormula) < 0.01 && d < scale;
+            }
+            
+            function isInsideHeart(dx, dy, scale) {
+                // Heart formula (approximation)
+                const heartFormula = Math.pow(dx * dx + Math.pow(dy - 0.25 * scale, 2) - 0.45 * scale, 3) - 
+                                   dx * dx * Math.pow(dy - 0.25 * scale, 3);
+                
+                return heartFormula < 0 && Math.sqrt(dx * dx + dy * dy) < scale;
+            }
+            
+            function drawMaze() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        switch (maze[y][x]) {
+                            case 0: // Wall
+                                ctx.fillStyle = '#f8d7da';
+                                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                                break;
+                            case 1: // Path
+                                ctx.fillStyle = '#fff1f2';
+                                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                                break;
+                            case 2: // Player
+                                ctx.fillStyle = '#fff1f2';
+                                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                                
+                                // Draw player as a small heart
+                                ctx.fillStyle = '#d8456b';
+                                drawHeart(ctx, x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize * 0.4);
+                                break;
+                            case 3: // Goal
+                                ctx.fillStyle = '#fff1f2';
+                                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                                
+                                // Draw goal as a heart
+                                ctx.fillStyle = '#ff6b98';
+                                drawHeart(ctx, x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize * 0.4);
+                                break;
+                        }
+                        
+                        // Draw cell borders
+                        ctx.strokeStyle = 'rgba(246, 221, 224, 0.5)';
+                        ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+            
+            function drawHeart(ctx, x, y, size) {
+                // Draw a heart shape
+                ctx.beginPath();
+                ctx.moveTo(x, y - size / 4);
+                
+                // Left half of the heart
+                ctx.bezierCurveTo(
+                    x - size / 2, y - size / 2,
+                    x - size, y,
+                    x, y + size / 2
+                );
+                
+                // Right half of the heart
+                ctx.bezierCurveTo(
+                    x + size, y,
+                    x + size / 2, y - size / 2,
+                    x, y - size / 4
+                );
+                
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            function handleClick(event) {
+                if (gameWon) return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+                
+                const cellX = Math.floor(mouseX / cellSize);
+                const cellY = Math.floor(mouseY / cellSize);
+                
+                // Check if clicked cell is adjacent to player
+                if (isAdjacent(playerX, playerY, cellX, cellY) && maze[cellY][cellX] !== 0) {
+                    // Move player
+                    maze[playerY][playerX] = 1; // Set old position to path
+                    playerX = cellX;
+                    playerY = cellY;
+                    
+                    // Check for win
+                    if (maze[playerY][playerX] === 3) {
+                        gameWon = true;
+                        showWinMessage();
+                    } else {
+                        maze[playerY][playerX] = 2; // Set new position to player
+                    }
+                    
+                    // Redraw maze
+                    drawMaze();
+                }
+            }
+            
+            function isAdjacent(x1, y1, x2, y2) {
+                // Check if two cells are adjacent
+                const dx = Math.abs(x1 - x2);
+                const dy = Math.abs(y1 - y2);
+                
+                return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+            }
+            
+            function showWinMessage() {
+                winMessage.style.display = 'block';
+                createHeartConfetti();
+            }
+            
+            function createHeartConfetti() {
+                // Create heart confetti when the player wins
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const heart = document.createElement('div');
+                        heart.innerHTML = '❤️';
+                        heart.style.position = 'fixed';
+                        heart.style.zIndex = '1000';
+                        heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+                        heart.style.color = getRandomColor();
+                        heart.style.left = Math.random() * window.innerWidth + 'px';
+                        heart.style.top = '-50px';
+                        heart.style.opacity = '1';
+                        heart.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+                        heart.style.transition = 'top 3s, opacity 3s, transform 3s';
+                        document.body.appendChild(heart);
+                        
+                        setTimeout(() => {
+                            heart.style.top = window.innerHeight + 50 + 'px';
+                            heart.style.opacity = '0';
+                            heart.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+                            
+                            setTimeout(() => {
+                                document.body.removeChild(heart);
+                            }, 3000);
+                        }, 100);
+                    }, i * 100);
+                }
+            }
+            
+            function createFallingHearts() {
+                // Create background falling hearts
+                for (let i = 0; i < 20; i++) {
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '❤️';
+                    heart.style.position = 'absolute';
+                    heart.style.fontSize = Math.random() * 15 + 5 + 'px';
+                    heart.style.color = getRandomColor();
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.top = '-50px';
+                    heart.style.opacity = '0.5';
+                    heart.style.animation = 'fall ' + (Math.random() * 20 + 10) + 's linear infinite';
+                    heart.style.animationDelay = Math.random() * 10 + 's';
+                    
+                    heartBackground.appendChild(heart);
+                }
+                
+                // Create CSS animation for falling hearts
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    @keyframes fall {
+                        0% {
+                            transform: translateY(0) rotate(0deg);
+                        }
+                        100% {
+                            transform: translateY(1000px) rotate(720deg);
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            function getRandomColor() {
+                const colors = ['#ff6b98', '#ff8fab', '#ffb3c6', '#d8456b', '#c13d62'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            function restartGame() {
+                // Hide win message
+                winMessage.style.display = 'none';
+                
+                // Reset game variables
+                gameWon = false;
+                
+                // Generate new maze
+                const newMaze = generateHeartMaze(rows, cols);
+                
+                // Set player starting position
+                playerX = 0;
+                playerY = 7;
+                
+                // Update maze
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        maze[y][x] = newMaze[y][x];
+                    }
+                }
+                
+                maze[playerY][playerX] = 2; // Set player position
+                
+                // Redraw maze
+                drawMaze();
+            }
+        });
+    </script>
+</body>
+</html>
