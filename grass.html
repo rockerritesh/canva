@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Virtual Firefly Farm with Interactive Grass</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let cursorX = null;
+        let cursorY = null;
+
+        // Firefly class (for reference, remains unchanged)
+        class Firefly {
+            constructor(x, y, isFlying) {
+                this.x = x;
+                this.y = y;
+                this.vx = isFlying ? (Math.random() - 0.5) * 2 : 0;
+                this.vy = isFlying ? (Math.random() - 0.5) * 2 : 0;
+                this.phase = Math.random() * Math.PI * 2;
+                this.isFlying = isFlying;
+            }
+
+            update() {
+                if (this.isFlying) {
+                    this.vx += (Math.random() - 0.5) * 0.2;
+                    this.vy += (Math.random() - 0.5) * 0.2;
+
+                    if (cursorX !== null && cursorY !== null) {
+                        const dx = cursorX - this.x;
+                        const dy = cursorY - this.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < 100) {
+                            const attraction = 0.1;
+                            this.vx += (dx / distance) * attraction;
+                            this.vy += (dy / distance) * attraction;
+                        }
+                    }
+
+                    const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                    if (speed > 5) {
+                        this.vx = (this.vx / speed) * 5;
+                        this.vy = (this.vy / speed) * 5;
+                    }
+
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+
+                this.phase += 0.1;
+                if (this.phase > Math.PI * 2) this.phase -= Math.PI * 2;
+            }
+        }
+
+        // GrassBlade class
+        class GrassBlade {
+            constructor(x, y, height) {
+                this.x = x;
+                this.y = y;
+                this.height = height;
+                this.swayAngle = 0;
+                this.color = `hsl(120, 50%, ${Math.random() * 30 + 20}%)`; // Varying green shades
+            }
+
+            update() {
+                if (cursorX !== null && cursorY !== null) {
+                    const dx = cursorX - this.x;
+                    const dy = cursorY - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 50) {
+                        const angle = Math.atan2(dy, dx);
+                        this.swayAngle = Math.sin(angle) * (50 - distance) / 50 * 0.5;
+                    } else {
+                        this.swayAngle = 0;
+                    }
+                } else {
+                    this.swayAngle = 0;
+                }
+            }
+
+            draw() {
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                const topX = this.x + this.height * Math.sin(this.swayAngle);
+                const topY = this.y - this.height * Math.cos(this.swayAngle);
+                ctx.quadraticCurveTo(this.x, this.y - this.height / 2, topX, topY);
+                ctx.stroke();
+            }
+        }
+
+        // Create fireflies
+        const fireflies = [];
+        for (let i = 0; i < 50; i++) {
+            const x = Math.random() * canvas.width;
+            const y = 500 + Math.random() * 100;
+            fireflies.push(new Firefly(x, y, false));
+        }
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            fireflies.push(new Firefly(x, y, true));
+        }
+
+        // Create grass blades
+        const grassBlades = [];
+        const grassDensity = 500; // Number of blades
+        for (let i = 0; i < grassDensity; i++) {
+            const x = Math.random() * canvas.width;
+            const y = 500 + Math.random() * 100;
+            const height = 20 + Math.random() * 30;
+            grassBlades.push(new GrassBlade(x, y, height));
+        }
+
+        // Create stars
+        const stars = [];
+        for (let i = 0; i < 100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * 500,
+                size: Math.random() * 2 + 1
+            });
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw sky
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, 500);
+
+            // Draw stars
+            ctx.fillStyle = 'white';
+            for (const star of stars) {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw grass blades
+            for (const blade of grassBlades) {
+                blade.update();
+                blade.draw();
+            }
+
+            // Set shadow for fireflies
+            ctx.shadowColor = 'yellow';
+            ctx.shadowBlur = 10;
+
+            // Update and draw fireflies
+            for (const firefly of fireflies) {
+                firefly.update();
+                const intensity = 0.5 + 0.5 * Math.sin(firefly.phase);
+                ctx.fillStyle = `rgba(255, 255, 0, ${intensity})`;
+                ctx.beginPath();
+                ctx.arc(firefly.x, firefly.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Reset shadow
+            ctx.shadowBlur = 0;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+
+        // Event listeners for mouse and touch interaction
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            cursorX = e.clientX - rect.left;
+            cursorY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            cursorX = touch.clientX - rect.left;
+            cursorY = touch.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mouseout', () => {
+            cursorX = null;
+            cursorY = null;
+        });
+
+        canvas.addEventListener('touchend', () => {
+            cursorX = null;
+            cursorY = null;
+        });
+    </script>
+</body>
+</html>
