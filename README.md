@@ -9,3 +9,7 @@ AI-GENERATED-CANVA
 ## GRASS
 ![image](https://github.com/user-attachments/assets/7c5378cd-7870-4448-a817-9ffe08afa56a)
 
+## Fuldi Dynamic
+![image](https://github.com/user-attachments/assets/aedb1dc8-101e-44a2-b4ab-2ca92372ea98)
+
+
