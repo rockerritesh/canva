@@ -3,87 +3,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample HTML Page</title>
+    <title>Garden of Roses</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            overflow: hidden;
+            background: #87CEEB;
+            font-family: Arial, sans-serif;
         }
-        header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 1em;
-            text-align: center;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            background-color: #333;
-        }
-        nav a {
-            color: white;
-            padding: 14px 20px;
-            text-decoration: none;
-            text-align: center;
-        }
-        nav a:hover {
-            background-color: #ddd;
-            color: black;
-        }
-        main {
-            padding: 20px;
-        }
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            position: fixed;
+        .garden {
+            position: relative;
             width: 100%;
+            height: 100vh;
+            background: linear-gradient(#87CEEB, #E0F7FA);
+            overflow: hidden;
+            cursor: none; /* Hide default cursor */
+        }
+        .ground {
+            position: absolute;
             bottom: 0;
+            width: 100%;
+            height: 40%;
+            background: #228B22;
+        }
+        .rose {
+            position: absolute;
+            bottom: calc(40% - 10px);
+            transform-origin: bottom center;
+            cursor: pointer;
+            transition: transform 0.3s, filter 0.3s;
+        }
+        .rose:hover {
+            transform: scale(1.1);
+            filter: saturate(1.5);
+        }
+        .stem {
+            width: 4px;
+            height: 60px;
+            background: #228B22;
+            position: absolute;
+            bottom: 0;
+            left: 13px;
+        }
+        .flower {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 50px;
+            z-index: 2;
+        }
+        .leaf {
+            width: 20px;
+            height: 10px;
+            background: #228B22;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 25px;
+            z-index: 1;
+        }
+        .leaf.left {
+            left: -10px;
+            transform: rotate(-20deg);
+        }
+        .leaf.right {
+            left: 20px;
+            transform: rotate(20deg);
+        }
+        .sun {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: #FFD700;
+            border-radius: 50%;
+            top: 40px;
+            right: 80px;
+            box-shadow: 0 0 30px 15px rgba(255, 215, 0, 0.5);
+        }
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 200px;
+            top: 5%;
+            z-index: 1;
+        }
+        .cloud {
+            position: absolute;
+            width: 200px;
+            height: 60px;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.8;
+        }
+        .cloud:before, .cloud:after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+        .cloud:before {
+            width: 100px;
+            height: 100px;
+            top: -50px;
+            left: 30px;
+        }
+        .cloud:after {
+            width: 80px;
+            height: 80px;
+            top: -30px;
+            right: 30px;
+        }
+        .cloud1 {
+            top: 40px;
+            left: 10%;
+            transform: scale(0.8);
+            animation: moveCloud 40s linear infinite;
+        }
+        .cloud2 {
+            top: 80px;
+            left: 50%;
+            transform: scale(1.2);
+            animation: moveCloud 35s linear infinite 5s;
+        }
+        @keyframes moveCloud {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(100vw); }
+        }
+        .title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 36px;
+            color: #333;
+            font-family: 'Georgia', serif;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
+        }
+        .butterfly {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            z-index: 5;
+            animation: flutter 20s linear infinite;
+        }
+        .butterfly:before, .butterfly:after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 20px;
+            background: rgba(255, 0, 200, 0.7);
+            border-radius: 10px 15px 0 15px;
+            transform-origin: right bottom;
+        }
+        .butterfly:after {
+            left: 5px;
+            border-radius: 15px 10px 15px 0;
+            transform-origin: left bottom;
+            background: rgba(255, 0, 200, 0.8);
+        }
+        .butterfly1 {
+            top: 30%;
+            left: 20%;
+        }
+        .butterfly2 {
+            top: 50%;
+            left: 70%;
+            animation-delay: 5s;
+        }
+        @keyframes flutter {
+            0%, 100% { transform: translate(0, 0) rotate(0); }
+            25% { transform: translate(100px, -50px) rotate(10deg); }
+            50% { transform: translate(200px, 30px) rotate(-5deg); }
+            75% { transform: translate(100px, 80px) rotate(15deg); }
+        }
+        /* Custom cursor styling */
+        .custom-cursor {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: screen;
+            transition: width 0.2s, height 0.2s;
+        }
+        /* Touch ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: ripple-effect 1s linear;
+            z-index: 9998;
+        }
+        @keyframes ripple-effect {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 0.8;
+            }
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+        /* Rose bending effect */
+        .rose-influence-area {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        /* Rain effect */
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            top: -20px;
+            animation: rain-fall linear;
+        }
+        @keyframes rain-fall {
+            0% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(120vh);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>Welcome to My Website</h1>
-    </header>
-
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#services">Services</a>
-        <a href="#contact">Contact</a>
-    </nav>
-
-    <main>
-        <section id="home">
-            <h2>Home</h2>
-            <p>This is the home section of the website.</p>
-        </section>
-
-        <section id="about">
-            <h2>About</h2>
-            <p>This section provides information about the website.</p>
-        </section>
-
-        <section id="services">
-            <h2>Services</h2>
-            <p>Details about the services offered.</p>
-        </section>
-
-        <section id="contact">
-            <h2>Contact</h2>
-            <p>Contact information and form.</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>Footer Content</p>
-    </footer>
-
+    <div class="garden">
+        <div class="title">Garden of Roses</div>
+        <div class="sun"></div>
+        <div class="clouds">
+            <div class="cloud cloud1"></div>
+            <div class="cloud cloud2"></div>
+        </div>
+        <div class="butterfly butterfly1"></div>
+        <div class="butterfly butterfly2"></div>
+        <div class="ground"></div>
+        <div class="custom-cursor"></div>
+        <div class="rose-influence-area"></div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const garden = document.querySelector('.garden');
+                const cursor = document.querySelector('.custom-cursor');
+                const influenceArea = document.querySelector('.rose-influence-area');
+                const colors = ['#FF0000', '#FF69B4', '#FFC0CB', '#DC143C', '#C71585', '#DB7093'];
+                const numRoses = 30;
+                let isRaining = false;
+                let lastInteractionTime = Date.now();
+                
+                // Create roses
+                for (let i = 0; i < numRoses; i++) {
+                    const rose = document.createElement('div');
+                    rose.className = 'rose';
+                    
+                    const stem = document.createElement('div');
+                    stem.className = 'stem';
+                    
+                    const flowerColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    const flower = document.createElement('div');
+                    flower.className = 'flower';
+                    flower.style.background = flowerColor;
+                    
+                    const leafLeft = document.createElement('div');
+                    leafLeft.className = 'leaf left';
+                    
+                    const leafRight = document.createElement('div');
+                    leafRight.className = 'leaf right';
+                    
+                    rose.appendChild(stem);
+                    rose.appendChild(flower);
+                    rose.appendChild(leafLeft);
+                    rose.appendChild(leafRight);
+                    
+                    // Random position
+                    rose.style.left = `${5 + Math.random() * 90}%`;
+                    
+                    // Random height
+                    const height = 40 + Math.random() * 40;
+                    stem.style.height = `${height}px`;
+                    flower.style.bottom = `${height - 10}px`;
+                    
+                    // Random scale
+                    const scale = 0.7 + Math.random() * 0.6;
+                    rose.style.transform = `scale(${scale})`;
+                    
+                    garden.appendChild(rose);
+                }
+                
+                // Mouse movement tracking for custom cursor
+                garden.addEventListener('mousemove', function(e) {
+                    lastInteractionTime = Date.now();
+                    cursor.style.left = e.clientX + 'px';
+                    cursor.style.top = e.clientY + 'px';
+                    influenceArea.style.left = e.clientX + 'px';
+                    influenceArea.style.top = e.clientY + 'px';
+                    
+                    // Bend roses near the cursor
+                    bendRosesNearCursor(e.clientX, e.clientY);
+                });
+                
+                // Mouse effects
+                garden.addEventListener('mousedown', function(e) {
+                    // Expand cursor on click
+                    cursor.style.width = '70px';
+                    cursor.style.height = '70px';
+                    
+                    // Create ripple effect
+                    createRipple(e.clientX, e.clientY);
+                });
+                
+                garden.addEventListener('mouseup', function() {
+                    // Return cursor to normal size
+                    cursor.style.width = '50px';
+                    cursor.style.height = '50px';
+                });
+                
+                // Touch effects for mobile
+                garden.addEventListener('touchstart', function(e) {
+                    lastInteractionTime = Date.now();
+                    const touch = e.touches[0];
+                    cursor.style.left = touch.clientX + 'px';
+                    cursor.style.top = touch.clientY + 'px';
+                    influenceArea.style.left = touch.clientX + 'px';
+                    influenceArea.style.top = touch.clientY + 'px';
+                    
+                    // Create ripple effect
+                    createRipple(touch.clientX, touch.clientY);
+                    
+                    // Bend roses near touch
+                    bendRosesNearCursor(touch.clientX, touch.clientY);
+                });
+                
+                garden.addEventListener('touchmove', function(e) {
+                    lastInteractionTime = Date.now();
+                    const touch = e.touches[0];
+                    cursor.style.left = touch.clientX + 'px';
+                    cursor.style.top = touch.clientY + 'px';
+                    influenceArea.style.left = touch.clientX + 'px';
+                    influenceArea.style.top = touch.clientY + 'px';
+                    
+                    // Bend roses near touch
+                    bendRosesNearCursor(touch.clientX, touch.clientY);
+                });
+                
+                // Double-click/tap to make it rain
+                garden.addEventListener('dblclick', toggleRain);
+                garden.addEventListener('touchend', function(e) {
+                    if (e.touches.length === 0) {
+                        // Check if this is a double tap
+                        const now = Date.now();
+                        if (now - lastTapTime < 300) {
+                            toggleRain();
+                        }
+                        lastTapTime = now;
+                    }
+                });
+                
+                // Make roses interactive
+                const roses = document.querySelectorAll('.rose');
+                roses.forEach(rose => {
+                    rose.addEventListener('click', function() {
+                        const flower = this.querySelector('.flower');
+                        const currentColor = flower.style.background;
+                        let newColor;
+                        
+                        do {
+                            newColor = colors[Math.floor(Math.random() * colors.length)];
+                        } while (newColor === currentColor);
+                        
+                        flower.style.background = newColor;
+                    });
+                });
+                
+                // Function to create ripple effect
+                function createRipple(x, y) {
+                    const ripple = document.createElement('div');
+                    ripple.className = 'ripple';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    garden.appendChild(ripple);
+                    
+                    // Remove ripple element after animation completes
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 1000);
+                }
+                
+                // Function to bend roses near cursor/touch
+                function bendRosesNearCursor(x, y) {
+                    roses.forEach(rose => {
+                        const roseRect = rose.getBoundingClientRect();
+                        const roseX = roseRect.left + roseRect.width / 2;
+                        const roseY = roseRect.top;
+                        
+                        // Calculate distance between cursor and rose
+                        const dx = roseX - x;
+                        const dy = roseY - y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Only affect roses within certain radius (150px)
+                        if (distance < 150) {
+                            // Calculate angle and intensity based on distance
+                            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                            const intensity = (150 - distance) / 150; // 0 to 1 based on distance
+                            
+                            // Apply transform to bend the rose away from cursor
+                            rose.style.transform = `rotate(${angle * 0.1}deg) skew(${-angle * 0.05}deg, ${angle * 0.03}deg) scale(${rose.dataset.scale || 1})`;
+                        } else {
+                            // Reset transform if not affected
+                            if (rose.dataset.scale) {
+                                rose.style.transform = `scale(${rose.dataset.scale})`;
+                            } else {
+                                rose.style.removeProperty('transform');
+                            }
+                        }
+                    });
+                }
+                
+                // Store original scale for each rose
+                roses.forEach(rose => {
+                    const transform = getComputedStyle(rose).transform;
+                    if (transform && transform !== 'none') {
+                        // Extract scale value if it exists
+                        const match = transform.match(/scale\(([^)]+)\)/);
+                        if (match && match[1]) {
+                            rose.dataset.scale = match[1];
+                        }
+                    }
+                });
+                
+                // Rain effect toggle
+                let lastTapTime = 0;
+                function toggleRain() {
+                    isRaining = !isRaining;
+                    
+                    if (isRaining) {
+                        startRain();
+                    } else {
+                        stopRain();
+                    }
+                }
+                
+                let rainInterval;
+                function startRain() {
+                    rainInterval = setInterval(createRaindrop, 50);
+                    
+                    // Make the sun less bright
+                    document.querySelector('.sun').style.boxShadow = '0 0 20px 5px rgba(255, 215, 0, 0.3)';
+                    
+                    // Make the sky darker
+                    garden.style.background = 'linear-gradient(#607D8B, #90A4AE)';
+                }
+                
+                function stopRain() {
+                    clearInterval(rainInterval);
+                    
+                    // Restore sun
+                    document.querySelector('.sun').style.boxShadow = '0 0 30px 15px rgba(255, 215, 0, 0.5)';
+                    
+                    // Restore sky
+                    garden.style.background = 'linear-gradient(#87CEEB, #E0F7FA)';
+                    
+                    // Remove existing raindrops
+                    document.querySelectorAll('.raindrop').forEach(drop => drop.remove());
+                }
+                
+                function createRaindrop() {
+                    const raindrop = document.createElement('div');
+                    raindrop.className = 'raindrop';
+                    raindrop.style.left = Math.random() * 100 + '%';
+                    raindrop.style.animationDuration = (0.7 + Math.random() * 0.5) + 's';
+                    
+                    garden.appendChild(raindrop);
+                    
+                    // Remove raindrop after animation completes
+                    setTimeout(() => {
+                        raindrop.remove();
+                    }, 1500);
+                }
+                
+                // Hide cursor when inactive for a few seconds
+                setInterval(() => {
+                    if (Date.now() - lastInteractionTime > 3000) {
+                        cursor.style.opacity = '0';
+                    } else {
+                        cursor.style.opacity = '1';
+                    }
+                }, 1000);
+            });
+        </script>
+    </div>
 </body>
 </html>
