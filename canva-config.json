@@ -1,0 +1,43 @@
+{
+  "name": "Canva Platform",
+  "version": "2.0.0",
+  "description": "Interactive Nature Simulations & Art Platform",
+  "homepage": "index.gtml",
+  "fallback": "index.html",
+  "author": "AI-Generated Content",
+  "license": "MIT",
+  "structure": {
+    "simulations": {
+      "path": "simulations/",
+      "description": "Interactive HTML5 simulations",
+      "categories": {
+        "nature": ["ripple.html", "sky.html", "grass.html", "rose.html"],
+        "physics": ["blackhole.html", "gravity.html", "solar.html", "field.html", "dynamic.html", "sim.html"],
+        "art": ["heart.html", "love.html", "romantic.html"],
+        "tools": ["distance.html", "act.html", "Lgame.html"]
+      }
+    },
+    "content": {
+      "path": "content/",
+      "description": "Markdown content files"
+    },
+    "docs": {
+      "path": "docs/",
+      "description": "Documentation files"
+    },
+    "assets": {
+      "path": "assets/",
+      "description": "Static assets"
+    }
+  },
+  "features": {
+    "contentEditor": true,
+    "blogSystem": true,
+    "simulationGrid": true,
+    "githubPages": true
+  },
+  "theme": {
+    "primaryBg": "#0a0a0a",
+    "accentColor": "#4ecdc4"
+  }
+} 
