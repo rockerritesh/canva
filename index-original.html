@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beautiful Nature Pages</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #1a1a2e;
+      color: white;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* Sun in the middle */
+    .sun {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, #ffde59 20%, #ff914d 70%, transparent 100%);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 60px #ffd700;
+      z-index: 1;
+    }
+    
+    /* Stars in background */
+    .stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    
+    .star {
+      position: absolute;
+      background-color: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite ease-in-out;
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+    
+    /* Flowers */
+    .flower {
+      position: absolute;
+      z-index: 2;
+    }
+    
+    .flower-center {
+      position: absolute;
+      background-color: #ffcc00;
+      border-radius: 50%;
+      z-index: 3;
+    }
+    
+    .petal {
+      position: absolute;
+      background-color: pink;
+      border-radius: 50% 50% 0 50%;
+      transform-origin: bottom right;
+      z-index: 2;
+    }
+    
+    /* Stems */
+    .stem {
+      position: absolute;
+      background-color: #4CAF50;
+      bottom: 0;
+      z-index: 1;
+    }
+    
+    /* Content container */
+    .content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      max-width: 800px;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 15px;
+      backdrop-filter: blur(5px);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    
+    .button-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .nav-button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      background: linear-gradient(145deg, #ff6b6b, #4ecdc4);
+      border: none;
+      border-radius: 30px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .nav-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(145deg, #ff8e8e, #6eede4);
+    }
+    
+    .nav-button:active {
+      transform: translateY(1px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Sun -->
+  <div class="sun"></div>
+  
+  <!-- Stars -->
+  <div class="stars" id="stars"></div>
+  
+  <!-- Content -->
+  <div class="content">
+    <h1>Nature's Beauty</h1>
+    <p>Welcome to a collection of beautiful interactive nature pages. Click on any button below to explore.</p>
+    
+    <div class="button-container">
+      <button class="nav-button" onclick="location.href='ripple.html'">Water Ripples</button>
+      <button class="nav-button" onclick="location.href='blackhole.html'">Blackhole</button>
+      <button class="nav-button" onclick="location.href='sky.html'">Night Sky</button>
+      <button class="nav-button" onclick="location.href='gravity.html'">Gravity</button>
+      <button class="nav-button" onclick="location.href='solar.html'">Solar System</button>
+      <button class="nav-button" onclick="location.href='grass.html'">Grass</button>
+      <button class="nav-button" onclick="location.href='heart.html'">heart</button>
+      <button class="nav-button" onclick="location.href='love.html'">love</button>
+      <button class="nav-button" onclick="location.href='romantic.html'">Romantic</button>
+      <button class="nav-button" onclick="location.href='field.html'">Gravity Field</button>
+      <button class="nav-button" onclick="location.href='distance.html'">Distance</button>
+    </div>
+  </div>
+
+  <script>
+    // Create stars
+    function createStars() {
+      const starsContainer = document.getElementById('stars');
+      const numStars = 200;
+      
+      for (let i = 0; i < numStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // Random size between 1-3px
+        const size = Math.random() * 2 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        
+        // Random position
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        
+        // Random animation delay
+        star.style.animationDelay = `${Math.random() * 3}s`;
+        
+        starsContainer.appendChild(star);
+      }
+    }
+    
+    // Create flowers
+    function createFlowers() {
+      const numFlowers = 15;
+      
+      for (let i = 0; i < numFlowers; i++) {
+        createFlower();
+      }
+    }
+    
+    function createFlower() {
+      const flower = document.createElement('div');
+      flower.className = 'flower';
+      
+      // Random position (but not in the center where the sun is)
+      let x, y;
+      do {
+        x = Math.random() * 90 + 5; // 5% to 95%
+        y = Math.random() * 90 + 5; // 5% to 95%
+      } while (Math.abs(x - 50) < 20 && Math.abs(y - 50) < 20);
+      
+      flower.style.left = `${x}%`;
+      flower.style.top = `${y}%`;
+      
+      // Random size
+      const size = Math.random() * 40 + 30; // 30-70px
+      
+      // Random flower color
+      const colors = ['#ff6b6b', '#ff9e7a', '#ffcc80', '#ffd166', '#f4ffb8', '#a6fff8', '#c5a3ff', '#ffa3d7'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      // Create petals
+      const numPetals = Math.floor(Math.random() * 3) + 5; // 5-7 petals
+      for (let j = 0; j < numPetals; j++) {
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        petal.style.width = `${size * 0.6}px`;
+        petal.style.height = `${size * 0.6}px`;
+        petal.style.backgroundColor = color;
+        petal.style.transform = `rotate(${j * (360 / numPetals)}deg)`;
+        petal.style.left = `-${size * 0.3}px`;
+        petal.style.top = `-${size * 0.3}px`;
+        flower.appendChild(petal);
+      }
+      
+      // Create flower center
+      const center = document.createElement('div');
+      center.className = 'flower-center';
+      center.style.width = `${size * 0.3}px`;
+      center.style.height = `${size * 0.3}px`;
+      center.style.left = `-${size * 0.15}px`;
+      center.style.top = `-${size * 0.15}px`;
+      flower.appendChild(center);
+      
+      // Create stem
+      if (y < 85) { // Only add stems if flower is not at the very bottom
+        const stem = document.createElement('div');
+        stem.className = 'stem';
+        stem.style.width = '3px';
+        stem.style.height = `${100 - y}%`;
+        stem.style.left = '0';
+        stem.style.transform = 'translateX(-50%)';
+        flower.appendChild(stem);
+      }
+      
+      document.body.appendChild(flower);
+    }
+    
+    // Initialize
+    window.onload = function() {
+      createStars();
+      createFlowers();
+    };
+  </script>
+</body>
+</html>

@@ -3,261 +3,500 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Beautiful Nature Pages</title>
+  <title>Canva - Interactive Nature Simulations & Art</title>
+  
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Highlight.js for code syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  
   <style>
-    body {
+    :root {
+      --primary-bg: #0a0a0a;
+      --secondary-bg: #1a1a2e;
+      --accent-bg: rgba(0, 0, 0, 0.7);
+      --text-primary: #ffffff;
+      --text-secondary: #b8bcc8;
+      --accent-color: #4ecdc4;
+      --accent-secondary: #ff6b6b;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
       margin: 0;
       padding: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #1a1a2e;
-      color: white;
-      overflow: hidden;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      box-sizing: border-box;
     }
-    
-    /* Sun in the middle */
-    .sun {
-      position: absolute;
-      width: 150px;
-      height: 150px;
-      background: radial-gradient(circle, #ffde59 20%, #ff914d 70%, transparent 100%);
-      border-radius: 50%;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 60px #ffd700;
-      z-index: 1;
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
     }
-    
-    /* Stars in background */
-    .stars {
-      position: absolute;
+
+    /* Animated background */
+    .background-animation {
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 0;
+      z-index: -1;
+      background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                  radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.3) 0%, transparent 50%);
+      animation: backgroundMove 20s ease-in-out infinite;
     }
-    
-    .star {
-      position: absolute;
-      background-color: white;
-      border-radius: 50%;
-      animation: twinkle 3s infinite ease-in-out;
+
+    @keyframes backgroundMove {
+      0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+      33% { transform: translateX(-30px) translateY(-50px) rotate(120deg); }
+      66% { transform: translateX(20px) translateY(20px) rotate(240deg); }
     }
-    
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 1; }
-    }
-    
-    /* Flowers */
-    .flower {
-      position: absolute;
-      z-index: 2;
-    }
-    
-    .flower-center {
-      position: absolute;
-      background-color: #ffcc00;
-      border-radius: 50%;
-      z-index: 3;
-    }
-    
-    .petal {
-      position: absolute;
-      background-color: pink;
-      border-radius: 50% 50% 0 50%;
-      transform-origin: bottom right;
-      z-index: 2;
-    }
-    
-    /* Stems */
-    .stem {
-      position: absolute;
-      background-color: #4CAF50;
-      bottom: 0;
-      z-index: 1;
-    }
-    
-    /* Content container */
-    .content {
-      position: relative;
-      z-index: 10;
+
+    /* Header */
+    header {
+      padding: 2rem 0;
       text-align: center;
-      max-width: 800px;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 30px;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-content h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 30px rgba(78, 205, 196, 0.3);
+    }
+
+    .header-content p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Main container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Content sections */
+    .section {
+      margin-bottom: 3rem;
+      background: var(--accent-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+    }
+
+    .section h2 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: var(--accent-color);
+      border-bottom: 2px solid var(--accent-color);
+      padding-bottom: 0.5rem;
+    }
+
+    /* Grid layout for simulations */
+    .simulations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .simulation-card {
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(255, 107, 107, 0.1));
       border-radius: 15px;
-      backdrop-filter: blur(5px);
+      padding: 1.5rem;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      cursor: pointer;
     }
-    
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 30px;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+
+    .simulation-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      border-color: var(--accent-color);
     }
-    
-    .button-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
+
+    .simulation-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent-color);
     }
-    
-    .nav-button {
+
+    .simulation-card p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Content area for markdown/html */
+    .content-area {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 2rem;
+      margin: 2rem 0;
+      border: 1px solid var(--border-color);
+    }
+
+    .content-input {
+      width: 100%;
+      min-height: 200px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem;
+      color: var(--text-primary);
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    .content-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+    }
+
+    .content-output {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      padding: 2rem;
+      margin-top: 1rem;
+      border: 1px solid var(--border-color);
+      min-height: 200px;
+    }
+
+    /* Buttons */
+    .btn {
       padding: 12px 24px;
-      font-size: 1.1rem;
-      background: linear-gradient(145deg, #ff6b6b, #4ecdc4);
       border: none;
       border-radius: 30px;
-      color: white;
       cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
       transition: all 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      margin: 0.5rem;
     }
-    
-    .nav-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
-      background: linear-gradient(145deg, #ff8e8e, #6eede4);
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary));
+      color: white;
     }
-    
-    .nav-button:active {
-      transform: translateY(1px);
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(78, 205, 196, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent-color);
+      color: var(--primary-bg);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-content h1 {
+        font-size: 2.5rem;
+      }
+      
+      .container {
+        padding: 1rem;
+      }
+      
+      .simulations-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Code highlighting */
+    pre {
+      background: rgba(0, 0, 0, 0.5) !important;
+      border-radius: 10px;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    /* Markdown styles */
+    .content-output h1, .content-output h2, .content-output h3 {
+      color: var(--accent-color);
+      margin: 1rem 0 0.5rem 0;
+    }
+
+    .content-output blockquote {
+      border-left: 4px solid var(--accent-color);
+      padding-left: 1rem;
+      margin: 1rem 0;
+      background: rgba(78, 205, 196, 0.1);
+      border-radius: 0 10px 10px 0;
+    }
+
+    .content-output table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    .content-output th, .content-output td {
+      border: 1px solid var(--border-color);
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .content-output th {
+      background: rgba(78, 205, 196, 0.2);
     }
   </style>
 </head>
 <body>
-  <!-- Sun -->
-  <div class="sun"></div>
+  <div class="background-animation"></div>
   
-  <!-- Stars -->
-  <div class="stars" id="stars"></div>
-  
-  <!-- Content -->
-  <div class="content">
-    <h1>Nature's Beauty</h1>
-    <p>Welcome to a collection of beautiful interactive nature pages. Click on any button below to explore.</p>
-    
-    <div class="button-container">
-      <button class="nav-button" onclick="location.href='ripple.html'">Water Ripples</button>
-      <button class="nav-button" onclick="location.href='blackhole.html'">Blackhole</button>
-      <button class="nav-button" onclick="location.href='sky.html'">Night Sky</button>
-      <button class="nav-button" onclick="location.href='gravity.html'">Gravity</button>
-      <button class="nav-button" onclick="location.href='solar.html'">Solar System</button>
-      <button class="nav-button" onclick="location.href='grass.html'">Grass</button>
-      <button class="nav-button" onclick="location.href='heart.html'">heart</button>
-      <button class="nav-button" onclick="location.href='love.html'">love</button>
-      <button class="nav-button" onclick="location.href='romantic.html'">Romantic</button>
-      <button class="nav-button" onclick="location.href='field.html'">Gravity Field</button>
-      <button class="nav-button" onclick="location.href='distance.html'">Distance</button>
+  <header>
+    <div class="header-content">
+      <h1>Canva</h1>
+      <p>Interactive Nature Simulations, Art & Dynamic Content Platform</p>
     </div>
+  </header>
+
+  <div class="container">
+    <!-- Interactive Simulations Section -->
+    <section class="section">
+      <h2>🌟 Interactive Simulations</h2>
+      <p>Explore beautiful, interactive nature simulations and artistic visualizations created with HTML5 Canvas and WebGL.</p>
+      
+      <div class="simulations-grid" id="simulationsGrid">
+        <!-- Simulations will be populated by JavaScript -->
+      </div>
+    </section>
+
+    <!-- Content Editor Section -->
+    <section class="section">
+      <h2>📝 Content Editor</h2>
+      <p>Create and preview content using HTML or Markdown. Perfect for blog posts, documentation, or any web content.</p>
+      
+      <div class="content-area">
+        <div style="margin-bottom: 1rem;">
+          <button class="btn btn-secondary" onclick="setContentType('markdown')">Markdown Mode</button>
+          <button class="btn btn-secondary" onclick="setContentType('html')">HTML Mode</button>
+          <button class="btn btn-primary" onclick="renderContent()">Render Content</button>
+          <button class="btn btn-secondary" onclick="clearContent()">Clear</button>
+        </div>
+        
+        <textarea 
+          id="contentInput" 
+          class="content-input" 
+          placeholder="Enter your HTML or Markdown content here..."
+        ></textarea>
+        
+        <div id="contentOutput" class="content-output">
+          <p style="color: var(--text-secondary); font-style: italic;">
+            Content preview will appear here...
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Blog Section -->
+    <section class="section">
+      <h2>📰 Blog</h2>
+      <p>Latest updates, tutorials, and insights about interactive web development and creative coding.</p>
+      
+      <div id="blogContent">
+        <!-- Blog content will be loaded here -->
+      </div>
+    </section>
   </div>
 
   <script>
-    // Create stars
-    function createStars() {
-      const starsContainer = document.getElementById('stars');
-      const numStars = 200;
+    // Simulation data
+    const simulations = [
+      { name: 'Water Ripples', file: 'simulations/ripple.html', description: 'Interactive water ripple effects with realistic physics' },
+      { name: 'Black Hole', file: 'simulations/blackhole.html', description: 'Mesmerizing black hole gravitational field visualization' },
+      { name: 'Night Sky', file: 'simulations/sky.html', description: 'Beautiful starry night sky with twinkling animations' },
+      { name: 'Gravity Simulation', file: 'simulations/gravity.html', description: 'Physics-based gravity and particle interactions' },
+      { name: 'Solar System', file: 'simulations/solar.html', description: 'Realistic solar system with planetary orbits' },
+      { name: 'Grass Field', file: 'simulations/grass.html', description: 'Swaying grass field with wind effects' },
+      { name: 'Heart Animation', file: 'simulations/heart.html', description: 'Romantic heart animation with particle effects' },
+      { name: 'Love Effects', file: 'simulations/love.html', description: 'Beautiful love-themed visual effects' },
+      { name: 'Romantic Scene', file: 'simulations/romantic.html', description: 'Romantic atmosphere with floating elements' },
+      { name: 'Gravity Field', file: 'simulations/field.html', description: 'Electromagnetic field visualization' },
+      { name: 'Distance Visualization', file: 'simulations/distance.html', description: 'Interactive distance and measurement tools' },
+      { name: 'Rose Garden', file: 'simulations/rose.html', description: 'Beautiful animated rose garden scene' },
+      { name: 'Dynamic Fluid', file: 'simulations/dynamic.html', description: 'Fluid dynamics simulation with real-time interaction' },
+      { name: 'Activity Tracker', file: 'simulations/act.html', description: 'Interactive activity and motion tracking' },
+      { name: 'Physics Simulator', file: 'simulations/sim.html', description: 'Advanced physics simulation environment' },
+      { name: 'Logic Game', file: 'simulations/Lgame.html', description: 'Interactive logic puzzle and brain training game' }
+    ];
+
+    // Content type tracking
+    let currentContentType = 'markdown';
+
+    // Initialize page
+    function initializePage() {
+      populateSimulations();
+      loadSampleContent();
+      hljs.highlightAll();
+    }
+
+    // Populate simulations grid
+    function populateSimulations() {
+      const grid = document.getElementById('simulationsGrid');
+      grid.innerHTML = '';
       
-      for (let i = 0; i < numStars; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
+      simulations.forEach(sim => {
+        const card = document.createElement('div');
+        card.className = 'simulation-card';
+        card.onclick = () => window.open(sim.file, '_blank');
         
-        // Random size between 1-3px
-        const size = Math.random() * 2 + 1;
-        star.style.width = `${size}px`;
-        star.style.height = `${size}px`;
+        card.innerHTML = `
+          <h3>${sim.name}</h3>
+          <p>${sim.description}</p>
+        `;
         
-        // Random position
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        
-        // Random animation delay
-        star.style.animationDelay = `${Math.random() * 3}s`;
-        
-        starsContainer.appendChild(star);
+        grid.appendChild(card);
+      });
+    }
+
+    // Set content type
+    function setContentType(type) {
+      currentContentType = type;
+      const input = document.getElementById('contentInput');
+      
+      if (type === 'markdown') {
+        input.placeholder = 'Enter your Markdown content here...\n\n# Example\nThis is **bold** and *italic* text.\n\n- List item 1\n- List item 2\n\n```javascript\nconsole.log("Hello World!");\n```';
+      } else {
+        input.placeholder = 'Enter your HTML content here...\n\n<h1>Example</h1>\n<p>This is <strong>bold</strong> and <em>italic</em> text.</p>\n<ul>\n  <li>List item 1</li>\n  <li>List item 2</li>\n</ul>';
       }
     }
-    
-    // Create flowers
-    function createFlowers() {
-      const numFlowers = 15;
+
+    // Render content
+    function renderContent() {
+      const input = document.getElementById('contentInput').value;
+      const output = document.getElementById('contentOutput');
       
-      for (let i = 0; i < numFlowers; i++) {
-        createFlower();
+      if (!input.trim()) {
+        output.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">No content to render...</p>';
+        return;
+      }
+      
+      try {
+        if (currentContentType === 'markdown') {
+          output.innerHTML = marked.parse(input);
+        } else {
+          output.innerHTML = input;
+        }
+        
+        // Re-highlight code blocks
+        hljs.highlightAll();
+      } catch (error) {
+        output.innerHTML = `<p style="color: var(--accent-secondary);">Error rendering content: ${error.message}</p>`;
       }
     }
-    
-    function createFlower() {
-      const flower = document.createElement('div');
-      flower.className = 'flower';
-      
-      // Random position (but not in the center where the sun is)
-      let x, y;
-      do {
-        x = Math.random() * 90 + 5; // 5% to 95%
-        y = Math.random() * 90 + 5; // 5% to 95%
-      } while (Math.abs(x - 50) < 20 && Math.abs(y - 50) < 20);
-      
-      flower.style.left = `${x}%`;
-      flower.style.top = `${y}%`;
-      
-      // Random size
-      const size = Math.random() * 40 + 30; // 30-70px
-      
-      // Random flower color
-      const colors = ['#ff6b6b', '#ff9e7a', '#ffcc80', '#ffd166', '#f4ffb8', '#a6fff8', '#c5a3ff', '#ffa3d7'];
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      
-      // Create petals
-      const numPetals = Math.floor(Math.random() * 3) + 5; // 5-7 petals
-      for (let j = 0; j < numPetals; j++) {
-        const petal = document.createElement('div');
-        petal.className = 'petal';
-        petal.style.width = `${size * 0.6}px`;
-        petal.style.height = `${size * 0.6}px`;
-        petal.style.backgroundColor = color;
-        petal.style.transform = `rotate(${j * (360 / numPetals)}deg)`;
-        petal.style.left = `-${size * 0.3}px`;
-        petal.style.top = `-${size * 0.3}px`;
-        flower.appendChild(petal);
-      }
-      
-      // Create flower center
-      const center = document.createElement('div');
-      center.className = 'flower-center';
-      center.style.width = `${size * 0.3}px`;
-      center.style.height = `${size * 0.3}px`;
-      center.style.left = `-${size * 0.15}px`;
-      center.style.top = `-${size * 0.15}px`;
-      flower.appendChild(center);
-      
-      // Create stem
-      if (y < 85) { // Only add stems if flower is not at the very bottom
-        const stem = document.createElement('div');
-        stem.className = 'stem';
-        stem.style.width = '3px';
-        stem.style.height = `${100 - y}%`;
-        stem.style.left = '0';
-        stem.style.transform = 'translateX(-50%)';
-        flower.appendChild(stem);
-      }
-      
-      document.body.appendChild(flower);
+
+    // Clear content
+    function clearContent() {
+      document.getElementById('contentInput').value = '';
+      document.getElementById('contentOutput').innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">Content preview will appear here...</p>';
     }
-    
-    // Initialize
-    window.onload = function() {
-      createStars();
-      createFlowers();
-    };
+
+    // Load sample content
+    function loadSampleContent() {
+      const sampleMarkdown = `# Welcome to Canva Platform
+
+This is a **dynamic content platform** that supports both *HTML* and *Markdown* rendering.
+
+## Features
+
+- 🎨 Interactive nature simulations
+- 📝 Real-time content editing
+- 🌟 Beautiful visual effects
+- 📱 Responsive design
+
+## Code Example
+
+\`\`\`javascript
+function createMagic() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Create beautiful animations
+  animate();
+}
+\`\`\`
+
+> **Note**: This platform is continuously updated with new simulations and features.
+
+[Visit GitHub Repository](https://github.com/yourusername/canva)`;
+
+      document.getElementById('contentInput').value = sampleMarkdown;
+      renderContent();
+    }
+
+    // Blog content loader
+    function loadBlogContent() {
+      const blogDiv = document.getElementById('blogContent');
+      blogDiv.innerHTML = `
+        <div class="simulation-card" style="margin: 1rem 0;">
+          <h3>🚀 Latest Updates</h3>
+          <p><strong>New Interactive Simulations Added:</strong> Enhanced physics engine, improved particle systems, and mobile responsiveness.</p>
+          <small style="color: var(--text-secondary);">Last updated: ${new Date().toLocaleDateString()}</small>
+        </div>
+        
+        <div class="simulation-card" style="margin: 1rem 0;">
+          <h3>🎯 Development Focus</h3>
+          <p><strong>Enhanced User Experience:</strong> Working on improved content editor, better markdown support, and real-time collaboration features.</p>
+        </div>
+        
+        <div class="simulation-card" style="margin: 1rem 0;">
+          <h3>📈 Performance Improvements</h3>
+          <p><strong>Optimization Updates:</strong> Reduced load times, better mobile performance, and enhanced visual effects rendering.</p>
+        </div>
+      `;
+    }
+
+    // Initialize when page loads
+    window.addEventListener('DOMContentLoaded', function() {
+      initializePage();
+      loadBlogContent();
+    });
+
+    // Auto-render content on input (debounced)
+    let renderTimeout;
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('contentInput');
+      input.addEventListener('input', function() {
+        clearTimeout(renderTimeout);
+        renderTimeout = setTimeout(renderContent, 500);
+      });
+    });
   </script>
 </body>
-</html>
+</html> 
