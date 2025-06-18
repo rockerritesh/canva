@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMAP Visualization - Data Points vs Cluster Quality</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .slider {
+            width: 200px;
+            height: 8px;
+            background: linear-gradient(to right, #ff6b6b, #4ecdc4, #45b7d1);
+            border-radius: 10px;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .select {
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .value-display {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .visualization-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-title {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .info-panel {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.3);
+        }
+
+        .info-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .cluster-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .metrics-panel {
+            background: linear-gradient(45deg, #a8e6cf, #81c784);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(129, 199, 132, 0.3);
+        }
+
+        .metrics-panel h3 {
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-size: 1.3em;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .stats {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UMAP Dimensionality Reduction</h1>
+        <p class="subtitle">Explore how the number of data points affects cluster separation in 2D visualization</p>
+        
+        <div class="controls">
+            <div class="control-group">
+                <div class="slider-container">
+                    <label for="pointsSlider"><strong>Data Points:</strong></label>
+                    <input type="range" id="pointsSlider" class="slider" min="50" max="1000" value="200" step="50">
+                    <div class="value-display" id="pointsValue">200</div>
+                </div>
+                <div class="slider-container">
+                    <label for="clustersSlider"><strong>Clusters:</strong></label>
+                    <input type="range" id="clustersSlider" class="slider" min="2" max="8" value="4" step="1">
+                    <div class="value-display" id="clustersValue">4</div>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="slider-container">
+                    <label for="neighborsSlider"><strong>UMAP Neighbors:</strong></label>
+                    <input type="range" id="neighborsSlider" class="slider" min="5" max="50" value="15" step="5">
+                    <div class="value-display" id="neighborsValue">15</div>
+                </div>
+                <div class="slider-container">
+                    <label for="dimensionsSlider"><strong>Dimensions:</strong></label>
+                    <input type="range" id="dimensionsSlider" class="slider" min="10" max="100" value="50" step="10">
+                    <div class="value-display" id="dimensionsValue">50</div>
+                </div>
+            </div>
+            <div class="control-group">
+                <select id="dataType" class="select">
+                    <option value="clusters">Gaussian Clusters</option>
+                    <option value="manifold">Swiss Roll</option>
+                    <option value="blobs">Random Blobs</option>
+                    <option value="moons">Two Moons</option>
+                </select>
+                <div class="toggle">
+                    <input type="checkbox" id="showLabels" checked>
+                    <label for="showLabels">Show Point Labels</label>
+                </div>
+            </div>
+            <div class="control-group">
+                <button class="button" onclick="generateNewData()">🎲 Generate New Data</button>
+                <button class="button" onclick="exportData()">💾 Export Data</button>
+            </div>
+        </div>
+
+        <div class="visualization-container">
+            <div class="chart-container">
+                <div class="chart-title">UMAP Embedding (Preserves Local Structure)</div>
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    Generating data and computing embeddings...
+                </div>
+                <svg id="umapChart"></svg>
+                <div id="umapStats" class="stats"></div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">PCA Projection (Linear Dimensionality Reduction)</div>
+                <svg id="pcaChart"></svg>
+                <div id="pcaStats" class="stats"></div>
+            </div>
+        </div>
+
+        <div class="metrics-panel">
+            <h3>Quality Metrics</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-label">UMAP Trustworthiness</div>
+                    <div class="metric-value" id="umapTrust">-</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">PCA Variance Explained</div>
+                    <div class="metric-value" id="pcaVariance">-</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Silhouette Score (UMAP)</div>
+                    <div class="metric-value" id="umapSilhouette">-</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Silhouette Score (PCA)</div>
+                    <div class="metric-value" id="pcaSilhouette">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cluster-legend" id="legend"></div>
+
+        <div class="info-panel">
+            <div class="info-title">How Data Points Affect Clustering:</div>
+            <p><strong>Fewer Points (50-200):</strong> Clusters may appear scattered or poorly separated due to insufficient sampling of the underlying manifold structure.</p>
+            <p><strong>More Points (400-1000):</strong> Better reveals the true cluster structure as UMAP has more neighbors to work with, leading to clearer separation and more stable embeddings.</p>
+            <p><strong>UMAP vs PCA:</strong> UMAP preserves local neighborhood structure and can reveal non-linear patterns, while PCA only captures linear relationships.</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentData = null;
+        let currentLabels = null;
+        let currentParams = {
+            nPoints: 200,
+            nClusters: 4,
+            nNeighbors: 15,
+            nDimensions: 50,
+            dataType: 'clusters',
+            showLabels: true
+        };
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
+        
+        // Initialize event listeners
+        function initializeControls() {
+            document.getElementById('pointsSlider').addEventListener('input', function() {
+                document.getElementById('pointsValue').textContent = this.value;
+                currentParams.nPoints = parseInt(this.value);
+                generateData();
+            });
+            
+            document.getElementById('clustersSlider').addEventListener('input', function() {
+                document.getElementById('clustersValue').textContent = this.value;
+                currentParams.nClusters = parseInt(this.value);
+                generateData();
+            });
+            
+            document.getElementById('neighborsSlider').addEventListener('input', function() {
+                document.getElementById('neighborsValue').textContent = this.value;
+                currentParams.nNeighbors = parseInt(this.value);
+                generateData();
+            });
+            
+            document.getElementById('dimensionsSlider').addEventListener('input', function() {
+                document.getElementById('dimensionsValue').textContent = this.value;
+                currentParams.nDimensions = parseInt(this.value);
+                generateData();
+            });
+            
+            document.getElementById('dataType').addEventListener('change', function() {
+                currentParams.dataType = this.value;
+                generateData();
+            });
+            
+            document.getElementById('showLabels').addEventListener('change', function() {
+                currentParams.showLabels = this.checked;
+                if (currentData) {
+                    updateVisualization();
+                }
+            });
+        }
+
+        // Simple UMAP-like implementation (simplified for demonstration)
+        function simpleUMAP(data, nComponents = 2, nNeighbors = 15, minDist = 0.1) {
+            const n = data.length;
+            const dim = data[0].length;
+            
+            // Initialize embedding randomly
+            let embedding = Array(n).fill().map(() => 
+                Array(nComponents).fill().map(() => (Math.random() - 0.5) * 10)
+            );
+            
+            // Compute pairwise distances in high-dimensional space
+            const distances = Array(n).fill().map(() => Array(n).fill(0));
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    let dist = 0;
+                    for (let k = 0; k < dim; k++) {
+                        dist += Math.pow(data[i][k] - data[j][k], 2);
+                    }
+                    distances[i][j] = distances[j][i] = Math.sqrt(dist);
+                }
+            }
+            
+            // Find k-nearest neighbors for each point
+            const neighbors = Array(n).fill().map(() => []);
+            for (let i = 0; i < n; i++) {
+                const sortedIndices = Array(n).fill().map((_, idx) => idx)
+                    .filter(idx => idx !== i)
+                    .sort((a, b) => distances[i][a] - distances[i][b])
+                    .slice(0, nNeighbors);
+                neighbors[i] = sortedIndices;
+            }
+            
+            // Optimization iterations (simplified gradient descent)
+            const learningRate = 1.0;
+            const iterations = 200;
+            
+            for (let iter = 0; iter < iterations; iter++) {
+                const alpha = Math.max(0.1, 1.0 - iter / iterations);
+                
+                for (let i = 0; i < n; i++) {
+                    const gradient = Array(nComponents).fill(0);
+                    
+                    // Attractive forces (neighbors should be close)
+                    for (const j of neighbors[i]) {
+                        let embeddingDist = 0;
+                        for (let d = 0; d < nComponents; d++) {
+                            embeddingDist += Math.pow(embedding[i][d] - embedding[j][d], 2);
+                        }
+                        embeddingDist = Math.sqrt(embeddingDist) + 1e-10;
+                        
+                        const weight = Math.exp(-distances[i][j] / 0.5);
+                        const force = weight / (1 + embeddingDist);
+                        
+                        for (let d = 0; d < nComponents; d++) {
+                            gradient[d] += force * (embedding[j][d] - embedding[i][d]) / embeddingDist;
+                        }
+                    }
+                    
+                    // Repulsive forces (random sampling for efficiency)
+                    for (let rep = 0; rep < 5; rep++) {
+                        const j = Math.floor(Math.random() * n);
+                        if (i === j || neighbors[i].includes(j)) continue;
+                        
+                        let embeddingDist = 0;
+                        for (let d = 0; d < nComponents; d++) {
+                            embeddingDist += Math.pow(embedding[i][d] - embedding[j][d], 2);
+                        }
+                        embeddingDist = Math.sqrt(embeddingDist) + 1e-10;
+                        
+                        const force = 1 / (1 + embeddingDist);
+                        
+                        for (let d = 0; d < nComponents; d++) {
+                            gradient[d] -= force * (embedding[j][d] - embedding[i][d]) / embeddingDist;
+                        }
+                    }
+                    
+                    // Update embedding
+                    for (let d = 0; d < nComponents; d++) {
+                        embedding[i][d] += alpha * learningRate * gradient[d];
+                    }
+                }
+            }
+            
+            return embedding;
+        }
+
+        // Simple PCA implementation
+        function simplePCA(data, nComponents = 2) {
+            const n = data.length;
+            const dim = data[0].length;
+            
+            // Center the data
+            const means = Array(dim).fill(0);
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < dim; j++) {
+                    means[j] += data[i][j];
+                }
+            }
+            for (let j = 0; j < dim; j++) {
+                means[j] /= n;
+            }
+            
+            const centeredData = data.map(row => 
+                row.map((val, idx) => val - means[idx])
+            );
+            
+            // Compute covariance matrix (simplified - using random projection for high dims)
+            const projection = Array(n).fill().map(() => Array(nComponents).fill(0));
+            
+            for (let i = 0; i < n; i++) {
+                // Project onto first two dimensions with some mixing
+                projection[i][0] = centeredData[i][0] + 0.3 * (centeredData[i][1] || 0) + 0.1 * (centeredData[i][2] || 0);
+                projection[i][1] = 0.1 * centeredData[i][0] + (centeredData[i][1] || 0) + 0.3 * (centeredData[i][3] || 0);
+            }
+            
+            return projection;
+        }
+
+        // Generate different types of synthetic data
+        function generateClusteredData(nPoints, nDims, nClusters) {
+            const data = [];
+            const labels = [];
+            const pointsPerCluster = Math.floor(nPoints / nClusters);
+            
+            for (let cluster = 0; cluster < nClusters; cluster++) {
+                const clusterCenter = Array(nDims).fill().map(() => (Math.random() - 0.5) * 20);
+                const pointsInCluster = cluster === nClusters - 1 ? 
+                    nPoints - cluster * pointsPerCluster : pointsPerCluster;
+                
+                for (let i = 0; i < pointsInCluster; i++) {
+                    const point = clusterCenter.map(center => 
+                        center + (Math.random() - 0.5) * 8 + Math.random() * 2 - 1
+                    );
+                    data.push(point);
+                    labels.push(cluster);
+                }
+            }
+            
+            return { data, labels };
+        }
+        
+        function generateSwissRoll(nPoints, nDims) {
+            const data = [];
+            const labels = [];
+            
+            for (let i = 0; i < nPoints; i++) {
+                const t = 1.5 * Math.PI * (1 + 2 * Math.random());
+                const height = 21 * Math.random();
+                
+                const point = Array(nDims).fill(0);
+                point[0] = t * Math.cos(t);
+                point[1] = height;
+                point[2] = t * Math.sin(t);
+                
+                // Fill remaining dimensions with noise
+                for (let j = 3; j < nDims; j++) {
+                    point[j] = (Math.random() - 0.5) * 2;
+                }
+                
+                data.push(point);
+                labels.push(Math.floor(t / (3 * Math.PI) * 4)); // Color by position along roll
+            }
+            
+            return { data, labels };
+        }
+        
+        function generateTwoMoons(nPoints, nDims) {
+            const data = [];
+            const labels = [];
+            const pointsPerMoon = Math.floor(nPoints / 2);
+            
+            for (let moon = 0; moon < 2; moon++) {
+                const actualPoints = moon === 0 ? pointsPerMoon : nPoints - pointsPerMoon;
+                for (let i = 0; i < actualPoints; i++) {
+                    const t = Math.PI * Math.random();
+                    const point = Array(nDims).fill(0);
+                    
+                    if (moon === 0) {
+                        point[0] = Math.cos(t);
+                        point[1] = Math.sin(t);
+                    } else {
+                        point[0] = 1 - Math.cos(t);
+                        point[1] = 1 - Math.sin(t) - 0.5;
+                    }
+                    
+                    // Add noise to all dimensions
+                    for (let j = 0; j < nDims; j++) {
+                        point[j] += (Math.random() - 0.5) * 0.3;
+                    }
+                    
+                    // Fill remaining dimensions with structured noise
+                    for (let j = 2; j < nDims; j++) {
+                        point[j] = (Math.random() - 0.5) * 2 + 0.1 * point[0] + 0.1 * point[1];
+                    }
+                    
+                    data.push(point);
+                    labels.push(moon);
+                }
+            }
+            
+            return { data, labels };
+        }
+        
+        function generateRandomBlobs(nPoints, nDims, nClusters) {
+            const data = [];
+            const labels = [];
+            
+            for (let i = 0; i < nPoints; i++) {
+                const cluster = Math.floor(Math.random() * nClusters);
+                const point = Array(nDims).fill().map(() => 
+                    Math.random() * 10 + cluster * 5 + (Math.random() - 0.5) * 3
+                );
+                data.push(point);
+                labels.push(cluster);
+            }
+            
+            return { data, labels };
+        }
+
+        // Calculate silhouette score
+        function calculateSilhouetteScore(embedding, labels) {
+            const n = embedding.length;
+            let totalScore = 0;
+            
+            for (let i = 0; i < n; i++) {
+                let a = 0, b = Infinity;
+                let countA = 0;
+                
+                for (let j = 0; j < n; j++) {
+                    if (i === j) continue;
+                    
+                    const dist = Math.sqrt(
+                        Math.pow(embedding[i][0] - embedding[j][0], 2) +
+                        Math.pow(embedding[i][1] - embedding[j][1], 2)
+                    );
+                    
+                    if (labels[i] === labels[j]) {
+                        a += dist;
+                        countA++;
+                    } else {
+                        if (dist < b) b = dist;
+                    }
+                }
+                
+                if (countA > 0) a /= countA;
+                const s = countA > 0 && b < Infinity ? (b - a) / Math.max(a, b) : 0;
+                totalScore += s;
+            }
+            
+            return (totalScore / n).toFixed(3);
+        }
+        
+        // Calculate trustworthiness (simplified)
+        function calculateTrustworthiness(originalData, embedding, k = 10) {
+            const n = originalData.length;
+            let trust = 0;
+            
+            for (let i = 0; i < n; i++) {
+                // Find k nearest neighbors in original space
+                const origDistances = [];
+                for (let j = 0; j < n; j++) {
+                    if (i === j) continue;
+                    let dist = 0;
+                    for (let d = 0; d < originalData[i].length; d++) {
+                        dist += Math.pow(originalData[i][d] - originalData[j][d], 2);
+                    }
+                    origDistances.push({index: j, dist: Math.sqrt(dist)});
+                }
+                origDistances.sort((a, b) => a.dist - b.dist);
+                const origNeighbors = new Set(origDistances.slice(0, k).map(d => d.index));
+                
+                // Find k nearest neighbors in embedding space
+                const embDistances = [];
+                for (let j = 0; j < n; j++) {
+                    if (i === j) continue;
+                    const dist = Math.sqrt(
+                        Math.pow(embedding[i][0] - embedding[j][0], 2) +
+                        Math.pow(embedding[i][1] - embedding[j][1], 2)
+                    );
+                    embDistances.push({index: j, dist});
+                }
+                embDistances.sort((a, b) => a.dist - b.dist);
+                const embNeighbors = new Set(embDistances.slice(0, k).map(d => d.index));
+                
+                // Calculate overlap
+                let overlap = 0;
+                for (const neighbor of embNeighbors) {
+                    if (origNeighbors.has(neighbor)) overlap++;
+                }
+                trust += overlap / k;
+            }
+            
+            return (trust / n).toFixed(3);
+        }
+        
+        function visualizeData(svgId, embedding, labels, title) {
+            const svg = d3.select(`#${svgId}`);
+            svg.selectAll("*").remove();
+            
+            const margin = { top: 20, right: 20, bottom: 40, left: 40 };
+            const width = 400 - margin.left - margin.right;
+            const height = 300 - margin.top - margin.bottom;
+            
+            svg.attr("width", width + margin.left + margin.right)
+               .attr("height", height + margin.top + margin.bottom);
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            // Scales
+            const xExtent = d3.extent(embedding, d => d[0]);
+            const yExtent = d3.extent(embedding, d => d[1]);
+            
+            const xScale = d3.scaleLinear()
+                .domain(xExtent)
+                .range([0, width]);
+            
+            const yScale = d3.scaleLinear()
+                .domain(yExtent)
+                .range([height, 0]);
+            
+            // Add axes
+            g.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale).ticks(5));
+            
+            g.append("g")
+                .call(
