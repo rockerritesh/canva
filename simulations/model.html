@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Performance Radar Chart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-purple {
+            background-color: #8b5cf6;
+            color: white;
+        }
+
+        .btn-purple:hover {
+            background-color: #7c3aed;
+        }
+
+        .btn-red {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-red:hover {
+            background-color: #dc2626;
+        }
+
+        .active {
+            opacity: 1;
+        }
+
+        .description {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 2rem;
+        }
+
+        .insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .insight-card {
+            background-color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-list {
+            list-style: none;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .insight-list li {
+            margin-bottom: 0.25rem;
+        }
+
+        .insight-list li::before {
+            content: "• ";
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .tooltip-value {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">AI Model Performance Comparison</h1>
+            
+            <div class="button-group">
+                <button class="btn btn-purple active" id="safetyBtn" onclick="setView('safety')">Safety Metrics</button>
+                <button class="btn btn-secondary" id="intentBtn" onclick="setView('intent')">Intent Types</button>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary active" id="cautiousBtn" onclick="setMetric('cautious')">Cautious Responses</button>
+                <button class="btn btn-secondary" id="harmfulBtn" onclick="setMetric('harmful')">Harmful Responses</button>
+            </div>
+
+            <div class="description">
+                <p><strong>Showing:</strong> <span id="currentView">Safety Metrics</span> - <span id="currentMetric">Cautious</span> Response Percentages</p>
+                <p><strong>Note:</strong> Higher values indicate more <span id="metricDescription">cautious/safe</span> responses</p>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="radarChart"></canvas>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #3b82f6;"></div>
+                <span>Claude</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #10b981;"></div>
+                <span>GPT-4</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #f59e0b;"></div>
+                <span>Qwen-8B</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ef4444;"></div>
+                <span>Llama-3.1-8B</span>
+            </div>
+        </div>
+
+        <div class="insights" id="insights">
+            <!-- Insights will be dynamically populated -->
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title" id="tooltipTitle"></div>
+        <div id="tooltipContent"></div>
+    </div>
+
+    <script>
+        // Data
+        const safetyData = [
+            {
+                category: 'Harmful Instructions',
+                Claude_Cautious: 72.7,
+                Claude_Harmful: 70.0,
+                GPT4_Cautious: 45.5,
+                GPT4_Harmful: 63.6,
+                Qwen_Cautious: 0.0,
+                Qwen_Harmful: 54.5,
+                Llama_Cautious: 54.5,
+                Llama_Harmful: 0.0
+            },
+            {
+                category: 'Harmful Response',
+                Claude_Cautious: 0.0,
+                Claude_Harmful: 0.0,
+                GPT4_Cautious: 27.3,
+                GPT4_Harmful: 63.6,
+                Qwen_Cautious: 30.0,
+                Qwen_Harmful: 70.0,
+                Llama_Cautious: 54.5,
+                Llama_Harmful: 9.1
+            },
+            {
+                category: 'Jailbreak Prompt',
+                Claude_Cautious: 76.9,
+                Claude_Harmful: 20.0,
+                GPT4_Cautious: 42.9,
+                GPT4_Harmful: 28.6,
+                Qwen_Cautious: 0.0,
+                Qwen_Harmful: 100.0,
+                Llama_Cautious: 23.1,
+                Llama_Harmful: 30.0
+            },
+            {
+                category: 'XSTest Safe',
+                Claude_Cautious: 25.0,
+                Claude_Harmful: 0.0,
+                GPT4_Cautious: 16.7,
+                GPT4_Harmful: 8.3,
+                Qwen_Cautious: 0.0,
+                Qwen_Harmful: 25.0,
+                Llama_Cautious: 25.0,
+                Llama_Harmful: 0.0
+            },
+            {
+                category: 'XSTest Unsafe',
+                Claude_Cautious: 74.7,
+                Claude_Harmful: 25.0,
+                GPT4_Cautious: 63.6,
+                GPT4_Harmful: 27.3,
+                Qwen_Cautious: 54.5,
+                Qwen_Harmful: 36.4,
+                Llama_Cautious: 36.4,
+                Llama_Harmful: 9.1
+            }
+        ];
+
+        const intentData = [
+            {
+                category: 'Rephrase',
+                Claude_Cautious: 25.0,
+                Claude_Harmful: 18.2,
+                GPT4_Cautious: 50.0,
+                GPT4_Harmful: 33.3,
+                Qwen_Cautious: 10.0,
+                Qwen_Harmful: 20.0,
+                Llama_Cautious: 27.1,
+                Llama_Harmful: 27.3
+            },
+            {
+                category: 'Sentiment Analysis',
+                Claude_Cautious: 28.6,
+                Claude_Harmful: 6.3,
+                GPT4_Cautious: 0.0,
+                GPT4_Harmful: 0.0,
+                Qwen_Cautious: 0.0,
+                Qwen_Harmful: 0.0,
+                Llama_Cautious: 0.0,
+                Llama_Harmful: 0.0
+            },
+            {
+                category: 'Translate',
+                Claude_Cautious: 83.3,
+                Claude_Harmful: 8.3,
+                GPT4_Cautious: 50.0,
+                GPT4_Harmful: 33.3,
+                Qwen_Cautious: 10.0,
+                Qwen_Harmful: 70.0,
+                Llama_Cautious: 20.0,
+                Llama_Harmful: 8.3
+            }
+        ];
+
+        // State
+        let currentView = 'safety';
+        let currentMetric = 'cautious';
+        let chart;
+
+        // Colors
+        const colors = {
+            Claude: '#3b82f6',
+            'GPT-4': '#10b981',
+            'Qwen-8B': '#f59e0b',
+            'Llama-3.1-8B': '#ef4444'
+        };
+
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'radar',
+                data: getChartData(),
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 4,
+                            hoverRadius: 6
+                        },
+                        line: {
+                            borderWidth: 2
+                        }
+                    },
+                    onHover: (event, activeElements) => {
+                        const tooltip = document.getElementById('tooltip');
+                        if (activeElements.length > 0) {
+                            const element = activeElements[0];
+                            const datasetIndex = element.datasetIndex;
+                            const index = element.index;
+                            const dataset = chart.data.datasets[datasetIndex];
+                            const category = chart.data.labels[index];
+                            const value = dataset.data[index];
+                            
+                            showTooltip(event, category, dataset.label, value);
+                        } else {
+                            hideTooltip();
+                        }
+                    }
+                }
+            });
+        }
+
+        function getChartData() {
+            const dataSource = currentView === 'safety' ? safetyData : intentData;
+            const metricSuffix = currentMetric === 'cautious' ? '_Cautious' : '_Harmful';
+            
+            const labels = dataSource.map(item => item.category);
+            
+            return {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Claude',
+                        data: dataSource.map(item => item[`Claude${metricSuffix}`]),
+                        borderColor: colors.Claude,
+                        backgroundColor: colors.Claude + '20',
+                        pointBackgroundColor: colors.Claude,
+                        pointBorderColor: colors.Claude,
+                        pointHoverBackgroundColor: colors.Claude,
+                        pointHoverBorderColor: colors.Claude,
+                    },
+                    {
+                        label: 'GPT-4',
+                        data: dataSource.map(item => item[`GPT4${metricSuffix}`]),
+                        borderColor: colors['GPT-4'],
+                        backgroundColor: colors['GPT-4'] + '20',
+                        pointBackgroundColor: colors['GPT-4'],
+                        pointBorderColor: colors['GPT-4'],
+                        pointHoverBackgroundColor: colors['GPT-4'],
+                        pointHoverBorderColor: colors['GPT-4'],
+                    },
+                    {
+                        label: 'Qwen-8B',
+                        data: dataSource.map(item => item[`Qwen${metricSuffix}`]),
+                        borderColor: colors['Qwen-8B'],
+                        backgroundColor: colors['Qwen-8B'] + '20',
+                        pointBackgroundColor: colors['Qwen-8B'],
+                        pointBorderColor: colors['Qwen-8B'],
+                        pointHoverBackgroundColor: colors['Qwen-8B'],
+                        pointHoverBorderColor: colors['Qwen-8B'],
+                    },
+                    {
+                        label: 'Llama-3.1-8B',
+                        data: dataSource.map(item => item[`Llama${metricSuffix}`]),
+                        borderColor: colors['Llama-3.1-8B'],
+                        backgroundColor: colors['Llama-3.1-8B'] + '20',
+                        pointBackgroundColor: colors['Llama-3.1-8B'],
+                        pointBorderColor: colors['Llama-3.1-8B'],
+                        pointHoverBackgroundColor: colors['Llama-3.1-8B'],
+                        pointHoverBorderColor: colors['Llama-3.1-8B'],
+                    }
+                ]
+            };
+        }
+
+        function showTooltip(event, category, model, value) {
+            const tooltip = document.getElementById('tooltip');
+            const tooltipTitle = document.getElementById('tooltipTitle');
+            const tooltipContent = document.getElementById('tooltipContent');
+            
+            tooltipTitle.textContent = category;
+            tooltipContent.innerHTML = `<div class="tooltip-value" style="color: ${colors[model]}">${model}: ${value.toFixed(1)}%</div>`;
+            
+            tooltip.style.left = event.native.pageX + 10 + 'px';
+            tooltip.style.top = event.native.pageY - 10 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('show');
+        }
+
+        function setView(view) {
+            currentView = view;
+            updateButtons();
+            updateChart();
+            updateInsights();
+        }
+
+        function setMetric(metric) {
+            currentMetric = metric;
+            updateButtons();
+            updateChart();
+            updateInsights();
+        }
+
+        function updateButtons() {
+            // Update view buttons
+            document.getElementById('safetyBtn').className = currentView === 'safety' ? 'btn btn-purple active' : 'btn btn-secondary';
+            document.getElementById('intentBtn').className = currentView === 'intent' ? 'btn btn-purple active' : 'btn btn-secondary';
+            
+            // Update metric buttons
+            document.getElementById('cautiousBtn').className = currentMetric === 'cautious' ? 'btn btn-primary active' : 'btn btn-secondary';
+            document.getElementById('harmfulBtn').className = currentMetric === 'harmful' ? 'btn btn-red active' : 'btn btn-secondary';
+            
+            // Update descriptions
+            document.getElementById('currentView').textContent = currentView === 'safety' ? 'Safety Metrics' : 'Intent Types';
+            document.getElementById('currentMetric').textContent = currentMetric === 'cautious' ? 'Cautious' : 'Harmful';
+            document.getElementById('metricDescription').textContent = currentMetric === 'cautious' ? 'cautious/safe' : 'harmful/unsafe';
+        }
+
+        function updateChart() {
+            chart.data = getChartData();
+            chart.update();
+        }
+
+        function updateInsights() {
+            const insights = document.getElementById('insights');
+            
+            if (currentView === 'safety') {
+                insights.innerHTML = `
+                    <div class="insight-card">
+                        <h3 class="insight-title">Safety Metrics - Cautious Responses</h3>
+                        <ul class="insight-list">
+                            <li>Claude shows consistently high caution across most categories</li>
+                            <li>GPT-4 demonstrates moderate caution levels</li>
+                            <li>Qwen-8B shows variable performance across categories</li>
+                            <li>Llama-3.1-8B has mixed cautious response patterns</li>
+                        </ul>
+                    </div>
+                    <div class="insight-card">
+                        <h3 class="insight-title">Safety Metrics - Harmful Responses</h3>
+                        <ul class="insight-list">
+                            <li>Claude maintains low harmful response rates</li>
+                            <li>GPT-4 shows moderate harmful response rates</li>
+                            <li>Qwen-8B has high harmful responses in some categories</li>
+                            <li>Llama-3.1-8B shows variable harmful response patterns</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                insights.innerHTML = `
+                    <div class="insight-card">
+                        <h3 class="insight-title">Intent Types - Cautious Responses</h3>
+                        <ul class="insight-list">
+                            <li>Claude shows high caution in translation tasks (83.3%)</li>
+                            <li>GPT-4 performs moderately across intent types</li>
+                            <li>Qwen-8B shows low caution in most intent categories</li>
+                            <li>Llama-3.1-8B has moderate caution in rephrase tasks</li>
+                        </ul>
+                    </div>
+                    <div class="insight-card">
+                        <h3 class="insight-title">Intent Types - Harmful Responses</h3>
+                        <ul class="insight-list">
+                            <li>Claude maintains low harmful responses across intent types</li>
+                            <li>GPT-4 shows moderate harmful responses in rephrase/translate</li>
+                            <li>Qwen-8B has high harmful responses in translation (70%)</li>
+                            <li>Llama-3.1-8B shows variable performance across intents</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initChart();
+            updateInsights();
+        });
+    </script>
+</body>
+</html>
