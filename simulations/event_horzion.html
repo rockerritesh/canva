@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Hole Event Horizon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .universe {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #000428 0%, #004e92 50%, #000 100%);
+            overflow: hidden;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 4s infinite linear;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .black-hole-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+        }
+
+        .event-horizon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: #000;
+            box-shadow: 
+                0 0 50px rgba(0, 0, 0, 0.9),
+                inset 0 0 50px rgba(255, 255, 255, 0.1);
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 50px rgba(0, 0, 0, 0.9),
+                    inset 0 0 50px rgba(255, 255, 255, 0.1);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 80px rgba(0, 0, 0, 1),
+                    inset 0 0 30px rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        .accretion-disk {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                rgba(255, 165, 0, 0.8) 45deg,
+                rgba(255, 69, 0, 0.9) 90deg,
+                rgba(255, 255, 255, 0.7) 135deg,
+                rgba(255, 165, 0, 0.8) 180deg,
+                transparent 225deg,
+                rgba(255, 140, 0, 0.6) 270deg,
+                rgba(255, 165, 0, 0.8) 315deg,
+                transparent 360deg
+            );
+            animation: rotate 8s infinite linear;
+            opacity: 0.8;
+        }
+
+        .accretion-disk::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: #000;
+        }
+
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .gravitational-lensing {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: lensing 6s infinite ease-in-out;
+        }
+
+        @keyframes lensing {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+
+        .matter-stream {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 165, 0, 0.8);
+            border-radius: 50%;
+            animation: spiral 4s infinite linear;
+        }
+
+        .matter-stream:nth-child(1) {
+            top: 20%;
+            left: 20%;
+            animation-delay: 0s;
+        }
+
+        .matter-stream:nth-child(2) {
+            top: 30%;
+            right: 20%;
+            animation-delay: 1s;
+        }
+
+        .matter-stream:nth-child(3) {
+            bottom: 20%;
+            left: 30%;
+            animation-delay: 2s;
+        }
+
+        .matter-stream:nth-child(4) {
+            bottom: 30%;
+            right: 30%;
+            animation-delay: 3s;
+        }
+
+        @keyframes spiral {
+            0% {
+                transform: rotate(0deg) translateX(150px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: rotate(360deg) translateX(50px) rotate(-360deg);
+                opacity: 0;
+            }
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 300px;
+        }
+
+        .info-panel h2 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .jets {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 200px;
+            background: linear-gradient(to top, 
+                transparent 0%, 
+                rgba(138, 43, 226, 0.8) 20%, 
+                rgba(75, 0, 130, 0.9) 50%, 
+                rgba(138, 43, 226, 0.8) 80%, 
+                transparent 100%);
+            animation: jet-pulse 2s infinite ease-in-out;
+        }
+
+        .jets::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) rotate(180deg);
+            width: 2px;
+            height: 200px;
+            background: linear-gradient(to top, 
+                transparent 0%, 
+                rgba(138, 43, 226, 0.8) 20%, 
+                rgba(75, 0, 130, 0.9) 50%, 
+                rgba(138, 43, 226, 0.8) 80%, 
+                transparent 100%);
+        }
+
+        @keyframes jet-pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .hawking-radiation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle at center,
+                transparent 70%,
+                rgba(0, 255, 255, 0.1) 80%,
+                rgba(255, 255, 255, 0.2) 90%,
+                transparent 100%
+            );
+            animation: radiation 5s infinite ease-in-out;
+        }
+
+        @keyframes radiation {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="universe">
+        <div class="stars"></div>
+        
+        <div class="black-hole-container">
+            <!-- Gravitational Lensing Effect -->
+            <div class="gravitational-lensing"></div>
+            
+            <!-- Hawking Radiation -->
+            <div class="hawking-radiation"></div>
+            
+            <!-- Accretion Disk -->
+            <div class="accretion-disk"></div>
+            
+            <!-- Relativistic Jets -->
+            <div class="jets"></div>
+            
+            <!-- Event Horizon -->
+            <div class="event-horizon"></div>
+            
+            <!-- Matter Streams -->
+            <div class="matter-stream"></div>
+            <div class="matter-stream"></div>
+            <div class="matter-stream"></div>
+            <div class="matter-stream"></div>
+        </div>
+
+        <div class="info-panel">
+            <h2>🕳️ Black Hole Event Horizon</h2>
+            <p><strong>Event Horizon:</strong> The point of no return around a black hole</p>
+            <p><strong>Accretion Disk:</strong> Hot, glowing matter spiraling into the black hole</p>
+            <p><strong>Relativistic Jets:</strong> High-energy particle streams</p>
+            <p><strong>Hawking Radiation:</strong> Theoretical radiation emitted by black holes</p>
+            <p><strong>Gravitational Lensing:</strong> Bending of light around massive objects</p>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" onclick="toggleAnimation()">Pause/Resume</button>
+            <button class="control-btn" onclick="toggleJets()">Toggle Jets</button>
+            <button class="control-btn" onclick="toggleRadiation()">Toggle Radiation</button>
+        </div>
+    </div>
+
+    <script>
+        let animationsPaused = false;
+        let jetsVisible = true;
+        let radiationVisible = true;
+
+        function toggleAnimation() {
+            const elements = document.querySelectorAll('.accretion-disk, .matter-stream, .gravitational-lensing, .event-horizon, .jets, .hawking-radiation, .stars');
+            
+            if (animationsPaused) {
+                elements.forEach(el => {
+                    el.style.animationPlayState = 'running';
+                });
+                animationsPaused = false;
+            } else {
+                elements.forEach(el => {
+                    el.style.animationPlayState = 'paused';
+                });
+                animationsPaused = true;
+            }
+        }
+
+        function toggleJets() {
+            const jets = document.querySelector('.jets');
+            if (jetsVisible) {
+                jets.style.opacity = '0';
+                jetsVisible = false;
+            } else {
+                jets.style.opacity = '1';
+                jetsVisible = true;
+            }
+        }
+
+        function toggleRadiation() {
+            const radiation = document.querySelector('.hawking-radiation');
+            if (radiationVisible) {
+                radiation.style.opacity = '0';
+                radiationVisible = false;
+            } else {
+                radiation.style.opacity = '0.5';
+                radiationVisible = true;
+            }
+        }
+
+        // Add some interactive effects
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX / window.innerWidth;
+            const mouseY = e.clientY / window.innerHeight;
+            
+            const stars = document.querySelector('.stars');
+            stars.style.transform = `translate(${mouseX * 10}px, ${mouseY * 10}px)`;
+            
+            const lensing = document.querySelector('.gravitational-lensing');
+            lensing.style.transform = `translate(-50%, -50%) scale(${1 + mouseX * 0.1})`;
+        });
+
+        // Add click effect on black hole
+        document.querySelector('.event-horizon').addEventListener('click', () => {
+            const horizon = document.querySelector('.event-horizon');
+            horizon.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            setTimeout(() => {
+                horizon.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 300);
+        });
+    </script>
+</body>
+</html>
