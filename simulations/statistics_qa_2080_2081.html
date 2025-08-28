@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Complete Statistics – Questions & Answers (Sets 2080 & 2081)</title>
+<style>
+  :root{
+    --bg:#0f172a;         /* slate-900 */
+    --panel:#111827;      /* gray-900 */
+    --muted:#94a3b8;      /* slate-400 */
+    --text:#e5e7eb;       /* gray-200 */
+    --accent:#22d3ee;     /* cyan-400 */
+    --ring:#38bdf8;       /* sky-400 */
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#ffffff; --panel:#f8fafc; --muted:#475569; --text:#0f172a; --accent:#0891b2; --ring:#0ea5e9; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+  header { padding:2rem 1rem; text-align:center; border-bottom:1px solid rgba(148,163,184,.25); background:linear-gradient(180deg, rgba(56,189,248,.08), transparent); }
+  h1 { margin:.2rem 0 0; font-weight:800; letter-spacing:.3px; }
+  .sub { color:var(--muted); margin:.2rem 0 0; font-size:.95rem; }
+  main { max-width: 980px; margin: 2rem auto; padding: 0 1rem 4rem; }
+  .toc { background: var(--panel); border:1px solid rgba(148,163,184,.25); border-radius:16px; padding:1rem; margin-bottom:2rem; }
+  .toc h2 { margin:.2rem 0 1rem; font-size:1.1rem; color:var(--accent); }
+  .toc a { color: var(--text); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  details { border:1px solid rgba(148,163,184,.25); border-radius:16px; background:var(--panel); padding: .6rem 1rem 1rem; margin: 1rem 0; }
+  summary { cursor: pointer; font-weight: 700; outline: none; }
+  details[open] { box-shadow: 0 0 0 3px rgba(56,189,248,.25); }
+  code, pre { background: rgba(148,163,184,.15); padding: .1rem .4rem; border-radius: 6px; }
+  .src { font-size:.9rem; color:var(--muted); }
+  .badge { display:inline-block; font-size:.75rem; padding:.15rem .5rem; border-radius:999px; border:1px solid rgba(148,163,184,.35); color:var(--muted); margin-left:.5rem; }
+  footer { text-align:center; color:var(--muted); padding:2rem 1rem; border-top:1px solid rgba(148,163,184,.25); }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Complete Statistics – Questions & Answers</h1>
+    <p class="sub">Compiled from sets <strong>2080-regular</strong> & <strong>2081_regular</strong>. Use the table of contents below or expand each question.</p>
+  </header>
+  <main>
+    <nav class="toc">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li><a href="#set2080">Set: 2080-regular</a></li>
+        <li><a href="#set2081">Set: 2081_regular</a></li>
+      </ol>
+    </nav>
+
+    <section id="set2080">
+      <h2>Set: 2080-regular <span class="badge">15 Questions</span></h2>
+
+      <details>
+        <summary>Q1. Mean, Median, Mode and Correction Problem</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p><strong>Part A – Differences</strong></p>
+        <ul>
+          <li><em>Mean</em>: Sum of all values divided by number of values (affected by outliers). Example: {2,4,6,8,10} → 6.</li>
+          <li><em>Median</em>: Middle value when ordered (robust to outliers). Example: {2,4,6,8,10} → 6.</li>
+          <li><em>Mode</em>: Most frequent value; can be none/one/many. Example: {2,3,4,4,5} → 4.</li>
+        </ul>
+        <p><strong>Part B – Correction</strong></p>
+        <p>Given n=100, mean=40, SD=5; incorrect 53 replaced by 83.</p>
+        <ol>
+          <li>Original sum = 100×40 = 4000 → corrected sum = 4030 → new mean = 40.3.</li>
+          <li>Original Σx² = n(SD² + mean²) = 100(25 + 1600) = 162,500.</li>
+          <li>Corrected Σx² = 162,500 − 53² + 83² = 166,580.</li>
+          <li>New SD = √[(166,580/100) − (40.3)²] = √41.71 = <strong>6.46</strong>.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Q2. Bayes' Theorem – Three Machines</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>Production weights: M1 0.2, M2 0.3, M3 0.5; non-defective rates: 0.95, 0.97, 0.99.</p>
+        <p>P(ND) = 0.976. Posterior probabilities for a non‑defective chip:</p>
+        <ul>
+          <li>P(M1|ND)=0.195</li>
+          <li>P(M2|ND)=0.298</li>
+          <li>P(M3|ND)=0.507</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q3. Binomial vs Negative Binomial</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ul>
+          <li><strong>Binomial</strong>: fixed <em>n</em>, variable successes <em>r</em>. P(X=r)=C(n,r)p^r(1-p)^{n-r}.</li>
+          <li><strong>Negative Binomial</strong>: fixed successes <em>r</em>, variable trials <em>n</em>. P(X=n)=C(n-1,r-1)p^r(1-p)^{n-r}.</li>
+          <li>Both: independent trials, constant p, discrete.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q4. Poisson – Flaws in Copper Wire</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>λ=2.3 per mm. P(X=2)=0.265; P(X≥2)=0.669; P(X≤2)=0.596.</p>
+      </details>
+
+      <details>
+        <summary>Q5. Continuous RV with f(x)=k e^{-2x}, x≥0</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ul>
+          <li>k=2</li>
+          <li>E[X]=1/2</li>
+          <li>F(x)=1−e^{-2x}</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q6. Normal – Light Bulb Life</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>Assuming μ=250, σ=50:</p>
+        <ul>
+          <li>P(X&gt;300)=0.1587</li>
+          <li>P(190&lt;X&lt;270)=0.540</li>
+          <li>P(X≤260)=0.5793</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q7. Sampling Without Replacement (Population {5,9,13,17})</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ul>
+          <li>All ordered samples of size 2 listed (12 total).</li>
+          <li>Unbiasedness: mean of sample means = population mean 11.</li>
+          <li>SE = (σ/√n)√((N−n)/(N−1)) = 2.58.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q8. Sampling Distribution of Mean (μ=23, σ=5, n=40)</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ul>
+          <li>SE=0.79</li>
+          <li>P( X̄&gt;26 ) ≈ 0</li>
+          <li>P(23.8&lt;X̄&lt;25.6)=0.157</li>
+          <li>P( X̄&lt;23.4 )=0.695</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q9. 95% CI for Mean (n=12, x̄=163.99, s=3.043)</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>t<sub>0.025,11</sub>=2.201, SE=0.878 → CI=(162.06, 165.92) minutes.</p>
+      </details>
+
+      <details>
+        <summary>Q10. One‑Way ANOVA (3 Batches)</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>F=4.28, F<sub>crit</sub>(2,15)=3.68 → Reject H₀. Significant differences among batches.</p>
+      </details>
+
+      <details>
+        <summary>Q11. Chi‑Square Test of Independence (Hypertension × Smoking)</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>χ²=12.85, χ²<sub>crit</sub>(2)=5.991 → Reject H₀. Variables are dependent.</p>
+      </details>
+
+      <details>
+        <summary>Q12. Test of Significance for Difference of Proportions</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ol>
+          <li>Set H₀: p₁=p₂</li>
+          <li>Compute pooled p̂</li>
+          <li>Z = (p̂₁−p̂₂)/√[p̂(1−p̂)(1/n₁+1/n₂)]</li>
+          <li>Decision via critical value / p‑value</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Q13. Linear Regression (NOx vs Humidity)</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <p>Regression: <strong>Y = 1.581 − 0.0182X</strong>. For X=50 → Y≈0.67.</p>
+      </details>
+
+      <details>
+        <summary>Q14. Correlation and Coefficient of Determination</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ul>
+          <li>Pearson r in [−1,1]; r² is explained variance.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q15. Descriptive Statistics &amp; CI (Sales, n=54)</summary>
+        <div class="src">Source: 2080-regular.pdf</div>
+        <ul>
+          <li>x̄=77.91, s=11.70</li>
+          <li>95% CI: (74.71, 81.11)</li>
+        </ul>
+      </details>
+    </section>
+
+    <section id="set2081">
+      <h2>Set: 2081_regular <span class="badge">15 Questions</span></h2>
+
+      <details>
+        <summary>Q1. Arithmetic Mean – Merits & Demerits + Correction</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p><strong>Merits</strong>: simple, uses all data, analytically convenient, stable under sampling.</p>
+        <p><strong>Demerits</strong>: affected by outliers, undefined for open‑ended classes, may misrepresent skewed data.</p>
+        <p><strong>Correction</strong>: n=20, mean=10, SD=2; 8→12 ⇒ new mean 10.2, new SD ≈ 2.00.</p>
+      </details>
+
+      <details>
+        <summary>Q2. Probability Axioms + Email Spam Bayes</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ul>
+          <li>Axioms: non‑negativity; P(S)=1; additivity for disjoint events.</li>
+          <li>P(spam)=0.016; P(Account#2 | spam)=0.25.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q3. Poisson – Meteors</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ul>
+          <li>1 minute (λ=3.62): P(0)=0.027.</li>
+          <li>2 minutes (λ=7.24): P(5≤X≤8)≈0.634; P(X≤3)≈0.089.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q4. Negative Binomial – Viral Fever</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>P(10th child is 3rd infected) = C(9,2)(0.4)³(0.6)⁷ ≈ 0.064. Expected infected for r=3, p=0.4 is 7.5.</p>
+      </details>
+
+      <details>
+        <summary>Q5. Standard Normal – Definition & Properties</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ul>
+          <li>μ=0, σ=1; pdf (1/√(2π))e^{−x²/2}. Symmetric, bell‑shaped, total area 1, 68‑95‑99.7 rule.</li>
+          <li>Normal approximation to Binomial: np≥5 and n(1−p)≥5.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q6. Normal – Finding μ and σ from Percentiles</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>Given 44% below 61 (z≈−0.15) and 4% above 80 (z≈1.75): σ=10, μ=62.5. P(X&gt;65)=40.13%.</p>
+      </details>
+
+      <details>
+        <summary>Q7. Sampling Distribution (Population {1,4,8,11})</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ul>
+          <li>With replacement pairs listed (16 total).</li>
+          <li>μ=6; σ=√14.5=3.81; mean of sample means = 6; S.E.=2.69.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q8. Definitions – Parameter, Statistic, S.E., Marginal Error</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>Examples provided; E=1.96×S.E.</p>
+      </details>
+
+      <details>
+        <summary>Q9. Correlation vs Regression – Key Differences</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ul>
+          <li>Correlation: strength + direction, unitless, symmetric.</li>
+          <li>Regression: predictive, directional, has units, depends on scale.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Q10. Multiple Regression (X₃ on X₁, X₂)</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>Model: X₃ = 104.67 − 2.5X₁ − 3.2X₂. For X₁=10, X₂=8 → X₃=54.07.</p>
+      </details>
+
+      <details>
+        <summary>Q11. Hypothesis Testing – Seven Steps</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ol>
+          <li>State H₀/H₁; choose α; pick test; critical region; compute statistic; decide; conclude.</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary>Q12. One‑Way ANOVA – Teaching Methods</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>F=7.67, F<sub>crit</sub>(2,9)=4.26 → Reject H₀ (methods differ).</p>
+      </details>
+
+      <details>
+        <summary>Q13. Chi‑Square – Interest vs Math Ability</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>χ²=47.02 &gt; 9.488 → Reject H₀; significant relationship.</p>
+      </details>
+
+      <details>
+        <summary>Q14. Two‑Proportion Z‑Test (Machines A vs B)</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <p>p̂=0.0317, Z=0.106, α=0.01 → Fail to reject H₀; no significant difference.</p>
+      </details>
+
+      <details>
+        <summary>Q15. Sleep Hours – Mean, SD, 95% CI</summary>
+        <div class="src">Source: 2081_regular.pdf</div>
+        <ul>
+          <li>n=45, x̄=6.76, s=4.42, SE=0.659</li>
+          <li>95% CI: (5.43, 8.09) hours</li>
+        </ul>
+      </details>
+
+    </section>
+  </main>
+  <footer>
+    <p>Prepared for study and revision. Print friendly and mobile responsive.</p>
+  </footer>
+</body>
+</html>
