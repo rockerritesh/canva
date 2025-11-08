@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graham's Scan Algorithm</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: #f3f4f6;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    
+    h2 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #1f2937;
+    }
+    
+    .canvas-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    canvas {
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .description {
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      color: #1e3a8a;
+      font-size: 14px;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-reset, .btn-prev, .btn-next {
+      background: #e5e7eb;
+      color: #1f2937;
+    }
+    
+    .btn-reset:hover:not(:disabled), .btn-prev:hover:not(:disabled), .btn-next:hover:not(:disabled) {
+      background: #d1d5db;
+    }
+    
+    .btn-play {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .btn-play:hover:not(:disabled) {
+      background: #2563eb;
+    }
+    
+    .btn-random {
+      background: #10b981;
+      color: white;
+    }
+    
+    .btn-random:hover:not(:disabled) {
+      background: #059669;
+    }
+    
+    .legend {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 14px;
+    }
+    
+    .legend h3 {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1f2937;
+    }
+    
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Graham's Scan Algorithm</h2>
+    
+    <div class="canvas-container">
+      <canvas id="canvas" width="600" height="500"></canvas>
+    </div>
+    
+    <div class="description" id="description">
+      Click 'Next' to start the algorithm
+    </div>
+    
+    <div class="controls">
+      <button class="btn-random" onclick="generateRandomPoints()">
+        🎲 Random Points
+      </button>
+      <button class="btn-reset" onclick="reset()">
+        ↻ Reset
+      </button>
+      <button class="btn-prev" id="btnPrev" onclick="previousStep()" disabled>
+        ← Previous
+      </button>
+      <button class="btn-play" id="btnPlay" onclick="togglePlay()">
+        ▶ Play
+      </button>
+      <button class="btn-next" id="btnNext" onclick="nextStep()">
+        Next →
+      </button>
+    </div>
+    
+    <div class="legend">
+      <h3>Legend:</h3>
+      <div class="legend-grid">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #ef4444;"></div>
+          <span>Leftmost point</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #f59e0b;"></div>
+          <span>Current test point</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #3b82f6;"></div>
+          <span>Hull points</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #6b7280;"></div>
+          <span>Remaining points</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let points = [];
+    let step = 0;
+    let isPlaying = false;
+    let leftMost = null;
+    let sortedPoints = [];
+    let hull = [];
+    let currentPoint = null;
+    let testingPoints = [];
+    let maxSteps = 3;
+    let playInterval = null;
+    
+    // Generate random points
+    function generateRandomPoints() {
+      const numPoints = 7 + Math.floor(Math.random() * 6); // 7-12 points
+      const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const newPoints = [];
+      
+      for (let i = 0; i < numPoints; i++) {
+        newPoints.push({
+          x: 80 + Math.random() * 440,
+          y: 80 + Math.random() * 340,
+          label: labels[i]
+        });
+      }
+      
+      points = newPoints;
+      reset();
+      draw();
+    }
+    
+    // Initialize with default points
+    function initializePoints() {
+      points = [
+        { x: 100, y: 300, label: 'A' },
+        { x: 200, y: 100, label: 'B' },
+        { x: 300, y: 250, label: 'C' },
+        { x: 400, y: 150, label: 'D' },
+        { x: 450, y: 300, label: 'E' },
+        { x: 350, y: 400, label: 'F' },
+        { x: 150, y: 350, label: 'G' }
+      ];
+    }
+    
+    // Calculate orientation
+    function orientation(p, q, r) {
+      return (q.x - p.x) * (r.y - p.y) - (r.x - p.x) * (q.y - p.y);
+    }
+    
+    // Calculate distance
+    function distance(p1, p2) {
+      return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+    
+    // Execute current step
+    function executeStep() {
+      if (step === 1) {
+        // Find leftmost point
+        leftMost = points[0];
+        for (let p of points) {
+          if (p.x < leftMost.x || (p.x === leftMost.x && p.y < leftMost.y)) {
+            leftMost = p;
+          }
+        }
+      } else if (step === 2) {
+        // Sort points by angle
+        if (leftMost) {
+          const sorted = points.filter(p => p !== leftMost);
+          sorted.sort((a, b) => {
+            const orient = orientation(leftMost, a, b);
+            if (orient > 0) return -1;
+            if (orient < 0) return 1;
+            return distance(leftMost, a) - distance(leftMost, b);
+          });
+          sortedPoints = [leftMost, ...sorted];
+          maxSteps = sortedPoints.length + 1;
+        }
+      } else if (step >= 3 && sortedPoints.length > 0) {
+        const iterationStep = step - 3;
+        
+        if (iterationStep === 0) {
+          hull = [sortedPoints[0], sortedPoints[1]];
+          currentPoint = null;
+          testingPoints = [];
+        } else if (iterationStep > 0 && iterationStep <= sortedPoints.length - 2) {
+          const pointIndex = iterationStep + 1;
+          const testPoint = sortedPoints[pointIndex];
+          currentPoint = testPoint;
+          
+          const newHull = [...hull];
+          newHull.push(testPoint);
+          
+          while (newHull.length > 2) {
+            const len = newHull.length;
+            const p = newHull[len - 3];
+            const q = newHull[len - 2];
+            const r = newHull[len - 1];
+            
+            if (orientation(p, q, r) < 0) {
+              testingPoints = [p, q, r];
+              newHull.splice(len - 2, 1);
+            } else {
+              testingPoints = [p, q, r];
+              break;
+            }
+          }
+          
+          hull = newHull;
+        }
+      }
+      
+      updateDescription();
+      updateButtons();
+      draw();
+    }
+    
+    // Update description
+    function updateDescription() {
+      const desc = document.getElementById('description');
+      if (step === 0) {
+        desc.textContent = "Click 'Next' to start the algorithm";
+      } else if (step === 1) {
+        desc.textContent = "Step 1: Find the leftmost point (highlighted in red)";
+      } else if (step === 2) {
+        desc.textContent = "Step 2: Sort points by angle counterclockwise around leftmost point";
+      } else if (step === 3) {
+        desc.textContent = "Step 3: Initialize hull with first two sorted points";
+      } else if (step > 3 && step <= maxSteps) {
+        desc.textContent = `Step ${step}: Testing point ${currentPoint?.label || ''} - ${
+          testingPoints.length === 3 ? 'Checking if it makes a left turn' : 'Adding to hull'
+        }`;
+      } else {
+        desc.textContent = "Algorithm complete! The convex hull is shown in blue.";
+      }
+    }
+    
+    // Update button states
+    function updateButtons() {
+      document.getElementById('btnPrev').disabled = step === 0;
+      document.getElementById('btnNext').disabled = step >= maxSteps;
+    }
+    
+    // Draw visualization
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw sorted order lines
+      if (step >= 2 && sortedPoints.length > 0) {
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.globalAlpha = 0.3;
+        for (let i = 0; i < sortedPoints.length - 1; i++) {
+          ctx.beginPath();
+          ctx.moveTo(sortedPoints[i].x, sortedPoints[i].y);
+          ctx.lineTo(sortedPoints[i + 1].x, sortedPoints[i + 1].y);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+      
+      // Draw hull
+      if (hull.length > 1) {
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(hull[0].x, hull[0].y);
+        for (let i = 1; i < hull.length; i++) {
+          ctx.lineTo(hull[i].x, hull[i].y);
+        }
+        ctx.stroke();
+      }
+      
+      // Draw testing triangle
+      if (testingPoints.length === 3) {
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(testingPoints[0].x, testingPoints[0].y);
+        ctx.lineTo(testingPoints[1].x, testingPoints[1].y);
+        ctx.lineTo(testingPoints[2].x, testingPoints[2].y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      
+      // Draw points
+      points.forEach((point, i) => {
+        let color = '#6b7280';
+        if (leftMost === point) color = '#ef4444';
+        else if (currentPoint === point) color = '#f59e0b';
+        else if (hull.includes(point)) color = '#3b82f6';
+        
+        ctx.fillStyle = color;
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.fillStyle = '#1f2937';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(point.label, point.x, point.y - 12);
+      });
+      
+      // Draw order numbers
+      if (step >= 2) {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '12px sans-serif';
+        sortedPoints.forEach((point, i) => {
+          ctx.fillText(i.toString(), point.x + 15, point.y + 5);
+        });
+      }
+    }
+    
+    // Control functions
+    function reset() {
+      step = 0;
+      leftMost = null;
+      sortedPoints = [];
+      hull = [];
+      currentPoint = null;
+      testingPoints = [];
+      maxSteps = 3;
+      if (isPlaying) togglePlay();
+      updateDescription();
+      updateButtons();
+      draw();
+    }
+    
+    function nextStep() {
+      if (step < maxSteps) {
+        step++;
+        executeStep();
+      }
+    }
+    
+    function previousStep() {
+      if (step > 0) {
+        step--;
+        reset();
+        for (let i = 0; i < step; i++) {
+          step = i + 1;
+          executeStep();
+        }
+      }
+    }
+    
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('btnPlay');
+      
+      if (isPlaying) {
+        btn.textContent = '⏸ Pause';
+        playInterval = setInterval(() => {
+          if (step < maxSteps) {
+            nextStep();
+          } else {
+            togglePlay();
+          }
+        }, 1500);
+      } else {
+        btn.textContent = '▶ Play';
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+        }
+      }
+    }
+    
+    // Initialize
+    initializePoints();
+    draw();
+    updateButtons();
+  </script>
+</body>
+</html>
