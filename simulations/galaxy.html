@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Galaxy Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            padding: 15px 20px;
+            background: rgba(10, 10, 30, 0.8);
+            border-bottom: 1px solid rgba(100, 100, 200, 0.3);
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #4a6fa5, #9d4edd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #a0c8ff;
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #galaxyCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .controls {
+            width: 300px;
+            background: rgba(10, 15, 40, 0.85);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid rgba(100, 150, 255, 0.2);
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(100, 150, 255, 0.1);
+        }
+        
+        .control-group h3 {
+            color: #6ba8ff;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+        
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #b0d0ff;
+            font-size: 0.9rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(100, 150, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4a9eff;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            background: rgba(30, 60, 120, 0.5);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+        
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(90deg, #2a4a7a, #4a2a7a);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .button:hover {
+            background: linear-gradient(90deg, #3a5a8a, #5a3a8a);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 50, 255, 0.2);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(100, 150, 255, 0.3);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #4a9eff;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #a0c8ff;
+            margin-top: 15px;
+        }
+        
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 10, 30, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 400px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+        
+        .info-panel h3 {
+            color: #6ba8ff;
+            margin-bottom: 8px;
+        }
+        
+        .notification {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(10, 30, 60, 0.9);
+            padding: 12px 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4a9eff;
+            max-width: 300px;
+            transform: translateX(400px);
+            transition: transform 0.5s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 1100px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .controls {
+                width: 100%;
+                height: 300px;
+                border-left: none;
+                border-top: 1px solid rgba(100, 150, 255, 0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Interactive Galaxy Simulation</h1>
+        <div class="subtitle">A realistic spiral galaxy with 50,000 stars, gravitational physics, and dynamic lighting</div>
+    </div>
+    
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="galaxyCanvas"></canvas>
+            <div class="info-panel">
+                <h3>Galaxy NGC 6744 Simulation</h3>
+                <p>This simulation represents a spiral galaxy similar to our Milky Way. Each point of light is a star. The central bulge contains older, yellow stars while the spiral arms feature younger, blue stars and stellar nurseries.</p>
+                <p>Use the controls to adjust galaxy parameters and explore different perspectives.</p>
+            </div>
+            <div class="notification" id="notification">
+                Simulation initialized with 50,000 stars. Use mouse to rotate and scroll to zoom.
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h3>Galaxy Properties</h3>
+                
+                <div class="slider-container">
+                    <label for="starCount">Star Count: <span id="starCountValue" class="value-display">50,000</span></label>
+                    <input type="range" id="starCount" min="1000" max="100000" value="50000" step="1000">
+                </div>
+                
+                <div class="slider-container">
+                    <label for="spiralTightness">Spiral Tightness: <span id="spiralTightnessValue" class="value-display">0.8</span></label>
+                    <input type="range" id="spiralTightness" min="0.1" max="2" value="0.8" step="0.1">
+                </div>
+                
+                <div class="slider-container">
+                    <label for="armCount">Spiral Arms: <span id="armCountValue" class="value-display">4</span></label>
+                    <input type="range" id="armCount" min="2" max="8" value="4" step="1">
+                </div>
+                
+                <div class="slider-container">
+                    <label for="bulgeSize">Central Bulge Size: <span id="bulgeSizeValue" class="value-display">0.3</span></label>
+                    <input type="range" id="bulgeSize" min="0.1" max="0.8" value="0.3" step="0.05">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Visual Effects</h3>
+                
+                <div class="toggle-container">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="darkMatterToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </div>
+                    <label for="darkMatterToggle">Dark Matter Halo</label>
+                </div>
+                
+                <div class="toggle-container">
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="nebulaToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </div>
+                    <label for="nebulaToggle">Nebula Clouds</label>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="brightness">Star Brightness: <span id="brightnessValue" class="value-display">1.0</span></label>
+                    <input type="range" id="brightness" min="0.1" max="3" value="1.0" step="0.1">
+                </div>
+                
+                <div class="slider-container">
+                    <label for="speed">Simulation Speed: <span id="speedValue" class="value-display">1.0</span></label>
+                    <input type="range" id="speed" min="0" max="3" value="1.0" step="0.1">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Camera Controls</h3>
+                <button id="resetView" class="button">Reset View</button>
+                <button id="topView" class="button">Top-Down View</button>
+                <button id="sideView" class="button">Side View</button>
+                <button id="flyThrough" class="button">Fly Through Animation</button>
+            </div>
+            
+            <div class="stats">
+                <div>Stars Rendered: <span id="renderedStars">50,000</span></div>
+                <div>FPS: <span id="fpsCounter">60</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Galaxy Simulation Script
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('galaxyCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas to full window size
+            function resizeCanvas() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Galaxy parameters
+            let galaxyParams = {
+                starCount: 50000,
+                spiralTightness: 0.8,
+                armCount: 4,
+                bulgeSize: 0.3,
+                darkMatter: true,
+                nebula: true,
+                brightness: 1.0,
+                speed: 1.0
+            };
+            
+            // Camera state
+            let camera = {
+                x: 0,
+                y: 0,
+                z: 500,
+                rotationX: 0.3,
+                rotationY: 0,
+                zoom: 1.0
+            };
+            
+            // Animation state
+            let animation = {
+                isAnimating: false,
+                flyThroughPhase: 0,
+                lastTime: 0,
+                fps: 60,
+                frameCount: 0,
+                lastFpsUpdate: 0
+            };
+            
+            // Stars array
+            let stars = [];
+            // Nebula clouds array
+            let nebulae = [];
+            
+            // Initialize the galaxy
+            function initGalaxy() {
+                stars = [];
+                nebulae = [];
+                
+                // Create stars
+                for (let i = 0; i < galaxyParams.starCount; i++) {
+                    // Determine if star is in bulge or disk
+                    let inBulge = Math.random() < galaxyParams.bulgeSize;
+                    
+                    // Generate position based on bulge or disk
+                    let x, y, z;
+                    
+                    if (inBulge) {
+                        // Bulge stars - spherical distribution
+                        let radius = Math.cbrt(Math.random()) * 150;
+                        let theta = Math.random() * Math.PI * 2;
+                        let phi = Math.acos(2 * Math.random() - 1);
+                        
+                        x = radius * Math.sin(phi) * Math.cos(theta);
+                        y = radius * Math.sin(phi) * Math.sin(theta);
+                        z = radius * Math.cos(phi) * 0.3; // Flatten the bulge slightly
+                    } else {
+                        // Disk stars - spiral arm distribution
+                        let armIndex = Math.floor(Math.random() * galaxyParams.armCount);
+                        let angle = Math.random() * Math.PI * 2;
+                        let radius = 50 + Math.pow(Math.random(), 2) * 400;
+                        
+                        // Spiral arm shape
+                        let spiralAngle = angle + galaxyParams.spiralTightness * Math.log(radius/50) + 
+                                         (Math.PI * 2 / galaxyParams.armCount) * armIndex;
+                        
+                        x = radius * Math.cos(spiralAngle);
+                        y = radius * Math.sin(spiralAngle);
+                        
+                        // Disk thickness decreases with radius
+                        let diskThickness = 15 * Math.exp(-radius / 300);
+                        z = (Math.random() - 0.5) * diskThickness;
+                    }
+                    
+                    // Determine star properties
+                    let age = inBulge ? Math.random() * 0.8 + 0.2 : Math.random(); // Bulge stars are older
+                    let size = Math.random() * 1.5 + 0.5;
+                    
+                    // Color based on age and location
+                    let r, g, b;
+                    if (inBulge) {
+                        // Older, yellower stars in bulge
+                        r = 255;
+                        g = 220 + Math.random() * 35;
+                        b = 180 + Math.random() * 40;
+                    } else {
+                        // Color based on temperature/age
+                        if (age > 0.7) {
+                            // Older, yellower stars
+                            r = 255;
+                            g = 220 + Math.random() * 35;
+                            b = 180 + Math.random() * 40;
+                        } else if (age > 0.4) {
+                            // Middle-aged, white stars
+                            r = 220 + Math.random() * 35;
+                            g = 220 + Math.random() * 35;
+                            b = 220 + Math.random() * 35;
+                        } else {
+                            // Young, blue stars
+                            r = 180 + Math.random() * 40;
+                            g = 200 + Math.random() * 55;
+                            b = 255;
+                        }
+                    }
+                    
+                    // Add velocity for orbital motion (simplified)
+                    let distance = Math.sqrt(x*x + y*y);
+                    let orbitalSpeed = 10 * Math.sqrt(galaxyParams.darkMatter ? 1000/(distance+50) : 500/(distance+50));
+                    let angle = Math.atan2(y, x);
+                    
+                    // Add some random motion
+                    orbitalSpeed *= (0.8 + Math.random() * 0.4);
+                    
+                    // Create star object
+                    stars.push({
+                        x, y, z,
+                        vx: -orbitalSpeed * Math.sin(angle),
+                        vy: orbitalSpeed * Math.cos(angle),
+                        vz: 0,
+                        size,
+                        r, g, b,
+                        originalX: x,
+                        originalY: y,
+                        originalZ: z,
+                        brightness: 0.5 + Math.random() * 0.5,
+                        inBulge
+                    });
+                }
+                
+                // Create nebula clouds
+                if (galaxyParams.nebula) {
+                    for (let i = 0; i < 8; i++) {
+                        let angle = Math.random() * Math.PI * 2;
+                        let radius = 150 + Math.random() * 300;
+                        let x = radius * Math.cos(angle);
+                        let y = radius * Math.sin(angle);
+                        let z = (Math.random() - 0.5) * 20;
+                        
+                        // Nebula color (red/purple/blue emission nebulae)
+                        let colorType = Math.floor(Math.random() * 3);
+                        let r, g, b;
+                        if (colorType === 0) {
+                            // Red (H-alpha)
+                            r = 255;
+                            g = 100 + Math.random() * 100;
+                            b = 100 + Math.random() * 100;
+                        } else if (colorType === 1) {
+                            // Blue (reflection)
+                            r = 100 + Math.random() * 100;
+                            g = 150 + Math.random() * 100;
+                            b = 255;
+                        } else {
+                            // Purple (mix)
+                            r = 200 + Math.random() * 55;
+                            g = 100 + Math.random() * 100;
+                            b = 200 + Math.random() * 55;
+                        }
+                        
+                        nebulae.push({
+                            x, y, z,
+                            size: 50 + Math.random() * 100,
+                            r, g, b,
+                            density: 0.1 + Math.random() * 0.2,
+                            pulsation: Math.random() * Math.PI * 2
+                        });
+                    }
+                }
+                
+                updateStarCountDisplay();
+            }
+            
+            // Project 3D coordinates to 2D canvas
+            function project(x, y, z) {
+                // Apply camera rotation
+                let cosX = Math.cos(camera.rotationX);
+                let sinX = Math.sin(camera.rotationX);
+                let cosY = Math.cos(camera.rotationY);
+                let sinY = Math.sin(camera.rotationY);
+                
+                // Translate relative to camera
+                let tx = x - camera.x;
+                let ty = y - camera.y;
+                let tz = z - camera.z;
+                
+                // Rotate around Y axis
+                let x1 = tx * cosY - tz * sinY;
+                let z1 = tx * sinY + tz * cosY;
+                
+                // Rotate around X axis
+                let y1 = ty * cosX - z1 * sinX;
+                let z2 = ty * sinX + z1 * cosX;
+                
+                // Apply perspective projection
+                let scale = camera.zoom * 800 / (z2 + 1000);
+                let screenX = canvas.width / 2 + x1 * scale;
+                let screenY = canvas.height / 2 + y1 * scale;
+                
+                return {
+                    screenX,
+                    screenY,
+                    scale,
+                    depth: z2
+                };
+            }
+            
+            // Draw the galaxy
+            function drawGalaxy() {
+                // Clear canvas with space background
+                ctx.fillStyle = '#000010';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw distant background stars
+                drawBackgroundStars();
+                
+                // Sort stars by depth for proper rendering order
+                let sortedStars = stars.map(star => {
+                    let proj = project(star.x, star.y, star.z);
+                    return {star, proj};
+                }).sort((a, b) => b.proj.depth - a.proj.depth);
+                
+                // Draw nebulae
+                if (galaxyParams.nebula) {
+                    drawNebulae();
+                }
+                
+                // Draw stars
+                sortedStars.forEach(({star, proj}) => {
+                    if (proj.depth < -800) return; // Behind camera
+                    
+                    // Calculate brightness based on distance
+                    let distanceFactor = 1 / (1 + proj.depth / 1000);
+                    let brightness = star.brightness * distanceFactor * galaxyParams.brightness;
+                    
+                    // Draw star
+                    let radius = star.size * proj.scale * brightness;
+                    
+                    if (radius < 0.5) {
+                        // Single pixel for very small stars
+                        ctx.fillStyle = `rgb(${star.r}, ${star.g}, ${star.b})`;
+                        ctx.fillRect(proj.screenX, proj.screenY, 1, 1);
+                    } else {
+                        // Create gradient for larger stars
+                        let gradient = ctx.createRadialGradient(
+                            proj.screenX, proj.screenY, 0,
+                            proj.screenX, proj.screenY, radius
+                        );
+                        
+                        gradient.addColorStop(0, `rgba(${star.r}, ${star.g}, ${star.b}, 1)`);
+                        gradient.addColorStop(0.7, `rgba(${star.r}, ${star.g}, ${star.b}, 0.3)`);
+                        gradient.addColorStop(1, `rgba(${star.r}, ${star.g}, ${star.b}, 0)`);
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(proj.screenX, proj.screenY, radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+                
+                // Draw central supermassive black hole
+                drawBlackHole();
+            }
+            
+            // Draw background stars (distant galaxies/foreground stars)
+            function drawBackgroundStars() {
+                // Draw some very distant background stars
+                for (let i = 0; i < 200; i++) {
+                    let x = (i * 13.7) % canvas.width;
+                    let y = (i * 5.3) % canvas.height;
+                    let size = 0.3 + (i % 3) * 0.2;
+                    let brightness = 0.3 + Math.sin(Date.now() / 1000 + i) * 0.1;
+                    
+                    ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Draw nebula clouds
+            function drawNebulae() {
+                nebulae.forEach(nebula => {
+                    let proj = project(nebula.x, nebula.y, nebula.z);
+                    if (proj.depth < -200) return;
+                    
+                    let size = nebula.size * proj.scale;
+                    let pulse = 1 + 0.2 * Math.sin(Date.now() / 3000 + nebula.pulsation);
+                    
+                    // Create nebula gradient
+                    let gradient = ctx.createRadialGradient(
+                        proj.screenX, proj.screenY, 0,
+                        proj.screenX, proj.screenY, size * pulse
+                    );
+                    
+                    gradient.addColorStop(0, `rgba(${nebula.r}, ${nebula.g}, ${nebula.b}, ${nebula.density * 0.5})`);
+                    gradient.addColorStop(0.7, `rgba(${nebula.r}, nebula.g}, ${nebula.b}, ${nebula.density * 0.2})`);
+                    gradient.addColorStop(1, `rgba(${nebula.r}, ${nebula.g}, ${nebula.b}, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(proj.screenX, proj.screenY, size * pulse, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            
+            // Draw central supermassive black hole
+            function drawBlackHole() {
+                let proj = project(0, 0, 0);
+                if (proj.depth < -200) return;
+                
+                // Black hole accretion disk
+                let diskSize = 25 * proj.scale;
+                
+                // Draw accretion disk
+                let gradient = ctx.createRadialGradient(
+                    proj.screenX, proj.screenY, 5 * proj.scale,
+                    proj.screenX, proj.screenY, diskSize
+                );
+                
+                gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                gradient.addColorStop(0.1, 'rgba(150, 100, 255, 0.8)');
+                gradient.addColorStop(0.5, 'rgba(255, 100, 100, 0.6)');
+                gradient.addColorStop(0.9, 'rgba(255, 200, 100, 0.3)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(proj.screenX, proj.screenY, diskSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Black hole event horizon
+                let horizonSize = 8 * proj.scale;
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(proj.screenX, proj.screenY, horizonSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Gravitational lensing effect
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(proj.screenX, proj.screenY, horizonSize * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Update star positions based on gravity
+            function updateStars(deltaTime) {
+                const dt = deltaTime * 0.016 * galaxyParams.speed;
+                
+                stars.forEach(star => {
+                    // Calculate gravitational force from central black hole
+                    let distance = Math.sqrt(star.x*star.x + star.y*star.y + star.z*star.z);
+                    let forceMagnitude = 10000 / (distance*distance + 2500);
+                    
+                    // Apply force (simplified gravity)
+                    star.vx += (-star.x / distance) * forceMagnitude * dt;
+                    star.vy += (-star.y / distance) * forceMagnitude * dt;
+                    star.vz += (-star.z / distance) * forceMagnitude * dt * 0.1; // Less force in Z direction
+                    
+                    // Update position
+                    star.x += star.vx * dt;
+                    star.y += star.vy * dt;
+                    star.z += star.vz * dt;
+                    
+                    // Apply dark matter halo effect if enabled
+                    if (galaxyParams.darkMatter) {
+                        let haloForce = 5000 / (distance + 500);
+                        star.vx += (-star.x / distance) * haloForce * dt * 0.5;
+                        star.vy += (-star.y / distance) * haloForce * dt * 0.5;
+                    }
+                    
+                    // Dampen velocity slightly to maintain structure
+                    star.vx *= 0.999;
+                    star.vy *= 0.999;
+                    star.vz *= 0.999;
+                });
+            }
+            
+            // Animation loop
+            function animate(currentTime) {
+                // Calculate delta time
+                const deltaTime = currentTime - animation.lastTime || 0;
+                animation.lastTime = currentTime;
+                
+                // Update FPS counter
+                animation.frameCount++;
+                if (currentTime - animation.lastFpsUpdate > 1000) {
+                    animation.fps = Math.round((animation.frameCount * 1000) / (currentTime - animation.lastFpsUpdate));
+                    animation.frameCount = 0;
+                    animation.lastFpsUpdate = currentTime;
+                    document.getElementById('fpsCounter').textContent = animation.fps;
+                }
+                
+                // Update stars
+                updateStars(deltaTime);
+                
+                // Update camera for fly-through animation
+                if (animation.isAnimating) {
+                    updateFlyThroughAnimation(deltaTime);
+                }
+                
+                // Draw everything
+                drawGalaxy();
+                
+                // Continue animation
+                requestAnimationFrame(animate);
+            }
+            
+            // Fly-through animation
+            function updateFlyThroughAnimation(deltaTime) {
+                const dt = deltaTime * 0.016;
+                animation.flyThroughPhase += dt * 0.05;
+                
+                camera.x = Math.sin(animation.flyThroughPhase * 0.5) * 300;
+                camera.y = Math.cos(animation.flyThroughPhase * 0.3) * 100;
+                camera.z = 300 + Math.sin(animation.flyThroughPhase * 0.2) * 200;
+                camera.rotationY = animation.flyThroughPhase;
+                camera.rotationX = 0.3 + Math.sin(animation.flyThroughPhase * 0.4) * 0.2;
+                
+                // Stop animation after one full loop
+                if (animation.flyThroughPhase > Math.PI * 4) {
+                    animation.isAnimating = false;
+                    animation.flyThroughPhase = 0;
+                }
+            }
+            
+            // Initialize UI controls
+            function initControls() {
+                // Star count slider
+                document.getElementById('starCount').addEventListener('input', function() {
+                    galaxyParams.starCount = parseInt(this.value);
+                    document.getElementById('starCountValue').textContent = 
+                        galaxyParams.starCount.toLocaleString();
+                    initGalaxy();
+                    showNotification(`Star count updated to ${galaxyParams.starCount.toLocaleString()}`);
+                });
+                
+                // Spiral tightness slider
+                document.getElementById('spiralTightness').addEventListener('input', function() {
+                    galaxyParams.spiralTightness = parseFloat(this.value);
+                    document.getElementById('spiralTightnessValue').textContent = galaxyParams.spiralTightness;
+                    initGalaxy();
+                });
+                
+                // Arm count slider
+                document.getElementById('armCount').addEventListener('input', function() {
+                    galaxyParams.armCount = parseInt(this.value);
+                    document.getElementById('armCountValue').textContent = galaxyParams.armCount;
+                    initGalaxy();
+                    showNotification(`Spiral arms updated to ${galaxyParams.armCount}`);
+                });
+                
+                // Bulge size slider
+                document.getElementById('bulgeSize').addEventListener('input', function() {
+                    galaxyParams.bulgeSize = parseFloat(this.value);
+                    document.getElementById('bulgeSizeValue').textContent = galaxyParams.bulgeSize;
+                    initGalaxy();
+                });
+                
+                // Dark matter toggle
+                document.getElementById('darkMatterToggle').addEventListener('change', function() {
+                    galaxyParams.darkMatter = this.checked;
+                    showNotification(`Dark matter halo ${galaxyParams.darkMatter ? 'enabled' : 'disabled'}`);
+                });
+                
+                // Nebula toggle
+                document.getElementById('nebulaToggle').addEventListener('change', function() {
+                    galaxyParams.nebula = this.checked;
+                    initGalaxy();
+                    showNotification(`Nebula clouds ${galaxyParams.nebula ? 'enabled' : 'disabled'}`);
+                });
+                
+                // Brightness slider
+                document.getElementById('brightness').addEventListener('input', function() {
+                    galaxyParams.brightness = parseFloat(this.value);
+                    document.getElementById('brightnessValue').textContent = galaxyParams.brightness.toFixed(1);
+                });
+                
+                // Speed slider
+                document.getElementById('speed').addEventListener('input', function() {
+                    galaxyParams.speed = parseFloat(this.value);
+                    document.getElementById('speedValue').textContent = galaxyParams.speed.toFixed(1);
+                });
+                
+                // Reset view button
+                document.getElementById('resetView').addEventListener('click', function() {
+                    camera.x = 0;
+                    camera.y = 0;
+                    camera.z = 500;
+                    camera.rotationX = 0.3;
+                    camera.rotationY = 0;
+                    camera.zoom = 1.0;
+                    animation.isAnimating = false;
+                    showNotification('View reset to default');
+                });
+                
+                // Top view button
+                document.getElementById('topView').addEventListener('click', function() {
+                    camera.x = 0;
+                    camera.y = 0;
+                    camera.z = 800;
+                    camera.rotationX = 0;
+                    camera.rotationY = 0;
+                    camera.zoom = 0.7;
+                    animation.isAnimating = false;
+                    showNotification('Switched to top-down view');
+                });
+                
+                // Side view button
+                document.getElementById('sideView').addEventListener('click', function() {
+                    camera.x = 0;
+                    camera.y = 300;
+                    camera.z = 300;
+                    camera.rotationX = Math.PI / 2;
+                    camera.rotationY = 0;
+                    camera.zoom = 1.0;
+                    animation.isAnimating = false;
+                    showNotification('Switched to side view');
+                });
+                
+                // Fly through button
+                document.getElementById('flyThrough').addEventListener('click', function() {
+                    animation.isAnimating = true;
+                    animation.flyThroughPhase = 0;
+                    showNotification('Starting fly-through animation');
+                });
+                
+                // Mouse controls for camera
+                let isDragging = false;
+                let lastMouseX = 0;
+                let lastMouseY = 0;
+                
+                canvas.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                    canvas.style.cursor = 'grabbing';
+                });
+                
+                canvas.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    
+                    let deltaX = e.clientX - lastMouseX;
+                    let deltaY = e.clientY - lastMouseY;
+                    
+                    camera.rotationY += deltaX * 0.01;
+                    camera.rotationX += deltaY * 0.01;
+                    
+                    // Clamp X rotation to prevent flipping
+                    camera.rotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotationX));
+                    
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                });
+                
+                canvas.addEventListener('mouseup', function() {
+                    isDragging = false;
+                    canvas.style.cursor = 'grab';
+                });
+                
+                canvas.addEventListener('mouseleave', function() {
+                    isDragging = false;
+                    canvas.style.cursor = 'default';
+                });
+                
+                canvas.style.cursor = 'grab';
+                
+                // Mouse wheel for zoom
+                canvas.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    camera.zoom *= e.deltaY > 0 ? 0.9 : 1.1;
+                    camera.zoom = Math.max(0.1, Math.min(5, camera.zoom));
+                });
+            }
+            
+            // Update star count display
+            function updateStarCountDisplay() {
+                document.getElementById('renderedStars').textContent = 
+                    galaxyParams.starCount.toLocaleString();
+            }
+            
+            // Show notification
+            function showNotification(message) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Initialize and start the simulation
+            function init() {
+                initGalaxy();
+                initControls();
+                showNotification('Galaxy simulation loaded. Use mouse to rotate and scroll to zoom.');
+                
+                // Start animation loop
+                requestAnimationFrame(animate);
+            }
+            
+            // Start everything
+            init();
+        });
+    </script>
+</body>
+</html>
