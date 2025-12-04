@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,144 +8,190 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 20px;
-      background-color: #f5f5f5;
+      background-color: #0f0f23;
+      color: #f0f0f0;
     }
+
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-      color: #333;
+      margin-bottom: 30px;
+      color: #8be9fd;
+      text-shadow: 0 0 10px rgba(139, 233, 253, 0.3);
     }
+
     .controls {
       display: flex;
       justify-content: center;
-      margin-bottom: 20px;
-      gap: 10px;
+      margin-bottom: 30px;
+      gap: 15px;
     }
+
     button {
-      padding: 8px 16px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 4px;
-      background-color: #4CAF50;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #4ecdc4, #556270);
       color: white;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+
     button.active {
-      background-color: #2E7D32;
+      background: linear-gradient(135deg, #ff6b6b, #ee5253);
     }
+
     button:hover {
-      background-color: #388E3C;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
     }
+
     .vis-container {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 20px;
+      gap: 30px;
     }
+
     .chart {
       width: 100%;
-      max-width: 500px;
-      height: 500px;
+      max-width: 400px;
+      height: 400px;
       position: relative;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 15px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
     .explanation {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #f8f8f8;
-      border-radius: 4px;
-      border-left: 4px solid #4CAF50;
+      margin-top: 40px;
+      padding: 25px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      border-left: 4px solid #4ecdc4;
+      line-height: 1.6;
     }
+
+    .explanation h3 {
+      color: #4ecdc4;
+      margin-top: 0;
+    }
+
     .tooltip {
       position: absolute;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0, 0, 0, 0.8);
       color: white;
-      padding: 5px 10px;
-      border-radius: 3px;
+      padding: 8px 12px;
+      border-radius: 6px;
       pointer-events: none;
       font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
     }
+
     .legend {
       display: flex;
       justify-content: center;
       gap: 20px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
+
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
       font-size: 14px;
+      color: #ccc;
     }
+
     .legend-color {
       width: 20px;
       height: 10px;
       border-radius: 2px;
     }
+
+    /* D3 Styles */
+    text {
+      fill: #ccc;
+    }
+
+    .grid line {
+      stroke: rgba(255, 255, 255, 0.1);
+    }
+
+    .domain {
+      stroke: rgba(255, 255, 255, 0.2);
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <h1>Trigonometric Similarity Visualization</h1>
-    
+
     <div class="controls">
       <button id="generateBtn">Generate 1000 New Points</button>
       <button id="toggleOriginalBtn">Toggle Original Points</button>
     </div>
-    
+
     <div class="legend">
       <div class="legend-item">
-        <div class="legend-color" style="background-color: rgba(255,0,0,0.3);"></div>
+        <div class="legend-color" style="background-color: rgba(255,100,100,0.6);"></div>
         <span>High Similarity</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color" style="background-color: rgba(0,0,255,0.3);"></div>
+        <div class="legend-color" style="background-color: rgba(100,100,255,0.6);"></div>
         <span>Low Similarity</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color" style="background-color: black;"></div>
+        <div class="legend-color" style="background-color: #fff;"></div>
         <span>Original Points</span>
       </div>
     </div>
-    
+
     <div class="vis-container">
-      <div class="chart" id="cosineChart">
-        <h3>Cosine Similarity</h3>
-      </div>
-      <div class="chart" id="sineChart">
-        <h3>Sine Similarity</h3>
-      </div>
-      <div class="chart" id="tangentChart">
-        <h3>Tangent Similarity</h3>
-      </div>
+      <div class="chart" id="cosineChart"></div>
+      <div class="chart" id="sineChart"></div>
+      <div class="chart" id="tangentChart"></div>
     </div>
-    
+
     <div class="explanation">
       <h3>Key Differences Between Trigonometric Similarity Measures:</h3>
-      <p><strong>Cosine Similarity:</strong> Measures the cosine of the angle between two vectors. Values range from -1 (opposite directions) to 1 (same direction). This is the most common similarity measure for vector spaces, emphasizing direction regardless of magnitude.</p>
-      <p><strong>Sine Similarity:</strong> Measures the sine of the angle between vectors. Values range from 0 to 1 (for angles between 0° and 90°), and from 0 to -1 (for angles between 90° and 180°). Sine similarity emphasizes perpendicularity rather than alignment.</p>
-      <p><strong>Tangent Similarity:</strong> Measures the tangent of the angle between vectors. Values range from -∞ to +∞, with undefined values at 90° and 270°. Tangent similarity has extreme sensitivity near perpendicular vectors and can create distinct clustering patterns.</p>
+      <p><strong>Cosine Similarity:</strong> Measures the cosine of the angle between two vectors. Values range from -1
+        (opposite directions) to 1 (same direction). This is the most common similarity measure for vector spaces,
+        emphasizing direction regardless of magnitude.</p>
+      <p><strong>Sine Similarity:</strong> Measures the sine of the angle between vectors. Values range from 0 to 1 (for
+        angles between 0° and 90°), and from 0 to -1 (for angles between 90° and 180°). Sine similarity emphasizes
+        perpendicularity rather than alignment.</p>
+      <p><strong>Tangent Similarity:</strong> Measures the tangent of the angle between vectors. Values range from -∞ to
+        +∞, with undefined values at 90° and 270°. Tangent similarity has extreme sensitivity near perpendicular vectors
+        and can create distinct clustering patterns.</p>
     </div>
   </div>
 
   <script>
     // Main visualization code
-    const width = 500;
-    const height = 500;
+    const width = 400;
+    const height = 400;
     const margin = { top: 40, right: 20, bottom: 30, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
-    
+
     // Generate random points
     function generateRandomPoints(n) {
       const points = [];
@@ -157,50 +204,50 @@
     // Calculate similarities between points
     function calculateSimilarities(points) {
       const n = points.length;
-      
+
       // Prepare arrays for different similarity measures
       const cosineSimilarities = [];
       const sineSimilarities = [];
       const tanSimilarities = [];
-      
+
       for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < Math.min(i + 5, n); j++) { // Limit connections for performance
           const p1 = points[i];
           const p2 = points[j];
-          
+
           // Calculate dot product
           const dotProduct = p1[0] * p2[0] + p1[1] * p2[1];
-          
+
           // Calculate magnitudes
           const mag1 = Math.sqrt(p1[0] * p1[0] + p1[1] * p1[1]);
           const mag2 = Math.sqrt(p2[0] * p2[0] + p2[1] * p2[1]);
-          
+
           // Handle zero vectors
           if (mag1 === 0 || mag2 === 0) continue;
-          
+
           // Calculate cosine similarity directly
           const cosSim = dotProduct / (mag1 * mag2);
-          
+
           // Calculate angle (bounded to avoid precision issues)
           const angle = Math.acos(Math.max(-0.9999, Math.min(0.9999, cosSim)));
-          
+
           // Calculate different similarities
-          cosineSimilarities.push({ 
-            point1: i, 
-            point2: j, 
+          cosineSimilarities.push({
+            point1: i,
+            point2: j,
             similarity: cosSim,
             x1: p1[0], y1: p1[1],
             x2: p2[0], y2: p2[1]
           });
-          
+
           sineSimilarities.push({
-            point1: i, 
+            point1: i,
             point2: j,
             similarity: Math.sin(angle),
             x1: p1[0], y1: p1[1],
             x2: p2[0], y2: p2[1]
           });
-          
+
           // Handle tangent edge cases
           let tanSim = Math.tan(angle);
           if (!Number.isFinite(tanSim)) {
@@ -208,9 +255,9 @@
           } else {
             tanSim = Math.max(-100, Math.min(100, tanSim)); // Bound tangent values
           }
-          
+
           tanSimilarities.push({
-            point1: i, 
+            point1: i,
             point2: j,
             similarity: tanSim,
             x1: p1[0], y1: p1[1],
@@ -218,7 +265,7 @@
           });
         }
       }
-      
+
       return {
         points,
         cosine: cosineSimilarities,
@@ -233,40 +280,46 @@
       const xScale = d3.scaleLinear()
         .domain([-1, 1])
         .range([0, innerWidth]);
-        
+
       const yScale = d3.scaleLinear()
         .domain([-1, 1])
         .range([innerHeight, 0]);
-      
+
       // Create a function to draw each chart
       function drawChart(containerId, similarityData, title) {
         const container = d3.select(`#${containerId}`);
         container.selectAll("*").remove();
-        
+
+        // Responsive SVG
         const svg = container.append("svg")
-          .attr("width", width)
-          .attr("height", height);
-          
+          .attr("viewBox", `0 0 ${width} ${height}`)
+          .attr("preserveAspectRatio", "xMidYMid meet")
+          .style("width", "100%")
+          .style("height", "100%");
+
         const g = svg.append("g")
           .attr("transform", `translate(${margin.left}, ${margin.top})`);
-        
+
         // Add title
         svg.append("text")
-          .attr("x", width/2)
+          .attr("x", width / 2)
           .attr("y", 20)
           .attr("text-anchor", "middle")
           .style("font-size", "16px")
           .style("font-weight", "bold")
+          .style("fill", "#4ecdc4")
           .text(title);
-        
+
         // Add axes
         g.append("g")
           .attr("transform", `translate(0, ${innerHeight})`)
-          .call(d3.axisBottom(xScale).ticks(5));
-          
+          .call(d3.axisBottom(xScale).ticks(5))
+          .selectAll("text").style("fill", "#aaa");
+
         g.append("g")
-          .call(d3.axisLeft(yScale).ticks(5));
-        
+          .call(d3.axisLeft(yScale).ticks(5))
+          .selectAll("text").style("fill", "#aaa");
+
         // Add gridlines
         g.append("g")
           .attr("class", "grid")
@@ -278,9 +331,9 @@
           .attr("y1", 0)
           .attr("x2", d => xScale(d))
           .attr("y2", innerHeight)
-          .attr("stroke", "#e0e0e0")
+          .attr("stroke", "rgba(255,255,255,0.1)")
           .attr("stroke-width", 0.5);
-          
+
         g.append("g")
           .attr("class", "grid")
           .selectAll("line")
@@ -291,9 +344,9 @@
           .attr("y1", d => yScale(d))
           .attr("x2", innerWidth)
           .attr("y2", d => yScale(d))
-          .attr("stroke", "#e0e0e0")
+          .attr("stroke", "rgba(255,255,255,0.1)")
           .attr("stroke-width", 0.5);
-        
+
         // Draw similarity connections
         const connections = g.selectAll(".connection")
           .data(similarityData)
@@ -307,12 +360,12 @@
           .attr("stroke", d => {
             const val = (d.similarity + 1) / 2; // Normalize to 0-1
             return d.similarity >= 0
-              ? `rgba(255, 0, 0, ${Math.min(0.5, val * 0.5)})`
-              : `rgba(0, 0, 255, ${Math.min(0.5, (1-val) * 0.5)})`;
+              ? `rgba(255, 100, 100, ${Math.min(0.8, val * 0.8)})`
+              : `rgba(100, 100, 255, ${Math.min(0.8, (1 - val) * 0.8)})`;
           })
           .attr("stroke-width", d => Math.abs(d.similarity) * 2 + 0.5)
           .attr("opacity", 0.6);
-          
+
         // Add original points (initially hidden)
         const points = g.selectAll(".point")
           .data(data.points)
@@ -322,42 +375,42 @@
           .attr("cx", d => xScale(d[0]))
           .attr("cy", d => yScale(d[1]))
           .attr("r", 2)
-          .attr("fill", "black")
+          .attr("fill", "#fff")
           .style("display", "none");
-          
+
         // Add tooltip
         const tooltip = container.append("div")
           .attr("class", "tooltip")
           .style("opacity", 0);
-          
+
         connections
-          .on("mouseover", function(event, d) {
+          .on("mouseover", function (event, d) {
             d3.select(this)
               .attr("stroke-width", Math.abs(d.similarity) * 3 + 1)
               .attr("opacity", 1);
-              
+
             tooltip.style("opacity", 1)
               .html(`Similarity: ${d.similarity.toFixed(4)}`)
               .style("left", (event.pageX - container.node().getBoundingClientRect().left) + "px")
               .style("top", (event.pageY - container.node().getBoundingClientRect().top - 30) + "px");
           })
-          .on("mouseout", function(event, d) {
+          .on("mouseout", function (event, d) {
             d3.select(this)
               .attr("stroke-width", Math.abs(d.similarity) * 2 + 0.5)
               .attr("opacity", 0.6);
-              
+
             tooltip.style("opacity", 0);
           });
-          
+
         return points;
       }
-      
+
       // Draw all three charts
       const cosinePoints = drawChart("cosineChart", data.cosine, "Cosine Similarity");
       const sinePoints = drawChart("sineChart", data.sine, "Sine Similarity");
       const tangentPoints = drawChart("tangentChart", data.tangent, "Tangent Similarity");
-      
-      return {cosinePoints, sinePoints, tangentPoints};
+
+      return { cosinePoints, sinePoints, tangentPoints };
     }
 
     // Initialize
@@ -365,30 +418,31 @@
     let data = calculateSimilarities(points);
     let pointElements = createVisualization(data);
     let showPoints = false;
-    
+
     // Add event listeners
     document.getElementById("generateBtn").addEventListener("click", () => {
       points = generateRandomPoints(1000);
       data = calculateSimilarities(points);
       pointElements = createVisualization(data);
-      
+
       if (showPoints) {
         pointElements.cosinePoints.style("display", "block");
         pointElements.sinePoints.style("display", "block");
         pointElements.tangentPoints.style("display", "block");
       }
     });
-    
-    document.getElementById("toggleOriginalBtn").addEventListener("click", function() {
+
+    document.getElementById("toggleOriginalBtn").addEventListener("click", function () {
       showPoints = !showPoints;
-      
+
       const display = showPoints ? "block" : "none";
       pointElements.cosinePoints.style("display", display);
       pointElements.sinePoints.style("display", display);
       pointElements.tangentPoints.style("display", display);
-      
+
       this.classList.toggle("active", showPoints);
     });
   </script>
 </body>
+
 </html>

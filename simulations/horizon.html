@@ -1,296 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Black Hole Event Horizon (Annotated)</title>
-<style>
-  html, body { height: 100%; margin: 0; background:#000; color:#fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-  .wrap { position: relative; height: 100%; width: 100%; overflow: hidden; }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  svg.labels { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Black Hole Event Horizon (Annotated)</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
 
-  .tag { font-size: 15px; font-weight: 600; fill: #fff; }
-  .desc { fill: #ddd; font-size: 12px; font-weight: 400; opacity: .95; }
-  .lead { stroke: rgba(255,255,255,.9); stroke-width: 1.5; fill: none; }
-  .dot { fill:#fff; }
+    .wrap {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
 
-  .hud { position: absolute; left: 16px; bottom: 16px; display:flex; gap:8px; pointer-events: auto; }
-  .btn {
-    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25);
-    color:#fff; padding:8px 10px; border-radius:6px; cursor:pointer; font-size:12px;
-  }
-  .btn:hover { background: rgba(255,255,255,.14); }
-</style>
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    svg.labels {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .tag {
+      font-size: 15px;
+      font-weight: 600;
+      fill: #fff;
+    }
+
+    .desc {
+      fill: #ddd;
+      font-size: 12px;
+      font-weight: 400;
+      opacity: .95;
+    }
+
+    .lead {
+      stroke: rgba(255, 255, 255, .9);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .dot {
+      fill: #fff;
+    }
+
+    .hud {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, .1);
+      border: 1px solid rgba(255, 255, 255, .3);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, .2);
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
+
 <body>
-<div class="wrap">
-  <canvas id="scene"></canvas>
+  <div class="wrap">
+    <canvas id="scene"></canvas>
 
-  <!-- SVG overlay for labels and leader lines -->
-  <svg class="labels" id="overlay" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <!-- Leader lines and annotation text; positions get updated to match canvas sizing -->
-    <g id="ann">
-      <circle id="p_shadow" r="3" class="dot"/>
-      <path id="l_shadow" class="lead"/>
-      <text id="t_shadow" class="tag">Black hole shadow</text>
-      <text id="d_shadow" class="desc">Region ≈2× event-horizon radius set by light capture and lensing.</text>
+    <!-- SVG overlay for labels and leader lines -->
+    <svg class="labels" id="overlay" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <!-- Leader lines and annotation text; positions get updated to match canvas sizing -->
+      <g id="ann">
+        <circle id="p_shadow" r="3" class="dot" />
+        <path id="l_shadow" class="lead" />
+        <text id="t_shadow" class="tag">Black hole shadow</text>
+        <text id="d_shadow" class="desc">Region ≈2× event-horizon radius set by light capture and lensing.</text>
 
-      <circle id="p_photon" r="3" class="dot"/>
-      <path id="l_photon" class="lead"/>
-      <text id="t_photon" class="tag">Photon ring</text>
-      <text id="d_photon" class="desc">Light orbiting the hole multiple times before escaping; thin, bright ring.</text>
+        <circle id="p_photon" r="3" class="dot" />
+        <path id="l_photon" class="lead" />
+        <text id="t_photon" class="tag">Photon ring</text>
+        <text id="d_photon" class="desc">Light orbiting the hole multiple times before escaping; thin, bright
+          ring.</text>
 
-      <circle id="p_beam" r="3" class="dot"/>
-      <path id="l_beam" class="lead"/>
-      <text id="t_beam" class="tag">Doppler beaming</text>
-      <text id="d_beam" class="desc">Approaching side appears brighter; receding side dimmer.</text>
+        <circle id="p_beam" r="3" class="dot" />
+        <path id="l_beam" class="lead" />
+        <text id="t_beam" class="tag">Doppler beaming</text>
+        <text id="d_beam" class="desc">Approaching side appears brighter; receding side dimmer.</text>
 
-      <circle id="p_far" r="3" class="dot"/>
-      <path id="l_far" class="lead"/>
-      <text id="t_far" class="tag">Image of the disk’s far side</text>
-      <text id="d_far" class="desc">Light from behind is lensed over the top into view.</text>
+        <circle id="p_far" r="3" class="dot" />
+        <path id="l_far" class="lead" />
+        <text id="t_far" class="tag">Image of the disk’s far side</text>
+        <text id="d_far" class="desc">Light from behind is lensed over the top into view.</text>
 
-      <circle id="p_under" r="3" class="dot"/>
-      <path id="l_under" class="lead"/>
-      <text id="t_under" class="tag">Image of the disk’s underside</text>
-      <text id="d_under" class="desc">Bent rays from beneath appear below the shadow.</text>
+        <circle id="p_under" r="3" class="dot" />
+        <path id="l_under" class="lead" />
+        <text id="t_under" class="tag">Image of the disk’s underside</text>
+        <text id="d_under" class="desc">Bent rays from beneath appear below the shadow.</text>
 
-      <circle id="p_disk" r="3" class="dot"/>
-      <path id="l_disk" class="lead"/>
-      <text id="t_disk" class="tag">Accretion disk</text>
-      <text id="d_disk" class="desc">Hot, thin, rotating gas spiraling inward.</text>
-    </g>
-  </svg>
+        <circle id="p_disk" r="3" class="dot" />
+        <path id="l_disk" class="lead" />
+        <text id="t_disk" class="tag">Accretion disk</text>
+        <text id="d_disk" class="desc">Hot, thin, rotating gas spiraling inward.</text>
+      </g>
+    </svg>
 
-  <div class="hud">
-    <button class="btn" id="toggle">Pause</button>
-    <button class="btn" id="flip">Flip bright side</button>
-    <button class="btn" id="reset">Reset view</button>
+    <div class="hud">
+      <button class="btn" id="toggle">Pause</button>
+      <button class="btn" id="flip">Flip bright side</button>
+      <button class="btn" id="reset">Reset view</button>
+    </div>
   </div>
-</div>
 
-<script>
-(() => {
-  const canvas = document.getElementById('scene');
-  const ctx = canvas.getContext('2d');
-  let W = canvas.width = window.innerWidth;
-  let H = canvas.height = window.innerHeight;
+  <script>
+    (() => {
+      const canvas = document.getElementById('scene');
+      const ctx = canvas.getContext('2d');
+      let W = canvas.width = window.innerWidth;
+      let H = canvas.height = window.innerHeight;
 
-  // Scene parameters (approximate, visually tuned)
-  const tilt = 0.24;              // vertical compression of equatorial disk
-  const Rshadow = Math.min(W, H) * 0.11;     // black hole shadow radius
-  const Rphoton = Rshadow * 1.45;            // photon ring radius
-  const RdiskIn = Rshadow * 1.2;             // disk inner radius
-  const RdiskOut = Rshadow * 4.7;            // disk outer radius
-  const lensTop = Rshadow * 2.1;             // far-side arc height
-  const lensBot = Rshadow * 1.4;             // underside arc depth
+      // Scene parameters (approximate, visually tuned)
+      const tilt = 0.24;              // vertical compression of equatorial disk
+      const Rshadow = Math.min(W, H) * 0.11;     // black hole shadow radius
+      const Rphoton = Rshadow * 1.45;            // photon ring radius
+      const RdiskIn = Rshadow * 1.2;             // disk inner radius
+      const RdiskOut = Rshadow * 4.7;            // disk outer radius
+      const lensTop = Rshadow * 2.1;             // far-side arc height
+      const lensBot = Rshadow * 1.4;             // underside arc depth
 
-  let t = 0;
-  let running = true;
-  let brightRight = true; // Doppler-beaming side
+      let t = 0;
+      let running = true;
+      let brightRight = true; // Doppler-beaming side
 
-  function colorRamp(x) {
-    // x in [0,1] -> orange-hot palette
-    const stops = [
-      [0.00, [30, 6, 0]],
-      [0.25, [120, 20, 0]],
-      [0.45, [200, 50, 0]],
-      [0.65, [255, 90, 0]],
-      [0.80, [255, 140, 20]],
-      [0.95, [255, 200, 120]],
-      [1.00, [255, 240, 200]]
-    ];
-    for (let i = 1; i < stops.length; i++) {
-      if (x <= stops[i][0]) {
-        const [p, c1] = stops[i-1];
-        const [q, c2] = stops[i];
-        const u = (x - p) / (q - p);
-        const r = Math.round(c1[0] + u * (c2[0] - c1[0]));
-        const g = Math.round(c1[1] + u * (c2[1] - c1[1]));
-        const b = Math.round(c1[2] + u * (c2[2] - c1[2]));
-        return `rgba(${r},${g},${b},1)`;
+      function colorRamp(x) {
+        // x in [0,1] -> orange-hot palette
+        const stops = [
+          [0.00, [30, 6, 0]],
+          [0.25, [120, 20, 0]],
+          [0.45, [200, 50, 0]],
+          [0.65, [255, 90, 0]],
+          [0.80, [255, 140, 20]],
+          [0.95, [255, 200, 120]],
+          [1.00, [255, 240, 200]]
+        ];
+        for (let i = 1; i < stops.length; i++) {
+          if (x <= stops[i][0]) {
+            const [p, c1] = stops[i - 1];
+            const [q, c2] = stops[i];
+            const u = (x - p) / (q - p);
+            const r = Math.round(c1[0] + u * (c2[0] - c1[0]));
+            const g = Math.round(c1[1] + u * (c2[1] - c1[1]));
+            const b = Math.round(c1[2] + u * (c2[2] - c1[2]));
+            return `rgba(${r},${g},${b},1)`;
+          }
+        }
+        return 'rgba(255,255,255,1)';
       }
-    }
-    return 'rgba(255,255,255,1)';
-  }
 
-  function drawBackground() {
-    // subtle star field
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, W, H);
-    const n = 350;
-    for (let i = 0; i < n; i++) {
-      const x = Math.random() * W;
-      const y = Math.random() * H;
-      const s = Math.random() * 1.2;
-      const a = 0.5 + Math.random() * 0.5;
-      ctx.fillStyle = `rgba(255,255,255,${a})`;
-      ctx.fillRect(x, y, s, s);
-    }
-  }
+      function drawBackground() {
+        // subtle star field
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+        const n = 350;
+        for (let i = 0; i < n; i++) {
+          const x = Math.random() * W;
+          const y = Math.random() * H;
+          const s = Math.random() * 1.2;
+          const a = 0.5 + Math.random() * 0.5;
+          ctx.fillStyle = `rgba(255,255,255,${a})`;
+          ctx.fillRect(x, y, s, s);
+        }
+      }
 
-  function ring(xc, yc, r1, r2, brightFn, swirl = 12, speed = 0.25, alpha = 1.0, verticalScale = 1.0) {
-    // Fill an annulus from r1..r2 using many thin angular strips
-    const steps = 900;
-    const thk = r2 - r1;
-    for (let i = 0; i < steps; i++) {
-      const a0 = (i / steps) * Math.PI * 2;
-      const a1 = ((i + 1) / steps) * Math.PI * 2;
-      const aMid = (a0 + a1) * 0.5;
+      function ring(xc, yc, r1, r2, brightFn, swirl = 12, speed = 0.25, alpha = 1.0, verticalScale = 1.0) {
+        // Fill an annulus from r1..r2 using many thin angular strips
+        const steps = 900;
+        const thk = r2 - r1;
+        for (let i = 0; i < steps; i++) {
+          const a0 = (i / steps) * Math.PI * 2;
+          const a1 = ((i + 1) / steps) * Math.PI * 2;
+          const aMid = (a0 + a1) * 0.5;
 
-      // Doppler brightness modulation (cosine relative to viewer left/right)
-      const dir = Math.cos(aMid + (brightRight ? 0 : Math.PI));
-      const doppler = 0.55 + 0.45 * Math.max(0, dir);
+          // Doppler brightness modulation (cosine relative to viewer left/right)
+          const dir = Math.cos(aMid + (brightRight ? 0 : Math.PI));
+          const doppler = 0.55 + 0.45 * Math.max(0, dir);
 
-      // Swirl bands
-      const bands = 0.5 + 0.5 * Math.sin(swirl * aMid + t * speed + 6 * Math.log1p(r1));
-      const heat = Math.pow(bands, 1.35);
+          // Swirl bands
+          const bands = 0.5 + 0.5 * Math.sin(swirl * aMid + t * speed + 6 * Math.log1p(r1));
+          const heat = Math.pow(bands, 1.35);
 
-      const c = colorRamp(0.25 + 0.75 * heat);
-      ctx.fillStyle = c;
-      ctx.globalAlpha = alpha * brightFn(aMid) * (0.55 + 0.45 * doppler);
+          const c = colorRamp(0.25 + 0.75 * heat);
+          ctx.fillStyle = c;
+          ctx.globalAlpha = alpha * brightFn(aMid) * (0.55 + 0.45 * doppler);
 
-      // Build a thin quad segment between r1..r2
-      ctx.beginPath();
-      const xr10 = xc + r1 * Math.cos(a0);
-      const yr10 = yc + (r1 * Math.sin(a0)) * verticalScale;
-      const xr11 = xc + r1 * Math.cos(a1);
-      const yr11 = yc + (r1 * Math.sin(a1)) * verticalScale;
-      const xr20 = xc + r2 * Math.cos(a0);
-      const yr20 = yc + (r2 * Math.sin(a0)) * verticalScale;
-      const xr21 = xc + r2 * Math.cos(a1);
-      const yr21 = yc + (r2 * Math.sin(a1)) * verticalScale;
-      ctx.moveTo(xr10, yr10);
-      ctx.lineTo(xr11, yr11);
-      ctx.lineTo(xr21, yr21);
-      ctx.lineTo(xr20, yr20);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
+          // Build a thin quad segment between r1..r2
+          ctx.beginPath();
+          const xr10 = xc + r1 * Math.cos(a0);
+          const yr10 = yc + (r1 * Math.sin(a0)) * verticalScale;
+          const xr11 = xc + r1 * Math.cos(a1);
+          const yr11 = yc + (r1 * Math.sin(a1)) * verticalScale;
+          const xr20 = xc + r2 * Math.cos(a0);
+          const yr20 = yc + (r2 * Math.sin(a0)) * verticalScale;
+          const xr21 = xc + r2 * Math.cos(a1);
+          const yr21 = yc + (r2 * Math.sin(a1)) * verticalScale;
+          ctx.moveTo(xr10, yr10);
+          ctx.lineTo(xr11, yr11);
+          ctx.lineTo(xr21, yr21);
+          ctx.lineTo(xr20, yr20);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
 
-  function drawScene() {
-    ctx.save();
-    ctx.clearRect(0, 0, W, H);
+      function drawScene() {
+        ctx.save();
+        ctx.clearRect(0, 0, W, H);
 
-    const cx = W * 0.5;
-    const cy = H * 0.52;
+        const cx = W * 0.5;
+        const cy = H * 0.52;
 
-    // 1) Far-side lensed arc (over the top)
-    ring(cx, cy - lensTop, RdiskIn * 0.95, RdiskOut * 0.95, () => 0.65, 16, 0.20, 0.85, 0.46);
+        // 1) Far-side lensed arc (over the top)
+        ring(cx, cy - lensTop, RdiskIn * 0.95, RdiskOut * 0.95, () => 0.65, 16, 0.20, 0.85, 0.46);
 
-    // 2) Underside image (below)
-    ring(cx, cy + lensBot, RdiskIn * 0.85, RdiskOut * 0.85, () => 0.5, 14, 0.20, 0.75, 0.52);
+        // 2) Underside image (below)
+        ring(cx, cy + lensBot, RdiskIn * 0.85, RdiskOut * 0.85, () => 0.5, 14, 0.20, 0.75, 0.52);
 
-    // 3) Equatorial accretion disk (main mid-plane)
-    ring(cx, cy, RdiskIn, RdiskOut, (ang) => {
-      // hide the back half slightly to mimic self-occlusion
-      const y = Math.sin(ang);
-      return 0.45 + 0.55 * (y > 0 ? 0.6 : 1.0);
-    }, 18, 0.28, 0.95, tilt);
+        // 3) Equatorial accretion disk (main mid-plane)
+        ring(cx, cy, RdiskIn, RdiskOut, (ang) => {
+          // hide the back half slightly to mimic self-occlusion
+          const y = Math.sin(ang);
+          return 0.45 + 0.55 * (y > 0 ? 0.6 : 1.0);
+        }, 18, 0.28, 0.95, tilt);
 
-    // 4) Black hole shadow
-    ctx.beginPath();
-    ctx.arc(cx, cy, Rshadow, 0, Math.PI * 2);
-    ctx.fillStyle = '#000';
-    ctx.shadowBlur = 28;
-    ctx.shadowColor = '#000';
-    ctx.fill();
-    ctx.shadowBlur = 0;
+        // 4) Black hole shadow
+        ctx.beginPath();
+        ctx.arc(cx, cy, Rshadow, 0, Math.PI * 2);
+        ctx.fillStyle = '#000';
+        ctx.shadowBlur = 28;
+        ctx.shadowColor = '#000';
+        ctx.fill();
+        ctx.shadowBlur = 0;
 
-    // 5) Photon ring (thin, bright)
-    const grd = ctx.createRadialGradient(cx, cy, Rphoton - 1, cx, cy, Rphoton + 2);
-    grd.addColorStop(0.25, 'rgba(255,200,120,0)');
-    grd.addColorStop(0.55, 'rgba(255,220,150,0.9)');
-    grd.addColorStop(0.75, 'rgba(255,220,150,0)');
-    ctx.beginPath();
-    ctx.arc(cx, cy, Rphoton, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,220,150,0.85)';
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-    ctx.fillStyle = grd;
-    ctx.fill();
+        // 5) Photon ring (thin, bright)
+        const grd = ctx.createRadialGradient(cx, cy, Rphoton - 1, cx, cy, Rphoton + 2);
+        grd.addColorStop(0.25, 'rgba(255,200,120,0)');
+        grd.addColorStop(0.55, 'rgba(255,220,150,0.9)');
+        grd.addColorStop(0.75, 'rgba(255,220,150,0)');
+        ctx.beginPath();
+        ctx.arc(cx, cy, Rphoton, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,220,150,0.85)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.fillStyle = grd;
+        ctx.fill();
 
-    // 6) Very faint outer glow
-    const glow = ctx.createRadialGradient(cx, cy, Rphoton * 0.9, cx, cy, Rphoton * 2.6);
-    glow.addColorStop(0, 'rgba(255,150,50,0.15)');
-    glow.addColorStop(1, 'rgba(255,150,50,0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, Rphoton * 2.6, 0, Math.PI * 2);
-    ctx.fill();
+        // 6) Very faint outer glow
+        const glow = ctx.createRadialGradient(cx, cy, Rphoton * 0.9, cx, cy, Rphoton * 2.6);
+        glow.addColorStop(0, 'rgba(255,150,50,0.15)');
+        glow.addColorStop(1, 'rgba(255,150,50,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Rphoton * 2.6, 0, Math.PI * 2);
+        ctx.fill();
 
-    ctx.restore();
+        ctx.restore();
 
-    // Update overlay labels
-    placeLabels(cx, cy);
-  }
+        // Update overlay labels
+        placeLabels(cx, cy);
+      }
 
-  function placeLabels(cx, cy) {
-    // Map from canvas space to SVG viewBox (1000x600)
-    const vW = 1000, vH = 600;
-    const sx = vW / W, sy = vH / H;
-    const map = (x, y) => [x * sx, y * sy];
+      function placeLabels(cx, cy) {
+        // Map from canvas space to SVG viewBox (1000x600)
+        const vW = 1000, vH = 600;
+        const sx = vW / W, sy = vH / H;
+        const map = (x, y) => [x * sx, y * sy];
 
-    // Anchor points on the drawing
-    const P = {
-      shadow: map(cx, cy),
-      photon: map(cx + Rphoton * 0.0, cy - Rphoton * 0.02),
-      beam:   map(cx + (brightRight ? RdiskOut*0.85 : -RdiskOut*0.85), cy + RdiskOut*0.04*tilt),
-      far:    map(cx, cy - lensTop - RdiskOut*0.22*0.46),
-      under:  map(cx, cy + lensBot + RdiskIn*0.55*0.52),
-      disk:   map(cx - RdiskOut*0.95, cy + 6)
-    };
+        // Anchor points on the drawing
+        const P = {
+          shadow: map(cx, cy),
+          photon: map(cx + Rphoton * 0.0, cy - Rphoton * 0.02),
+          beam: map(cx + (brightRight ? RdiskOut * 0.85 : -RdiskOut * 0.85), cy + RdiskOut * 0.04 * tilt),
+          far: map(cx, cy - lensTop - RdiskOut * 0.22 * 0.46),
+          under: map(cx, cy + lensBot + RdiskIn * 0.55 * 0.52),
+          disk: map(cx - RdiskOut * 0.95, cy + 6)
+        };
 
-    const label = (pid, lid, tid, did, toX, toY, offY=0) => {
-      const p = document.getElementById(pid);
-      const l = document.getElementById(lid);
-      const t = document.getElementById(tid);
-      const d = document.getElementById(did);
-      p.setAttribute('cx', P[pid.split('_')[1]][0]);
-      p.setAttribute('cy', P[pid.split('_')[1]][1]);
-      l.setAttribute('d', `M ${P[pid.split('_')[1]][0]} ${P[pid.split('_')[1]][1]} L ${toX} ${toY}`);
-      t.setAttribute('x', toX + 6);
-      t.setAttribute('y', toY - 6 + offY);
-      d.setAttribute('x', toX + 6);
-      d.setAttribute('y', toY + 12 + offY);
-    };
+        const label = (pid, lid, tid, did, toX, toY, offY = 0) => {
+          const p = document.getElementById(pid);
+          const l = document.getElementById(lid);
+          const t = document.getElementById(tid);
+          const d = document.getElementById(did);
+          p.setAttribute('cx', P[pid.split('_')[1]][0]);
+          p.setAttribute('cy', P[pid.split('_')[1]][1]);
+          l.setAttribute('d', `M ${P[pid.split('_')[1]][0]} ${P[pid.split('_')[1]][1]} L ${toX} ${toY}`);
+          t.setAttribute('x', toX + 6);
+          t.setAttribute('y', toY - 6 + offY);
+          d.setAttribute('x', toX + 6);
+          d.setAttribute('y', toY + 12 + offY);
+        };
 
-    label('p_shadow','l_shadow','t_shadow','d_shadow', 735, 245);
-    label('p_photon','l_photon','t_photon','d_photon', 585, 115);
-    label('p_beam','l_beam','t_beam','d_beam', 190, 250);
-    label('p_far','l_far','t_far','d_far', 515, 70);
-    label('p_under','l_under','t_under','d_under', 420, 520);
-    label('p_disk','l_disk','t_disk','d_disk', 140, 390, -4);
-  }
+        label('p_shadow', 'l_shadow', 't_shadow', 'd_shadow', 735, 245);
+        label('p_photon', 'l_photon', 't_photon', 'd_photon', 585, 115);
+        label('p_beam', 'l_beam', 't_beam', 'd_beam', 190, 250);
+        label('p_far', 'l_far', 't_far', 'd_far', 515, 70);
+        label('p_under', 'l_under', 't_under', 'd_under', 420, 520);
+        label('p_disk', 'l_disk', 't_disk', 'd_disk', 140, 390, -4);
+      }
 
-  function loop() {
-    if (running) t += 0.016;
-    drawScene();
-    requestAnimationFrame(loop);
-  }
+      function loop() {
+        if (running) t += 0.016;
+        drawScene();
+        requestAnimationFrame(loop);
+      }
 
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    drawBackground();
-  }
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        drawBackground();
+      }
 
-  // Controls
-  document.getElementById('toggle').onclick = () => {
-    running = !running;
-    document.getElementById('toggle').textContent = running ? 'Pause' : 'Play';
-  };
-  document.getElementById('flip').onclick = () => { brightRight = !brightRight; };
-  document.getElementById('reset').onclick = () => { brightRight = true; t = 0; };
+      // Controls
+      document.getElementById('toggle').onclick = () => {
+        running = !running;
+        document.getElementById('toggle').textContent = running ? 'Pause' : 'Play';
+      };
+      document.getElementById('flip').onclick = () => { brightRight = !brightRight; };
+      document.getElementById('reset').onclick = () => { brightRight = true; t = 0; };
 
-  window.addEventListener('resize', () => { resize(); });
-  resize();
-  drawBackground();
-  loop();
-})();
-</script>
+      window.addEventListener('resize', () => { resize(); });
+      resize();
+      drawBackground();
+      loop();
+    })();
+  </script>
 </body>
+
 </html>

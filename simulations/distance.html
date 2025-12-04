@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
   <title>Distance Metrics Visualization</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Arial', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #0f0f23;
       color: #f0f0f0;
       overflow: hidden;
@@ -25,85 +23,6 @@
       flex-direction: column;
     }
 
-    .header {
-      padding: 12px 20px 10px;
-      background: rgba(0, 0, 0, 0.3);
-      border-bottom: 1px solid rgba(100, 100, 255, 0.5);
-    }
-
-    h1 {
-      margin: 0;
-      color: #8be9fd;
-      text-shadow: 0 0 10px rgba(139, 233, 253, 0.8);
-      font-size: 20px;
-      line-height: 1.2;
-    }
-
-    .controls, .controls-2 {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px 16px;
-      margin: 8px 0 0;
-    }
-
-    .controls button {
-      background: #44475a;
-      color: #f8f8f2;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 13px;
-    }
-
-    .controls button:hover {
-      background: #6272a4;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 10px rgba(98, 114, 164, 0.4);
-    }
-
-    .controls button.active {
-      background: #bd93f9;
-      color: #282a36;
-    }
-
-    .subcontrols {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px 18px;
-      align-items: center;
-      margin-top: 8px;
-      font-size: 13px;
-    }
-
-    .subcontrols .group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0,0,0,0.25);
-      border: 1px solid rgba(189, 147, 249, 0.3);
-      padding: 6px 8px;
-      border-radius: 6px;
-    }
-
-    .subcontrols input[type="range"] {
-      width: 160px;
-      accent-color: #bd93f9;
-    }
-
-    .subcontrols input[type="checkbox"] {
-      accent-color: #50fa7b;
-    }
-
-    .canvas-container {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-    }
-
     canvas {
       touch-action: none;
       display: block;
@@ -111,61 +30,164 @@
       height: 100%;
     }
 
+    /* Floating UI */
+    .controls-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(20, 20, 40, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid rgba(189, 147, 249, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      width: 300px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin: 0 0 15px 0;
+      color: #8be9fd;
+      text-shadow: 0 0 10px rgba(139, 233, 253, 0.5);
+      font-size: 1.2rem;
+      border-bottom: 1px solid rgba(189, 147, 249, 0.2);
+      padding-bottom: 10px;
+    }
+
+    .metric-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .metric-buttons button {
+      flex: 1 0 45%;
+      background: rgba(68, 71, 90, 0.6);
+      color: #f8f8f2;
+      border: 1px solid rgba(189, 147, 249, 0.2);
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .metric-buttons button:hover {
+      background: rgba(98, 114, 164, 0.8);
+      transform: translateY(-1px);
+    }
+
+    .metric-buttons button.active {
+      background: #bd93f9;
+      color: #282a36;
+      box-shadow: 0 0 10px rgba(189, 147, 249, 0.4);
+    }
+
+    .control-group {
+      margin-bottom: 12px;
+    }
+
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #bd93f9;
+      background: rgba(255, 255, 255, 0.1);
+      height: 4px;
+      border-radius: 2px;
+    }
+
+    .toggles {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    #exportPng {
+      background: #50fa7b;
+      color: #282a36;
+    }
+
+    #reset {
+      background: #ff5555;
+      color: white;
+    }
+
     .info-panel {
       position: absolute;
       bottom: 20px;
       left: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(189, 147, 249, 0.5);
-      max-width: 360px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-      font-size: 13px;
+      background: rgba(20, 20, 40, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 15px;
+      border: 1px solid rgba(189, 147, 249, 0.3);
+      max-width: 300px;
+      font-size: 0.9rem;
     }
 
     .info-panel h3 {
-      margin: 0 0 6px;
-      font-size: 16px;
+      margin: 0 0 5px;
       color: #8be9fd;
-    }
-
-    .instruction {
-      position: absolute;
-      top: 80px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.75);
-      text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-      pointer-events: none;
-      z-index: 10;
-      font-size: 14px;
+      font-size: 1rem;
     }
 
     .formula {
-      font-family: monospace;
-      background: rgba(40, 42, 54, 0.8);
-      padding: 6px 8px;
-      border-radius: 4px;
-      margin-top: 6px;
+      font-family: 'Monaco', monospace;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px;
+      border-radius: 6px;
+      margin: 8px 0;
       color: #50fa7b;
-      font-size: 12px;
+      font-size: 0.85rem;
     }
 
     .legend {
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(80, 250, 123, 0.5);
-      font-size: 12px;
+      background: rgba(20, 20, 40, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 15px;
+      border-radius: 15px;
+      border: 1px solid rgba(80, 250, 123, 0.3);
+      font-size: 0.85rem;
     }
 
     .legend h4 {
-      margin: 0 0 6px;
+      margin: 0 0 10px;
       color: #50fa7b;
     }
 
@@ -176,586 +198,587 @@
     }
 
     .color-box {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       margin-right: 10px;
-      border-radius: 3px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
     }
 
-    .hint {
-      opacity: 0.85;
-      color: #ffb86c;
-      margin-top: 6px;
-      font-size: 12px;
+    .instruction {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+      font-size: 0.9rem;
+      backdrop-filter: blur(5px);
     }
   </style>
 </head>
+
 <body>
-<div class="container">
-  <div class="header">
-    <h1>Distance Metrics Visualization</h1>
-    <div class="controls">
-      <button id="euclidean" class="active">Euclidean</button>
-      <button id="manhattan">Manhattan</button>
-      <button id="minkowski">Minkowski</button>
-      <button id="cosine">Cosine</button>
-      <button id="chebyshev">Chebyshev</button>
-    </div>
-    <div class="subcontrols">
-      <div class="group" id="minkowskiGroup" style="display:none">
-        <label for="pSlider">p:</label>
+  <div class="container">
+    <canvas id="visualCanvas"></canvas>
+
+    <div class="instruction">Click to set reference. Drag to move. Shift+Click to pin target.</div>
+
+    <div class="controls-panel">
+      <h1>Distance Metrics</h1>
+
+      <div class="metric-buttons">
+        <button id="euclidean" class="active">Euclidean</button>
+        <button id="manhattan">Manhattan</button>
+        <button id="minkowski">Minkowski</button>
+        <button id="cosine">Cosine</button>
+        <button id="chebyshev">Chebyshev</button>
+      </div>
+
+      <div class="control-group" id="minkowskiGroup" style="display:none">
+        <label for="pSlider">Minkowski p: <span id="pValue">3.0</span></label>
         <input type="range" id="pSlider" min="1" max="5" step="0.1" value="3" />
-        <span id="pValue">3.0</span>
       </div>
-      <div class="group">
-        <label for="resSlider">Resolution:</label>
+
+      <div class="control-group">
+        <label for="resSlider">Resolution: <span id="resValue">6</span> px</label>
         <input type="range" id="resSlider" min="2" max="20" step="1" value="6" />
-        <span id="resValue">6</span> px
       </div>
-      <div class="group">
-        <label><input type="checkbox" id="showContours" checked /> Show contours</label>
+
+      <div class="toggles">
+        <label class="toggle-item"><input type="checkbox" id="showContours" checked /> Show contours</label>
+        <label class="toggle-item"><input type="checkbox" id="showGrid" checked /> Show grid</label>
+        <label class="toggle-item"><input type="checkbox" id="animateBg" checked /> Animate background</label>
       </div>
-      <div class="group">
-        <label><input type="checkbox" id="showGrid" checked /> Show grid</label>
-      </div>
-      <div class="group">
-        <label><input type="checkbox" id="animateBg" checked /> Animate background</label>
-      </div>
-      <div class="group">
-        <button id="exportPng">Export PNG</button>
+
+      <div class="action-buttons">
+        <button id="exportPng">Export</button>
         <button id="reset">Reset</button>
       </div>
-      <div class="hint">Click to set reference. Drag to move. Shift+Click to pin target. Hover to probe distance.</div>
+    </div>
+
+    <div class="info-panel">
+      <h3 id="currentMetric">Euclidean Distance</h3>
+      <p id="metricDescription">The "straight-line" distance between two points.</p>
+      <div class="formula" id="metricFormula">d(x,y) = √(Σ(xi - yi)²)</div>
+      <p id="currentDistance">Click to set a reference point</p>
+      <p id="hoverDistance"></p>
+      <p id="targetDistance"></p>
+    </div>
+
+    <div class="legend">
+      <h4>Distance Map</h4>
+      <div class="legend-item">
+        <div class="color-box" style="background: #8be9fd;"></div>
+        <span>Near</span>
+      </div>
+      <div class="legend-item">
+        <div class="color-box" style="background: #50fa7b;"></div>
+        <span>Medium</span>
+      </div>
+      <div class="legend-item">
+        <div class="color-box" style="background: #ffb86c;"></div>
+        <span>Far</span>
+      </div>
+      <div class="legend-item">
+        <div class="color-box" style="background: #ff5555;"></div>
+        <span>Very Far</span>
+      </div>
     </div>
   </div>
 
-  <div class="instruction">Set a reference point and explore how different distance metrics shape space.</div>
+  <script>
+    // Canvas + DPR setup
+    const canvas = document.getElementById('visualCanvas');
+    const ctx = canvas.getContext('2d');
+    let dpr = Math.max(1, window.devicePixelRatio || 1);
 
-  <div class="canvas-container">
-    <canvas id="visualCanvas"></canvas>
-  </div>
+    // State
+    let referencePoint = null;
+    let targetPoint = null;   // optional pinned target (Shift+Click)
+    let hoverPoint = null;    // live cursor probe
+    let currentMetric = 'euclidean';
+    let p = 3; // Minkowski
+    let resolution = 6;
+    let showContours = true;
+    let showGrid = true;
+    let animateBg = true;
+    let isDragging = false;
 
-  <div class="info-panel">
-    <h3 id="currentMetric">Euclidean Distance</h3>
-    <p id="metricDescription">The "straight-line" distance between two points in Euclidean space.</p>
-    <div class="formula" id="metricFormula">d(x,y) = √(Σ(xi - yi)²)</div>
-    <p id="currentDistance">Click to set a reference point</p>
-    <p id="hoverDistance"></p>
-    <p id="targetDistance"></p>
-  </div>
+    function setCanvasSize() {
+      const container = document.querySelector('.container');
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      // No style width/height needed if canvas fills container via CSS
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+    }
 
-  <div class="legend">
-    <h4>Distance Color Map</h4>
-    <div class="legend-item">
-      <div class="color-box" style="background: #8be9fd;"></div>
-      <span>Near</span>
-    </div>
-    <div class="legend-item">
-      <div class="color-box" style="background: #50fa7b;"></div>
-      <span>Medium</span>
-    </div>
-    <div class="legend-item">
-      <div class="color-box" style="background: #ffb86c;"></div>
-      <span>Far</span>
-    </div>
-    <div class="legend-item">
-      <div class="color-box" style="background: #ff5555;"></div>
-      <span>Very Far</span>
-    </div>
-  </div>
-</div>
-
-<script>
-  // Canvas + DPR setup
-  const canvas = document.getElementById('visualCanvas');
-  const ctx = canvas.getContext('2d');
-  let dpr = Math.max(1, window.devicePixelRatio || 1);
-
-  // State
-  let referencePoint = null;
-  let targetPoint = null;   // optional pinned target (Shift+Click)
-  let hoverPoint = null;    // live cursor probe
-  let currentMetric = 'euclidean';
-  let p = 3; // Minkowski
-  let resolution = 6;
-  let showContours = true;
-  let showGrid = true;
-  let animateBg = true;
-  let isDragging = false;
-
-  function setCanvasSize() {
-    const container = document.querySelector('.canvas-container');
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    dpr = Math.max(1, window.devicePixelRatio || 1);
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
-  }
-
-  window.addEventListener('resize', () => {
+    window.addEventListener('resize', () => {
+      setCanvasSize();
+      if (referencePoint) draw();
+    });
     setCanvasSize();
-    if (referencePoint) draw();
-  });
-  setCanvasSize();
 
-  const metricsInfo = {
-    euclidean: {
-      name: "Euclidean Distance",
-      description: "The 'straight-line' distance between two points in Euclidean space.",
-      formula: "d(x,y) = √(Σ(xi - yi)²)"
-    },
-    manhattan: {
-      name: "Manhattan Distance",
-      description: "Sum of absolute differences across axes, like navigating city blocks.",
-      formula: "d(x,y) = Σ|xi - yi|"
-    },
-    minkowski: {
-      name: "Minkowski Distance",
-      description: "Generalization of Euclidean and Manhattan using parameter p.",
-      formula: "d(x,y) = (Σ|xi - yi|^p)^(1/p)"
-    },
-    cosine: {
-      name: "Cosine Similarity (as distance)",
-      description: "1 - cosine similarity of vectors from origin; range [0, 2].",
-      formula: "d(x,y) = 1 - (x·y)/(||x||·||y||)"
-    },
-    chebyshev: {
-      name: "Chebyshev Distance",
-      description: "Maximum absolute difference across axes.",
-      formula: "d(x,y) = max(|xi - yi|)"
-    }
-  };
-
-  const distanceFunctions = {
-    euclidean: (x1, y1, x2, y2) =>
-      Math.hypot(x2 - x1, y2 - y1),
-    manhattan: (x1, y1, x2, y2) =>
-      Math.abs(x2 - x1) + Math.abs(y2 - y1),
-    minkowski: (x1, y1, x2, y2) =>
-      Math.pow(
-        Math.pow(Math.abs(x2 - x1), p) + Math.pow(Math.abs(y2 - y1), p),
-        1 / p
-      ),
-    cosine: (x1, y1, x2, y2) => {
-      const dot = x1 * x2 + y1 * y2;
-      const m1 = Math.hypot(x1, y1);
-      const m2 = Math.hypot(x2, y2);
-      if (m1 === 0 || m2 === 0) return 0;
-      // distance in [0, 2]
-      return 1 - dot / (m1 * m2);
-    },
-    chebyshev: (x1, y1, x2, y2) =>
-      Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1))
-  };
-
-  function lerpColor(a, b, t) {
-    const ah = parseInt(a.slice(1), 16);
-    const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
-    const bh = parseInt(b.slice(1), 16);
-    const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
-    const rr = Math.round(ar + t * (br - ar));
-    const rg = Math.round(ag + t * (bg - ag));
-    const rb = Math.round(ab + t * (bb - ab));
-    return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb).toString(16).slice(1);
-  }
-
-  function getColor(distance, maxDistance) {
-    const normalized = Math.min(distance / maxDistance, 1);
-    if (normalized < 0.25) {
-      return lerpColor('#8be9fd', '#50fa7b', normalized * 4);
-    } else if (normalized < 0.5) {
-      return lerpColor('#50fa7b', '#ffb86c', (normalized - 0.25) * 4);
-    } else if (normalized < 0.75) {
-      return lerpColor('#ffb86c', '#ff5555', (normalized - 0.5) * 4);
-    }
-    return lerpColor('#ff5555', '#ff79c6', (normalized - 0.75) * 4);
-  }
-
-  function maxDistanceForMetric(ref) {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    if (currentMetric === 'cosine') return 2; // normalized [0,2]
-    const d = distanceFunctions[currentMetric];
-    return Math.max(
-      d(ref.x, ref.y, 0, 0),
-      d(ref.x, ref.y, w, 0),
-      d(ref.x, ref.y, 0, h),
-      d(ref.x, ref.y, w, h)
-    );
-  }
-
-  // Background draw (when no ref point)
-  const particles = [];
-  const numParticles = 60;
-
-  function initParticles() {
-    particles.length = 0;
-    for (let i = 0; i < numParticles; i++) {
-      particles.push({
-        x: Math.random() * canvas.clientWidth,
-        y: Math.random() * canvas.clientHeight,
-        r: Math.random() * 2 + 1,
-        a: Math.random() * 0.2,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5
-      });
-    }
-  }
-  initParticles();
-
-  function drawBackground() {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-
-    // Gradient background
-    const gradient = ctx.createRadialGradient(
-      w / 2, h / 2, 0,
-      w / 2, h / 2, Math.max(w, h)
-    );
-    gradient.addColorStop(0, '#282a36');
-    gradient.addColorStop(1, '#0f0f23');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, w, h);
-
-    // Grid
-    if (showGrid) {
-      ctx.lineWidth = 0.5;
-      ctx.strokeStyle = 'rgba(98, 114, 164, 0.25)';
-      const gridSize = 30;
-      for (let x = 0; x < w; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
+    const metricsInfo = {
+      euclidean: {
+        name: "Euclidean Distance",
+        description: "The 'straight-line' distance between two points in Euclidean space.",
+        formula: "d(x,y) = √(Σ(xi - yi)²)"
+      },
+      manhattan: {
+        name: "Manhattan Distance",
+        description: "Sum of absolute differences across axes, like navigating city blocks.",
+        formula: "d(x,y) = Σ|xi - yi|"
+      },
+      minkowski: {
+        name: "Minkowski Distance",
+        description: "Generalization of Euclidean and Manhattan using parameter p.",
+        formula: "d(x,y) = (Σ|xi - yi|^p)^(1/p)"
+      },
+      cosine: {
+        name: "Cosine Similarity",
+        description: "1 - cosine similarity of vectors from origin; range [0, 2].",
+        formula: "d(x,y) = 1 - (x·y)/(||x||·||y||)"
+      },
+      chebyshev: {
+        name: "Chebyshev Distance",
+        description: "Maximum absolute difference across axes.",
+        formula: "d(x,y) = max(|xi - yi|)"
       }
-      for (let y = 0; y < h; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
+    };
+
+    const distanceFunctions = {
+      euclidean: (x1, y1, x2, y2) =>
+        Math.hypot(x2 - x1, y2 - y1),
+      manhattan: (x1, y1, x2, y2) =>
+        Math.abs(x2 - x1) + Math.abs(y2 - y1),
+      minkowski: (x1, y1, x2, y2) =>
+        Math.pow(
+          Math.pow(Math.abs(x2 - x1), p) + Math.pow(Math.abs(y2 - y1), p),
+          1 / p
+        ),
+      cosine: (x1, y1, x2, y2) => {
+        const dot = x1 * x2 + y1 * y2;
+        const m1 = Math.hypot(x1, y1);
+        const m2 = Math.hypot(x2, y2);
+        if (m1 === 0 || m2 === 0) return 0;
+        // distance in [0, 2]
+        return 1 - dot / (m1 * m2);
+      },
+      chebyshev: (x1, y1, x2, y2) =>
+        Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1))
+    };
+
+    function lerpColor(a, b, t) {
+      const ah = parseInt(a.slice(1), 16);
+      const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
+      const bh = parseInt(b.slice(1), 16);
+      const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
+      const rr = Math.round(ar + t * (br - ar));
+      const rg = Math.round(ag + t * (bg - ag));
+      const rb = Math.round(ab + t * (bb - ab));
+      return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb).toString(16).slice(1);
+    }
+
+    function getColor(distance, maxDistance) {
+      const normalized = Math.min(distance / maxDistance, 1);
+      if (normalized < 0.25) {
+        return lerpColor('#8be9fd', '#50fa7b', normalized * 4);
+      } else if (normalized < 0.5) {
+        return lerpColor('#50fa7b', '#ffb86c', (normalized - 0.25) * 4);
+      } else if (normalized < 0.75) {
+        return lerpColor('#ffb86c', '#ff5555', (normalized - 0.5) * 4);
+      }
+      return lerpColor('#ff5555', '#ff79c6', (normalized - 0.75) * 4);
+    }
+
+    function maxDistanceForMetric(ref) {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (currentMetric === 'cosine') return 2; // normalized [0,2]
+      const d = distanceFunctions[currentMetric];
+      return Math.max(
+        d(ref.x, ref.y, 0, 0),
+        d(ref.x, ref.y, w, 0),
+        d(ref.x, ref.y, 0, h),
+        d(ref.x, ref.y, w, h)
+      );
+    }
+
+    // Background draw (when no ref point)
+    const particles = [];
+    const numParticles = 60;
+
+    function initParticles() {
+      particles.length = 0;
+      for (let i = 0; i < numParticles; i++) {
+        particles.push({
+          x: Math.random() * canvas.clientWidth,
+          y: Math.random() * canvas.clientHeight,
+          r: Math.random() * 2 + 1,
+          a: Math.random() * 0.2,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5
+        });
       }
     }
+    initParticles();
 
-    // Particles
-    if (animateBg) {
-      particles.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = w;
-        if (p.x > w) p.x = 0;
-        if (p.y < 0) p.y = h;
-        if (p.y > h) p.y = 0;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${p.a})`;
-        ctx.fill();
-      });
-    }
-  }
+    function drawBackground() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
 
-  function drawHeatmap() {
-    if (!referencePoint) return;
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    const maxD = maxDistanceForMetric(referencePoint);
-    const dFunc = distanceFunctions[currentMetric];
+      // Gradient background
+      const gradient = ctx.createRadialGradient(
+        w / 2, h / 2, 0,
+        w / 2, h / 2, Math.max(w, h)
+      );
+      gradient.addColorStop(0, '#282a36');
+      gradient.addColorStop(1, '#0f0f23');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
 
-    // Draw tiles
-    for (let x = 0; x < w; x += resolution) {
-      for (let y = 0; y < h; y += resolution) {
-        const d = dFunc(referencePoint.x, referencePoint.y, x + 0.5 * resolution, y + 0.5 * resolution);
-        ctx.fillStyle = getColor(d, maxD);
-        ctx.fillRect(x, y, resolution, resolution);
-      }
-    }
-  }
-
-  function drawContoursLayer() {
-    if (!referencePoint || !showContours) return;
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    const maxD = maxDistanceForMetric(referencePoint);
-    const dFunc = distanceFunctions[currentMetric];
-
-    const numContours = 8;
-    ctx.lineWidth = 1.25;
-    for (let i = 1; i <= numContours; i++) {
-      const target = (maxD * i) / numContours;
-      ctx.strokeStyle = `rgba(40, 42, 54, ${0.45 + i * 0.05})`;
-      ctx.beginPath();
-      let first = true;
-
-      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 180) {
-        let found = false;
-        let lo = 0, hi = Math.max(w, h), mid, dist;
-        for (let it = 0; it < 12; it++) {
-          mid = (lo + hi) / 2;
-          const x = referencePoint.x + Math.cos(angle) * mid;
-          const y = referencePoint.y + Math.sin(angle) * mid;
-          if (x < 0 || y < 0 || x >= w || y >= h) { hi = mid; continue; }
-          dist = dFunc(referencePoint.x, referencePoint.y, x, y);
-          if (Math.abs(dist - target) < 0.2) { found = true; break; }
-          if (dist < target) lo = mid; else hi = mid;
+      // Grid
+      if (showGrid) {
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = 'rgba(98, 114, 164, 0.25)';
+        const gridSize = 30;
+        for (let x = 0; x < w; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
         }
-        if (found) {
-          const x = referencePoint.x + Math.cos(angle) * mid;
-          const y = referencePoint.y + Math.sin(angle) * mid;
-          if (first) { ctx.moveTo(x, y); first = false; }
-          else { ctx.lineTo(x, y); }
+        for (let y = 0; y < h; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
         }
       }
-      ctx.closePath();
-      ctx.stroke();
-    }
-  }
 
-  function drawReferenceAndGuides() {
-    if (!referencePoint) return;
-
-    // Reference point
-    ctx.beginPath();
-    ctx.arc(referencePoint.x, referencePoint.y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#bd93f9';
-    ctx.fill();
-    ctx.strokeStyle = '#f8f8f2';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Crosshairs
-    ctx.beginPath();
-    ctx.moveTo(referencePoint.x - 15, referencePoint.y);
-    ctx.lineTo(referencePoint.x + 15, referencePoint.y);
-    ctx.moveTo(referencePoint.x, referencePoint.y - 15);
-    ctx.lineTo(referencePoint.x, referencePoint.y + 15);
-    ctx.strokeStyle = '#f8f8f2';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Lines + labels (hover and/or target)
-    function drawMeasure(toPoint, color) {
-      if (!toPoint) return;
-      const d = distanceFunctions[currentMetric](referencePoint.x, referencePoint.y, toPoint.x, toPoint.y);
-      ctx.beginPath();
-      ctx.moveTo(referencePoint.x, referencePoint.y);
-      ctx.lineTo(toPoint.x, toPoint.y);
-      ctx.strokeStyle = color;
-      ctx.setLineDash([6, 6]);
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Label at midpoint
-      const mx = (referencePoint.x + toPoint.x) / 2;
-      const my = (referencePoint.y + toPoint.y) / 2;
-      const label = d.toFixed(2);
-      ctx.font = '12px Arial';
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      const pad = 3;
-      const textW = ctx.measureText(label).width;
-      ctx.fillRect(mx - textW / 2 - pad, my - 10 - pad, textW + pad * 2, 14 + pad * 2);
-      ctx.fillStyle = '#50fa7b';
-      ctx.fillText(label, mx - textW / 2, my + 2);
+      // Particles
+      if (animateBg) {
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0) p.x = w;
+          if (p.x > w) p.x = 0;
+          if (p.y < 0) p.y = h;
+          if (p.y > h) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${p.a})`;
+          ctx.fill();
+        });
+      }
     }
 
-    drawMeasure(hoverPoint, '#50fa7b');
-    drawMeasure(targetPoint, '#ffb86c');
+    function drawHeatmap() {
+      if (!referencePoint) return;
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      const maxD = maxDistanceForMetric(referencePoint);
+      const dFunc = distanceFunctions[currentMetric];
 
-    // Target point marker
-    if (targetPoint) {
+      // Draw tiles
+      for (let x = 0; x < w; x += resolution) {
+        for (let y = 0; y < h; y += resolution) {
+          const d = dFunc(referencePoint.x, referencePoint.y, x + 0.5 * resolution, y + 0.5 * resolution);
+          ctx.fillStyle = getColor(d, maxD);
+          ctx.fillRect(x, y, resolution, resolution);
+        }
+      }
+    }
+
+    function drawContoursLayer() {
+      if (!referencePoint || !showContours) return;
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      const maxD = maxDistanceForMetric(referencePoint);
+      const dFunc = distanceFunctions[currentMetric];
+
+      const numContours = 8;
+      ctx.lineWidth = 1.25;
+      for (let i = 1; i <= numContours; i++) {
+        const target = (maxD * i) / numContours;
+        ctx.strokeStyle = `rgba(40, 42, 54, ${0.45 + i * 0.05})`;
+        ctx.beginPath();
+        let first = true;
+
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 180) {
+          let found = false;
+          let lo = 0, hi = Math.max(w, h), mid, dist;
+          for (let it = 0; it < 12; it++) {
+            mid = (lo + hi) / 2;
+            const x = referencePoint.x + Math.cos(angle) * mid;
+            const y = referencePoint.y + Math.sin(angle) * mid;
+            if (x < 0 || y < 0 || x >= w || y >= h) { hi = mid; continue; }
+            dist = dFunc(referencePoint.x, referencePoint.y, x, y);
+            if (Math.abs(dist - target) < 0.2) { found = true; break; }
+            if (dist < target) lo = mid; else hi = mid;
+          }
+          if (found) {
+            const x = referencePoint.x + Math.cos(angle) * mid;
+            const y = referencePoint.y + Math.sin(angle) * mid;
+            if (first) { ctx.moveTo(x, y); first = false; }
+            else { ctx.lineTo(x, y); }
+          }
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+
+    function drawReferenceAndGuides() {
+      if (!referencePoint) return;
+
+      // Reference point
       ctx.beginPath();
-      ctx.arc(targetPoint.x, targetPoint.y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffb86c';
+      ctx.arc(referencePoint.x, referencePoint.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#bd93f9';
       ctx.fill();
       ctx.strokeStyle = '#f8f8f2';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 2;
       ctx.stroke();
+
+      // Crosshairs
+      ctx.beginPath();
+      ctx.moveTo(referencePoint.x - 15, referencePoint.y);
+      ctx.lineTo(referencePoint.x + 15, referencePoint.y);
+      ctx.moveTo(referencePoint.x, referencePoint.y - 15);
+      ctx.lineTo(referencePoint.x, referencePoint.y + 15);
+      ctx.strokeStyle = '#f8f8f2';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Lines + labels (hover and/or target)
+      function drawMeasure(toPoint, color) {
+        if (!toPoint) return;
+        const d = distanceFunctions[currentMetric](referencePoint.x, referencePoint.y, toPoint.x, toPoint.y);
+        ctx.beginPath();
+        ctx.moveTo(referencePoint.x, referencePoint.y);
+        ctx.lineTo(toPoint.x, toPoint.y);
+        ctx.strokeStyle = color;
+        ctx.setLineDash([6, 6]);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Label at midpoint
+        const mx = (referencePoint.x + toPoint.x) / 2;
+        const my = (referencePoint.y + toPoint.y) / 2;
+        const label = d.toFixed(2);
+        ctx.font = '12px Arial';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        const pad = 3;
+        const textW = ctx.measureText(label).width;
+        ctx.fillRect(mx - textW / 2 - pad, my - 10 - pad, textW + pad * 2, 14 + pad * 2);
+        ctx.fillStyle = '#50fa7b';
+        ctx.fillText(label, mx - textW / 2, my + 2);
+      }
+
+      drawMeasure(hoverPoint, '#50fa7b');
+      drawMeasure(targetPoint, '#ffb86c');
+
+      // Target point marker
+      if (targetPoint) {
+        ctx.beginPath();
+        ctx.arc(targetPoint.x, targetPoint.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffb86c';
+        ctx.fill();
+        ctx.strokeStyle = '#f8f8f2';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
     }
-  }
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-    if (!referencePoint) {
-      drawBackground();
-      return;
-    }
-    drawHeatmap();
-    drawContoursLayer();
-    drawReferenceAndGuides();
-  }
-
-  // Info panel updates
-  function updateInfoPanel() {
-    const info = metricsInfo[currentMetric];
-    document.getElementById('currentMetric').textContent = info.name;
-    document.getElementById('metricDescription').textContent = info.description;
-    document.getElementById('metricFormula').textContent = info.formula;
-
-    const center = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
-    const curr = document.getElementById('currentDistance');
-    const hov = document.getElementById('hoverDistance');
-    const tar = document.getElementById('targetDistance');
-
-    if (!referencePoint) {
-      curr.textContent = 'Click to set a reference point';
-      hov.textContent = '';
-      tar.textContent = '';
-      return;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!referencePoint) {
+        drawBackground();
+        return;
+      }
+      drawHeatmap();
+      drawContoursLayer();
+      drawReferenceAndGuides();
     }
 
-    const dToCenter = distanceFunctions[currentMetric](
-      referencePoint.x, referencePoint.y, center.x, center.y
-    ).toFixed(2);
-    curr.textContent = `Distance to center: ${dToCenter}`;
+    // Info panel updates
+    function updateInfoPanel() {
+      const info = metricsInfo[currentMetric];
+      document.getElementById('currentMetric').textContent = info.name;
+      document.getElementById('metricDescription').textContent = info.description;
+      document.getElementById('metricFormula').textContent = info.formula;
 
-    if (hoverPoint) {
-      const dHover = distanceFunctions[currentMetric](
-        referencePoint.x, referencePoint.y, hoverPoint.x, hoverPoint.y
+      const center = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+      const curr = document.getElementById('currentDistance');
+      const hov = document.getElementById('hoverDistance');
+      const tar = document.getElementById('targetDistance');
+
+      if (!referencePoint) {
+        curr.textContent = 'Click to set a reference point';
+        hov.textContent = '';
+        tar.textContent = '';
+        return;
+      }
+
+      const dToCenter = distanceFunctions[currentMetric](
+        referencePoint.x, referencePoint.y, center.x, center.y
       ).toFixed(2);
-      hov.textContent = `Distance to cursor: ${dHover}`;
-    } else {
-      hov.textContent = '';
+      curr.textContent = `Distance to center: ${dToCenter}`;
+
+      if (hoverPoint) {
+        const dHover = distanceFunctions[currentMetric](
+          referencePoint.x, referencePoint.y, hoverPoint.x, hoverPoint.y
+        ).toFixed(2);
+        hov.textContent = `Distance to cursor: ${dHover}`;
+      } else {
+        hov.textContent = '';
+      }
+
+      if (targetPoint) {
+        const dTarget = distanceFunctions[currentMetric](
+          referencePoint.x, referencePoint.y, targetPoint.x, targetPoint.y
+        ).toFixed(2);
+        tar.textContent = `Distance to target: ${dTarget}`;
+      } else {
+        tar.textContent = '';
+      }
     }
 
-    if (targetPoint) {
-      const dTarget = distanceFunctions[currentMetric](
-        referencePoint.x, referencePoint.y, targetPoint.x, targetPoint.y
-      ).toFixed(2);
-      tar.textContent = `Distance to target: ${dTarget}`;
-    } else {
-      tar.textContent = '';
+    // Event handling
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
-  }
-
-  // Event handling
-  function getMousePos(e) {
-    const rect = canvas.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }
-  function getTouchPos(touch) {
-    const rect = canvas.getBoundingClientRect();
-    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
-  }
-
-  canvas.addEventListener('mousedown', (e) => {
-    const pos = getMousePos(e);
-    if (!referencePoint) {
-      referencePoint = pos;
-      draw(); updateInfoPanel();
-      return;
+    function getTouchPos(touch) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     }
-    // Start dragging if near reference point
-    const dist = Math.hypot(pos.x - referencePoint.x, pos.y - referencePoint.y);
-    if (dist <= 12) isDragging = true;
-  });
-  window.addEventListener('mousemove', (e) => {
-    const pos = getMousePos(e);
-    hoverPoint = pos;
-    if (isDragging && referencePoint) {
-      referencePoint = pos;
-    }
-    draw(); updateInfoPanel();
-  });
-  window.addEventListener('mouseup', () => { isDragging = false; });
 
-  canvas.addEventListener('click', (e) => {
-    if (e.shiftKey) {
-      // Pin/unpin target
+    canvas.addEventListener('mousedown', (e) => {
       const pos = getMousePos(e);
-      targetPoint = pos;
-    } else {
+      if (!referencePoint) {
+        referencePoint = pos;
+        draw(); updateInfoPanel();
+        return;
+      }
+      // Start dragging if near reference point
+      const dist = Math.hypot(pos.x - referencePoint.x, pos.y - referencePoint.y);
+      if (dist <= 12) isDragging = true;
+    });
+    window.addEventListener('mousemove', (e) => {
       const pos = getMousePos(e);
-      referencePoint = pos;
-    }
-    draw(); updateInfoPanel();
-  });
-
-  canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const pos = getTouchPos(e.touches[0]);
-    if (!referencePoint) {
-      referencePoint = pos;
-    } else {
-      targetPoint = pos;
-    }
-    draw(); updateInfoPanel();
-  });
-  canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const pos = getTouchPos(e.touches[0]);
-    hoverPoint = pos;
-    draw(); updateInfoPanel();
-  });
-
-  // Metric buttons
-  document.querySelectorAll('.controls button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentMetric = btn.id;
-      // Toggle Minkowski controls
-      document.getElementById('minkowskiGroup').style.display =
-        currentMetric === 'minkowski' ? 'flex' : 'none';
+      hoverPoint = pos;
+      if (isDragging && referencePoint) {
+        referencePoint = pos;
+      }
       draw(); updateInfoPanel();
     });
-  });
+    window.addEventListener('mouseup', () => { isDragging = false; });
 
-  // Sliders + toggles
-  const pSlider = document.getElementById('pSlider');
-  const pValue = document.getElementById('pValue');
-  pSlider.addEventListener('input', () => {
-    p = parseFloat(pSlider.value);
-    pValue.textContent = p.toFixed(1);
-    if (currentMetric === 'minkowski' && referencePoint) {
+    canvas.addEventListener('click', (e) => {
+      if (e.shiftKey) {
+        // Pin/unpin target
+        const pos = getMousePos(e);
+        targetPoint = pos;
+      } else {
+        const pos = getMousePos(e);
+        referencePoint = pos;
+      }
       draw(); updateInfoPanel();
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const pos = getTouchPos(e.touches[0]);
+      if (!referencePoint) {
+        referencePoint = pos;
+      } else {
+        targetPoint = pos;
+      }
+      draw(); updateInfoPanel();
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const pos = getTouchPos(e.touches[0]);
+      hoverPoint = pos;
+      draw(); updateInfoPanel();
+    });
+
+    // Metric buttons
+    document.querySelectorAll('.metric-buttons button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.metric-buttons button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMetric = btn.id;
+        // Toggle Minkowski controls
+        document.getElementById('minkowskiGroup').style.display =
+          currentMetric === 'minkowski' ? 'block' : 'none';
+        draw(); updateInfoPanel();
+      });
+    });
+
+    // Sliders + toggles
+    const pSlider = document.getElementById('pSlider');
+    const pValue = document.getElementById('pValue');
+    pSlider.addEventListener('input', () => {
+      p = parseFloat(pSlider.value);
+      pValue.textContent = p.toFixed(1);
+      if (currentMetric === 'minkowski' && referencePoint) {
+        draw(); updateInfoPanel();
+      }
+    });
+
+    const resSlider = document.getElementById('resSlider');
+    const resValue = document.getElementById('resValue');
+    resSlider.addEventListener('input', () => {
+      resolution = parseInt(resSlider.value, 10);
+      resValue.textContent = resolution;
+      if (referencePoint) { draw(); }
+    });
+
+    document.getElementById('showContours').addEventListener('change', (e) => {
+      showContours = e.target.checked;
+      if (referencePoint) draw();
+    });
+    document.getElementById('showGrid').addEventListener('change', (e) => {
+      showGrid = e.target.checked;
+      if (!referencePoint) draw();
+    });
+    document.getElementById('animateBg').addEventListener('change', (e) => {
+      animateBg = e.target.checked;
+    });
+
+    // Export and Reset
+    document.getElementById('exportPng').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'distance-visualization.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+    document.getElementById('reset').addEventListener('click', () => {
+      referencePoint = null;
+      targetPoint = null;
+      hoverPoint = null;
+      draw(); updateInfoPanel();
+    });
+
+    // Animation loop
+    function animate() {
+      if (!referencePoint) {
+        drawBackground();
+      } else {
+        draw();
+      }
+      requestAnimationFrame(animate);
     }
-  });
 
-  const resSlider = document.getElementById('resSlider');
-  const resValue = document.getElementById('resValue');
-  resSlider.addEventListener('input', () => {
-    resolution = parseInt(resSlider.value, 10);
-    resValue.textContent = resolution;
-    if (referencePoint) { draw(); }
-  });
-
-  document.getElementById('showContours').addEventListener('change', (e) => {
-    showContours = e.target.checked;
-    if (referencePoint) draw();
-  });
-  document.getElementById('showGrid').addEventListener('change', (e) => {
-    showGrid = e.target.checked;
-    if (!referencePoint) draw();
-  });
-  document.getElementById('animateBg').addEventListener('change', (e) => {
-    animateBg = e.target.checked;
-  });
-
-  // Export and Reset
-  document.getElementById('exportPng').addEventListener('click', () => {
-    const link = document.createElement('a');
-    link.download = 'distance-visualization.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
-  document.getElementById('reset').addEventListener('click', () => {
-    referencePoint = null;
-    targetPoint = null;
-    hoverPoint = null;
-    draw(); updateInfoPanel();
-  });
-
-  // Animation loop
-  function animate() {
-    if (!referencePoint) {
-      drawBackground();
-    } else {
-      draw();
-    }
-    requestAnimationFrame(animate);
-  }
-
-  // Initial
-  updateInfoPanel();
-  animate();
-</script>
+    // Initial
+    updateInfoPanel();
+    animate();
+  </script>
 </body>
+
 </html>

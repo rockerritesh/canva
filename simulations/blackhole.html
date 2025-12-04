@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,39 +10,157 @@
             margin: 0;
             overflow: hidden;
             background-color: black;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
         }
+
         canvas {
             display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Floating UI */
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 280px;
+            transition: opacity 0.3s;
+        }
+
+        .controls:hover {
+            opacity: 1;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            height: 4px;
+            border-radius: 2px;
+            -webkit-appearance: none;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            color: #4ecdc4;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4ecdc4, #556270);
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
+
 <body>
-    <canvas id="simulation" width="800" height="600"></canvas>
+    <canvas id="simulation"></canvas>
+
+    <div class="controls">
+        <h2>Event Horizon</h2>
+        <div class="control-group">
+            <label>Mass (Radius) <span id="radiusVal">50</span></label>
+            <input type="range" id="radius" min="20" max="150" value="50">
+        </div>
+        <div class="control-group">
+            <label>Accretion Disk <span id="diskVal">30</span></label>
+            <input type="range" id="disk" min="10" max="100" value="30">
+        </div>
+        <div class="control-group">
+            <label>Radiation Rate <span id="rateVal">0.1</span></label>
+            <input type="range" id="rate" min="0" max="1" step="0.05" value="0.1">
+        </div>
+        <button id="reset">Reset Simulation</button>
+    </div>
+
     <script>
         // Get canvas and context
         const canvas = document.getElementById('simulation');
         const ctx = canvas.getContext('2d');
-        
-        // Constants
-        const cx = canvas.width / 2;       // Center x
-        const cy = canvas.height / 2;      // Center y
-        const bhRadius = 50;               // Black hole radius (event horizon)
-        const diskThickness = 30;          // Thickness of accretion disk
-        const innerRadius = bhRadius;      // Inner edge of accretion disk
-        const outerRadius = bhRadius + diskThickness; // Outer edge
-        
+
+        // State
+        let cx, cy;
+        let bhRadius = 50;               // Black hole radius (event horizon)
+        let diskThickness = 30;          // Thickness of accretion disk
+        let emissionRate = 0.1;
+
+        // Resize handler
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            cx = canvas.width / 2;
+            cy = canvas.height / 2;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
         // Generate background stars
         const stars = [];
-        for (let i = 0; i < 100; i++) {
-            stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-            });
+        function initStars() {
+            stars.length = 0;
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    alpha: Math.random()
+                });
+            }
         }
-        
+        initStars();
+
         // Particle class for Hawking radiation
         class Particle {
             constructor() {
+                const innerRadius = bhRadius;
                 // Start particle just outside event horizon
                 const theta = Math.random() * 2 * Math.PI;
                 this.position = {
@@ -58,8 +177,9 @@
                 // History for trail effect
                 this.history = [{ x: this.position.x, y: this.position.y }];
                 this.maxHistory = 10;
+                this.life = 1.0;
             }
-            
+
             update() {
                 this.position.x += this.velocity.vx;
                 this.position.y += this.velocity.vy;
@@ -67,8 +187,9 @@
                 if (this.history.length > this.maxHistory) {
                     this.history.shift();
                 }
+                this.life -= 0.01;
             }
-            
+
             draw() {
                 // Draw trail with color gradient
                 for (let i = 1; i < this.history.length; i++) {
@@ -76,80 +197,126 @@
                     const r = 255; // Red constant
                     const g = Math.floor(255 * t); // Green increases
                     const b = Math.floor(255 * t); // Blue increases
-                    const a = 0.1 + 0.9 * t; // Alpha from faint to bright
+                    const a = (0.1 + 0.9 * t) * this.life; // Alpha from faint to bright
                     ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.moveTo(this.history[i-1].x, this.history[i-1].y);
+                    ctx.moveTo(this.history[i - 1].x, this.history[i - 1].y);
                     ctx.lineTo(this.history[i].x, this.history[i].y);
                     ctx.stroke();
                 }
             }
         }
-        
+
         let particles = [];
-        
+
         // Animation loop
         function animate() {
+            const innerRadius = bhRadius;
+            const outerRadius = bhRadius + diskThickness;
+
             // Probabilistic particle creation for quantum-like emission
-            if (Math.random() < 0.1) { // Adjust for desired frequency
+            if (Math.random() < emissionRate) {
                 particles.push(new Particle());
             }
-            
+
             // Update particles
             particles.forEach(particle => particle.update());
-            
-            // Remove particles that travel too far
+
+            // Remove particles that travel too far or die
             particles = particles.filter(particle => {
                 const dx = particle.position.x - cx;
                 const dy = particle.position.y - cy;
-                return dx * dx + dy * dy < (outerRadius + 100) ** 2;
+                return (dx * dx + dy * dy < (Math.max(canvas.width, canvas.height)) ** 2) && particle.life > 0;
             });
-            
+
             // Clear canvas
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             // Draw stars
             ctx.fillStyle = 'white';
             stars.forEach(star => {
+                ctx.globalAlpha = star.alpha;
                 ctx.beginPath();
-                ctx.arc(star.x, star.y, 1, 0, 2 * Math.PI);
+                ctx.arc(star.x, star.y, star.size, 0, 2 * Math.PI);
                 ctx.fill();
             });
-            
+            ctx.globalAlpha = 1.0;
+
             // Draw accretion disk
             const gradient = ctx.createRadialGradient(cx, cy, innerRadius, cx, cy, outerRadius);
-            gradient.addColorStop(0, 'white');     // Hot inner edge
-            gradient.addColorStop(0.5, 'yellow');  // Transition
-            gradient.addColorStop(1, 'red');       // Cooler outer edge
+            gradient.addColorStop(0, '#ffffff');     // Hot inner edge
+            gradient.addColorStop(0.2, '#fff700');   // Yellow
+            gradient.addColorStop(0.5, '#ff8c00');   // Orange
+            gradient.addColorStop(1, '#8b0000');     // Red outer edge
+
             ctx.fillStyle = gradient;
             ctx.beginPath();
             ctx.arc(cx, cy, outerRadius, 0, 2 * Math.PI);         // Outer circle
             ctx.arc(cx, cy, innerRadius, 0, 2 * Math.PI, true);   // Inner circle (counterclockwise)
             ctx.fill();
-            
+
             // Draw black hole
             ctx.fillStyle = 'black';
             ctx.beginPath();
             ctx.arc(cx, cy, bhRadius, 0, 2 * Math.PI);
             ctx.fill();
-            
-            // Draw event horizon outline
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 1;
+
+            // Draw event horizon outline (glow)
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'white';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(cx, cy, bhRadius, 0, 2 * Math.PI);
             ctx.stroke();
-            
+            ctx.shadowBlur = 0;
+
             // Draw particles
             particles.forEach(particle => particle.draw());
-            
+
             // Next frame
             requestAnimationFrame(animate);
         }
-        
+
         // Start animation
         animate();
+
+        // UI Logic
+        document.getElementById('radius').addEventListener('input', (e) => {
+            bhRadius = parseInt(e.target.value);
+            document.getElementById('radiusVal').textContent = bhRadius;
+        });
+
+        document.getElementById('disk').addEventListener('input', (e) => {
+            diskThickness = parseInt(e.target.value);
+            document.getElementById('diskVal').textContent = diskThickness;
+        });
+
+        document.getElementById('rate').addEventListener('input', (e) => {
+            emissionRate = parseFloat(e.target.value);
+            document.getElementById('rateVal').textContent = emissionRate;
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            bhRadius = 50;
+            diskThickness = 30;
+            emissionRate = 0.1;
+            particles = [];
+
+            document.getElementById('radius').value = 50;
+            document.getElementById('disk').value = 30;
+            document.getElementById('rate').value = 0.1;
+
+            document.getElementById('radiusVal').textContent = 50;
+            document.getElementById('diskVal').textContent = 30;
+            document.getElementById('rateVal').textContent = 0.1;
+
+            initStars(); // Re-randomize stars
+        });
+
     </script>
 </body>
+
 </html>

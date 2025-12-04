@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,11 +34,11 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 radial-gradient(2px 2px at 20px 30px, #eee, transparent),
-                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
                 radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
                 radial-gradient(2px 2px at 160px 30px, #fff, transparent);
             background-repeat: repeat;
             background-size: 200px 100px;
@@ -45,8 +46,15 @@
         }
 
         @keyframes twinkle {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .black-hole-container {
@@ -67,20 +75,23 @@
             height: 200px;
             border-radius: 50%;
             background: #000;
-            box-shadow: 
+            box-shadow:
                 0 0 50px rgba(0, 0, 0, 0.9),
                 inset 0 0 50px rgba(255, 255, 255, 0.1);
             animation: pulse 3s infinite ease-in-out;
         }
 
         @keyframes pulse {
-            0%, 100% { 
-                box-shadow: 
+
+            0%,
+            100% {
+                box-shadow:
                     0 0 50px rgba(0, 0, 0, 0.9),
                     inset 0 0 50px rgba(255, 255, 255, 0.1);
             }
-            50% { 
-                box-shadow: 
+
+            50% {
+                box-shadow:
                     0 0 80px rgba(0, 0, 0, 1),
                     inset 0 0 30px rgba(255, 255, 255, 0.2);
             }
@@ -94,18 +105,16 @@
             width: 350px;
             height: 350px;
             border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                transparent 0deg,
-                rgba(255, 165, 0, 0.8) 45deg,
-                rgba(255, 69, 0, 0.9) 90deg,
-                rgba(255, 255, 255, 0.7) 135deg,
-                rgba(255, 165, 0, 0.8) 180deg,
-                transparent 225deg,
-                rgba(255, 140, 0, 0.6) 270deg,
-                rgba(255, 165, 0, 0.8) 315deg,
-                transparent 360deg
-            );
+            background: conic-gradient(from 0deg,
+                    transparent 0deg,
+                    rgba(255, 165, 0, 0.8) 45deg,
+                    rgba(255, 69, 0, 0.9) 90deg,
+                    rgba(255, 255, 255, 0.7) 135deg,
+                    rgba(255, 165, 0, 0.8) 180deg,
+                    transparent 225deg,
+                    rgba(255, 140, 0, 0.6) 270deg,
+                    rgba(255, 165, 0, 0.8) 315deg,
+                    transparent 360deg);
             animation: rotate 8s infinite linear;
             opacity: 0.8;
         }
@@ -123,8 +132,13 @@
         }
 
         @keyframes rotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
         }
 
         .gravitational-lensing {
@@ -140,11 +154,14 @@
         }
 
         @keyframes lensing {
-            0%, 100% { 
+
+            0%,
+            100% {
                 transform: translate(-50%, -50%) scale(1);
                 opacity: 0.3;
             }
-            50% { 
+
+            50% {
                 transform: translate(-50%, -50%) scale(1.1);
                 opacity: 0.6;
             }
@@ -188,6 +205,7 @@
                 transform: rotate(0deg) translateX(150px) rotate(0deg);
                 opacity: 1;
             }
+
             100% {
                 transform: rotate(360deg) translateX(50px) rotate(-360deg);
                 opacity: 0;
@@ -216,11 +234,16 @@
 
         .controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .control-btn {
@@ -228,13 +251,16 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #fff;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            font-weight: 500;
         }
 
         .control-btn:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .jets {
@@ -244,12 +270,12 @@
             transform: translate(-50%, -50%);
             width: 2px;
             height: 200px;
-            background: linear-gradient(to top, 
-                transparent 0%, 
-                rgba(138, 43, 226, 0.8) 20%, 
-                rgba(75, 0, 130, 0.9) 50%, 
-                rgba(138, 43, 226, 0.8) 80%, 
-                transparent 100%);
+            background: linear-gradient(to top,
+                    transparent 0%,
+                    rgba(138, 43, 226, 0.8) 20%,
+                    rgba(75, 0, 130, 0.9) 50%,
+                    rgba(138, 43, 226, 0.8) 80%,
+                    transparent 100%);
             animation: jet-pulse 2s infinite ease-in-out;
         }
 
@@ -261,17 +287,24 @@
             transform: translateX(-50%) rotate(180deg);
             width: 2px;
             height: 200px;
-            background: linear-gradient(to top, 
-                transparent 0%, 
-                rgba(138, 43, 226, 0.8) 20%, 
-                rgba(75, 0, 130, 0.9) 50%, 
-                rgba(138, 43, 226, 0.8) 80%, 
-                transparent 100%);
+            background: linear-gradient(to top,
+                    transparent 0%,
+                    rgba(138, 43, 226, 0.8) 20%,
+                    rgba(75, 0, 130, 0.9) 50%,
+                    rgba(138, 43, 226, 0.8) 80%,
+                    transparent 100%);
         }
 
         @keyframes jet-pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .hawking-radiation {
@@ -282,48 +315,50 @@
             width: 250px;
             height: 250px;
             border-radius: 50%;
-            background: radial-gradient(
-                circle at center,
-                transparent 70%,
-                rgba(0, 255, 255, 0.1) 80%,
-                rgba(255, 255, 255, 0.2) 90%,
-                transparent 100%
-            );
+            background: radial-gradient(circle at center,
+                    transparent 70%,
+                    rgba(0, 255, 255, 0.1) 80%,
+                    rgba(255, 255, 255, 0.2) 90%,
+                    transparent 100%);
             animation: radiation 5s infinite ease-in-out;
         }
 
         @keyframes radiation {
-            0%, 100% { 
+
+            0%,
+            100% {
                 transform: translate(-50%, -50%) scale(1);
                 opacity: 0.5;
             }
-            50% { 
+
+            50% {
                 transform: translate(-50%, -50%) scale(1.2);
                 opacity: 0.8;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="universe">
         <div class="stars"></div>
-        
+
         <div class="black-hole-container">
             <!-- Gravitational Lensing Effect -->
             <div class="gravitational-lensing"></div>
-            
+
             <!-- Hawking Radiation -->
             <div class="hawking-radiation"></div>
-            
+
             <!-- Accretion Disk -->
             <div class="accretion-disk"></div>
-            
+
             <!-- Relativistic Jets -->
             <div class="jets"></div>
-            
+
             <!-- Event Horizon -->
             <div class="event-horizon"></div>
-            
+
             <!-- Matter Streams -->
             <div class="matter-stream"></div>
             <div class="matter-stream"></div>
@@ -354,7 +389,7 @@
 
         function toggleAnimation() {
             const elements = document.querySelectorAll('.accretion-disk, .matter-stream, .gravitational-lensing, .event-horizon, .jets, .hawking-radiation, .stars');
-            
+
             if (animationsPaused) {
                 elements.forEach(el => {
                     el.style.animationPlayState = 'running';
@@ -394,10 +429,10 @@
         document.addEventListener('mousemove', (e) => {
             const mouseX = e.clientX / window.innerWidth;
             const mouseY = e.clientY / window.innerHeight;
-            
+
             const stars = document.querySelector('.stars');
             stars.style.transform = `translate(${mouseX * 10}px, ${mouseY * 10}px)`;
-            
+
             const lensing = document.querySelector('.gravitational-lensing');
             lensing.style.transform = `translate(-50%, -50%) scale(${1 + mouseX * 0.1})`;
         });
@@ -412,4 +447,5 @@
         });
     </script>
 </body>
+
 </html>
