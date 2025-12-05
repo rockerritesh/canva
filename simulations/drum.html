@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber DJ X-Ray Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff0a;
+            --glass-bg: rgba(10, 20, 30, 0.7);
+            --panel-border: rgba(0, 243, 255, 0.3);
+        }
+
+        body {
+            background-color: #050505;
+            color: var(--neon-cyan);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* --- X-Ray Chassis --- */
+        .dj-container {
+            width: 95vw;
+            max-width: 1200px;
+            aspect-ratio: 16/9;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .grid-bg {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- Components --- */
+        
+        /* Turntables / Jog Wheels */
+        .turntable {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: conic-gradient(from 0deg, rgba(0,243,255,0.05), rgba(0,0,0,0.8), rgba(0,243,255,0.05));
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+
+        .turntable::before {
+            content: '';
+            position: absolute;
+            inset: 15%;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            animation: spin 4s linear infinite;
+        }
+        
+        .turntable.active::before {
+             animation: spin 1s linear infinite;
+             border-color: var(--neon-cyan);
+        }
+
+        .spindle {
+            width: 15%;
+            height: 15%;
+            background: radial-gradient(circle, #fff 0%, #333 100%);
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Faders & Knobs */
+        .fader-track {
+            width: 8px;
+            height: 120px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .fader-knob {
+            width: 30px;
+            height: 15px;
+            background: var(--neon-cyan);
+            border-radius: 2px;
+            position: absolute;
+            left: 50%;
+            bottom: 50%; /* Default center */
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            cursor: pointer;
+            transition: bottom 0.1s;
+        }
+
+        .knob-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 243, 255, 0.4);
+            position: relative;
+            cursor: pointer;
+            background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0, 243, 255, 0.1) 100%);
+        }
+        
+        .knob-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 50%;
+            background: var(--neon-cyan);
+            transform-origin: top center;
+            transform: translate(-50%, 0) rotate(0deg); /* 0deg is pointing down, need adjustment */
+        }
+
+        /* Drum Pads */
+        .pad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .drum-pad {
+            aspect-ratio: 1/1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .drum-pad:active, .drum-pad.hit {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px var(--neon-cyan);
+            transform: scale(0.95);
+            color: #fff;
+        }
+
+        /* Visualizer */
+        .spectrum-bar {
+            flex: 1;
+            background: var(--neon-purple);
+            opacity: 0.6;
+            border-radius: 2px 2px 0 0;
+            transform-origin: bottom;
+            transform: scaleY(0.1);
+            transition: transform 0.05s ease;
+        }
+
+        /* --- Animations --- */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="dj-container">
+        <div class="grid-bg"></div>
+
+        <!-- Header / HUD -->
+        <div class="relative z-20 flex justify-between items-start mb-4 border-b border-white/10 pb-2">
+            <div>
+                <h1 class="text-2xl font-bold tracking-widest glow-text italic">CYBER-DJ <span class="text-xs not-italic font-mono text-white/50">X-RAY SERIES</span></h1>
+                <div class="text-[10px] font-mono text-cyan-300/60 mt-1">SYSTEM READY // AUDIO BUFFER LOADED</div>
+            </div>
+            <div class="flex gap-4">
+                <div class="text-right">
+                    <div class="text-[10px] text-purple-400 font-mono">MASTER OUT</div>
+                    <div class="flex gap-0.5 items-end h-8 w-24 bg-black/40 p-1 rounded border border-white/10" id="visualizer">
+                        <!-- Bars injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Deck Area -->
+        <div class="flex-1 flex gap-6 relative z-10 min-h-0">
+            
+            <!-- LEFT DECK -->
+            <div class="w-1/3 flex flex-col items-center justify-center relative p-4 border border-white/5 rounded-xl bg-white/5 backdrop-blur-sm">
+                <div class="absolute top-2 left-2 text-[10px] font-mono opacity-50">DECK A</div>
+                <div class="turntable" id="deck-a">
+                    <div class="spindle"></div>
+                    <!-- Stylus Arm simplified -->
+                    <div class="absolute top-0 right-0 w-2 h-24 bg-gray-600 origin-top rotate-12 opacity-50" style="transform: rotate(25deg);"></div>
+                </div>
+                
+                <div class="w-full mt-6 flex justify-between px-8">
+                    <button class="w-8 h-8 rounded-full bg-gray-800 border border-white/20 hover:bg-cyan-900/50 flex items-center justify-center transition-colors" onclick="toggleDeck('deck-a')">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    <div class="h-2 w-32 bg-gray-800 rounded-full mt-3 overflow-hidden relative">
+                         <div class="absolute top-0 left-0 h-full w-1/2 bg-cyan-500 opacity-50"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIXER (CENTER) -->
+            <div class="w-1/3 flex flex-col gap-2">
+                <!-- EQ Section -->
+                <div class="flex-1 flex justify-around items-center bg-black/20 rounded-lg border border-white/5 p-2">
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="knob-circle" style="transform: rotate(45deg);"><div class="knob-indicator"></div></div>
+                        <span class="text-[9px] font-mono opacity-60">HI</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="knob-circle" style="transform: rotate(0deg);"><div class="knob-indicator"></div></div>
+                        <span class="text-[9px] font-mono opacity-60">MID</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="knob-circle" style="transform: rotate(-45deg);"><div class="knob-indicator"></div></div>
+                        <span class="text-[9px] font-mono opacity-60">LOW</span>
+                    </div>
+                </div>
+
+                <!-- Faders Section -->
+                <div class="flex-[2] flex justify-center gap-8 items-center bg-black/20 rounded-lg border border-white/5 p-4">
+                    <div class="fader-track"><div class="fader-knob" style="bottom: 70%"></div></div>
+                    
+                    <!-- Volume Meter in middle -->
+                    <div class="w-4 h-32 flex flex-col justify-between py-1 bg-black/40 rounded border border-white/10">
+                         <div class="w-full h-[5%] bg-red-500 opacity-80"></div>
+                         <div class="w-full h-[5%] bg-yellow-500 opacity-80"></div>
+                         <div class="w-full h-[80%] bg-gradient-to-t from-green-900 to-green-400 opacity-60"></div>
+                    </div>
+
+                    <div class="fader-track"><div class="fader-knob" style="bottom: 70%"></div></div>
+                </div>
+
+                <!-- Crossfader -->
+                <div class="h-12 bg-black/20 rounded-lg border border-white/5 flex items-center px-6 relative">
+                    <div class="w-full h-1 bg-white/20 rounded"></div>
+                    <div class="absolute left-1/2 w-8 h-6 bg-gray-700 border border-cyan-500/50 -translate-x-1/2 rounded cursor-grab shadow-[0_0_10px_rgba(0,243,255,0.2)]"></div>
+                </div>
+            </div>
+
+            <!-- DRUM PADS (RIGHT) -->
+            <div class="w-1/3 flex flex-col p-4 border border-white/5 rounded-xl bg-white/5 backdrop-blur-sm relative">
+                <div class="absolute top-2 left-2 text-[10px] font-mono opacity-50">SAMPLER // KIT: 808</div>
+                
+                <div class="mt-auto pad-grid h-full max-h-[300px]">
+                    <!-- Row 1 -->
+                    <div class="drum-pad" data-key="65" data-sound="clap">A<br>CLAP</div>
+                    <div class="drum-pad" data-key="83" data-sound="hihat">S<br>HIHAT</div>
+                    <div class="drum-pad" data-key="68" data-sound="kick">D<br>KICK</div>
+                    
+                    <!-- Row 2 -->
+                    <div class="drum-pad" data-key="70" data-sound="openhat">F<br>OPEN</div>
+                    <div class="drum-pad" data-key="71" data-sound="boom">G<br>BOOM</div>
+                    <div class="drum-pad" data-key="72" data-sound="ride">H<br>RIDE</div>
+                    
+                    <!-- Row 3 -->
+                    <div class="drum-pad" data-key="74" data-sound="snare">J<br>SNARE</div>
+                    <div class="drum-pad" data-key="75" data-sound="tom">K<br>TOM</div>
+                    <div class="drum-pad" data-key="76" data-sound="tink">L<br>TINK</div>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- X-Ray Wiring Decor (Behind components) -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-40">
+            <!-- Wires from Deck A to Mixer -->
+            <path d="M 20% 50% C 25% 50%, 30% 60%, 40% 60%" stroke="var(--neon-cyan)" stroke-width="2" fill="none" stroke-dasharray="5,5" />
+            <!-- Wires from Pads to Mixer -->
+            <path d="M 80% 50% C 75% 50%, 70% 60%, 60% 60%" stroke="var(--neon-purple)" stroke-width="2" fill="none" stroke-dasharray="5,5" />
+        </svg>
+
+    </div>
+
+    <!-- Audio Logic -->
+    <script>
+        // Sound Mapping
+        const sounds = {
+            'clap': 'https://dotehacker.github.io/drum/sounds/clap.wav',
+            'hihat': 'https://dotehacker.github.io/drum/sounds/hihat.wav',
+            'kick': 'https://dotehacker.github.io/drum/sounds/kick.wav',
+            'openhat': 'https://dotehacker.github.io/drum/sounds/openhat.wav',
+            'boom': 'https://dotehacker.github.io/drum/sounds/boom.wav',
+            'ride': 'https://dotehacker.github.io/drum/sounds/ride.wav',
+            'snare': 'https://dotehacker.github.io/drum/sounds/snare.wav',
+            'tom': 'https://dotehacker.github.io/drum/sounds/tom.wav',
+            'tink': 'https://dotehacker.github.io/drum/sounds/tink.wav',
+        };
+
+        // Preload Audio
+        const audioCache = {};
+        Object.keys(sounds).forEach(key => {
+            audioCache[key] = new Audio(sounds[key]);
+        });
+
+        // Initialize Visualizer Bars
+        const vizContainer = document.getElementById('visualizer');
+        const bars = [];
+        for(let i=0; i<12; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'spectrum-bar';
+            vizContainer.appendChild(bar);
+            bars.push(bar);
+        }
+
+        // Play Sound Function
+        function playSound(key) {
+            const pad = document.querySelector(`.drum-pad[data-key="${key}"]`);
+            if(!pad) return;
+
+            const soundName = pad.dataset.sound;
+            const audio = audioCache[soundName];
+            
+            // Clone node to allow overlapping plays of same sound
+            if (audio) {
+                const clone = audio.cloneNode();
+                clone.volume = 0.8;
+                clone.play();
+                triggerVisualizer();
+            }
+
+            // Visual Feedback
+            pad.classList.add('hit');
+            setTimeout(() => pad.classList.remove('hit'), 100);
+        }
+
+        // Visualizer Animation (Simulated)
+        function triggerVisualizer() {
+            bars.forEach(bar => {
+                const height = Math.random() * 0.8 + 0.2; // random height
+                bar.style.transform = `scaleY(${height})`;
+                bar.style.background = '#fff'; // Flash white
+                setTimeout(() => {
+                    bar.style.transform = `scaleY(0.1)`;
+                    bar.style.background = 'var(--neon-purple)';
+                }, 100);
+            });
+        }
+
+        // Keyboard Listener
+        window.addEventListener('keydown', (e) => {
+            playSound(e.keyCode);
+        });
+
+        // Click Listener for Pads
+        document.querySelectorAll('.drum-pad').forEach(pad => {
+            pad.addEventListener('mousedown', () => {
+                playSound(pad.dataset.key);
+            });
+        });
+
+        // Toggle Deck Animation
+        function toggleDeck(id) {
+            const deck = document.getElementById(id);
+            deck.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
