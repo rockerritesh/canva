@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber DJ X-Ray Console</title>
+    <title>NEON WAVE//SYS DJ CONSOLE</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --neon-cyan: #00f3ff;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
             --neon-purple: #bc13fe;
-            --neon-green: #0aff0a;
-            --glass-bg: rgba(10, 20, 30, 0.7);
-            --panel-border: rgba(0, 243, 255, 0.3);
+            --dark-bg: #050508;
+            --glass-panel: rgba(20, 30, 40, 0.6);
+            --glow-spread: 15px;
         }
 
         body {
-            background-color: #050505;
-            color: var(--neon-cyan);
-            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--neon-blue);
+            font-family: 'Rajdhani', sans-serif;
             height: 100vh;
             display: flex;
             align-items: center;
@@ -27,293 +28,279 @@
             user-select: none;
         }
 
-        /* --- X-Ray Chassis --- */
-        .dj-container {
-            width: 95vw;
-            max-width: 1200px;
-            aspect-ratio: 16/9;
-            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
-            border: 1px solid var(--panel-border);
-            border-radius: 24px;
+        /* --- Background & Chassis --- */
+        .main-chassis {
+            width: 95vw; max-width: 1280px; aspect-ratio: 16/9;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #000000 100%);
+            border: 2px solid rgba(0, 243, 255, 0.1);
+            border-radius: 30px;
             position: relative;
-            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
+            box-shadow: 0 0 80px rgba(0, 243, 255, 0.15), inset 0 0 100px rgba(0,0,0,0.8);
+            overflow: hidden; display: flex; flex-direction: column; padding: 25px;
+            backdrop-filter: blur(10px);
         }
 
-        .grid-bg {
-            position: absolute;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
+        .bg-scanner {
+            position: absolute; inset: 0; pointer-events: none; z-index: 0;
+            background: 
+                linear-gradient(90deg, rgba(0,243,255,0.03) 1px, transparent 1px) 0 0 / 20px 20px,
+                linear-gradient(rgba(0,243,255,0.03) 1px, transparent 1px) 0 0 / 20px 20px;
+            mask-image: radial-gradient(ellipse at center, black 40%, transparent 100%);
         }
 
-        /* --- Components --- */
-        
-        /* Turntables / Jog Wheels */
-        .turntable {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1/1;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: conic-gradient(from 0deg, rgba(0,243,255,0.05), rgba(0,0,0,0.8), rgba(0,243,255,0.05));
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s;
+        .bg-waves {
+            position: absolute; inset: 0; opacity: 0.1; z-index: 0;
+            background: repeating-linear-gradient(45deg, var(--neon-blue), var(--neon-blue) 2px, transparent 2px, transparent 20px);
+            animation: bgScroll 20s linear infinite;
         }
 
-        .turntable::before {
-            content: '';
-            position: absolute;
-            inset: 15%;
-            border-radius: 50%;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
-            animation: spin 4s linear infinite;
-        }
-        
-        .turntable.active::before {
-             animation: spin 1s linear infinite;
-             border-color: var(--neon-cyan);
-        }
-
-        .spindle {
-            width: 15%;
-            height: 15%;
-            background: radial-gradient(circle, #fff 0%, #333 100%);
-            border-radius: 50%;
-            z-index: 10;
-            box-shadow: 0 0 10px var(--neon-cyan);
-        }
-
-        /* Faders & Knobs */
-        .fader-track {
-            width: 8px;
-            height: 120px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-            position: relative;
-            margin: 0 auto;
-        }
-
-        .fader-knob {
-            width: 30px;
-            height: 15px;
-            background: var(--neon-cyan);
-            border-radius: 2px;
-            position: absolute;
-            left: 50%;
-            bottom: 50%; /* Default center */
-            transform: translateX(-50%);
-            box-shadow: 0 0 10px var(--neon-cyan);
-            cursor: pointer;
-            transition: bottom 0.1s;
-        }
-
-        .knob-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(0, 243, 255, 0.4);
-            position: relative;
-            cursor: pointer;
-            background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0, 243, 255, 0.1) 100%);
-        }
-        
-        .knob-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 50%;
-            background: var(--neon-cyan);
-            transform-origin: top center;
-            transform: translate(-50%, 0) rotate(0deg); /* 0deg is pointing down, need adjustment */
-        }
-
-        /* Drum Pads */
-        .pad-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .drum-pad {
-            aspect-ratio: 1/1;
-            background: rgba(255, 255, 255, 0.03);
+        /* --- Glass Panels --- */
+        .cyber-panel {
+            background: var(--glass-panel);
             border: 1px solid rgba(0, 243, 255, 0.2);
-            border-radius: 8px;
-            cursor: pointer;
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
             position: relative;
-            overflow: hidden;
-            transition: all 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: rgba(255,255,255,0.4);
+        }
+        .cyber-panel::before { /* Corner accents */
+            content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px;
+            border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue); border-radius: 4px 0 0 0;
+        }
+        .cyber-panel::after {
+            content: ''; position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px;
+            border-bottom: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue); border-radius: 0 0 4px 0;
         }
 
-        .drum-pad:active, .drum-pad.hit {
-            background: rgba(0, 243, 255, 0.2);
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 15px var(--neon-cyan);
-            transform: scale(0.95);
-            color: #fff;
+        /* --- Holographic Decks --- */
+        .holo-deck-container {
+            position: relative; width: 100%; aspect-ratio: 1/1;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .holo-platter {
+            width: 90%; height: 90%; border-radius: 50%;
+            border: 3px solid rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 30px rgba(0, 243, 255, 0.2);
+            position: relative; overflow: hidden;
+            background: radial-gradient(circle, rgba(0,0,0,0.9) 20%, rgba(0,243,255,0.1) 100%);
+        }
+        .holo-waveform {
+            position: absolute; inset: 5%; border-radius: 50%;
+            border: 1px dashed rgba(255, 0, 255, 0.4);
+            animation: spinSlow 8s linear infinite;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 50,50 m -40,0 a 40,40 0 1,1 80,0 a 40,40 0 1,1 -80,0' fill='none' stroke='rgba(0,243,255,0.5)' stroke-width='1' stroke-dasharray='5,10'/%3E%3Cpath d='M 50,50 m -30,0 a 30,30 0 1,1 60,0 a 30,30 0 1,1 -60,0' fill='none' stroke='rgba(188,19,254,0.5)' stroke-width='2' stroke-dasharray='10,15'/%3E%3C/svg%3E");
+        }
+        .holo-platter.active .holo-waveform { animation: spinFast 1.5s linear infinite; filter: brightness(1.5); }
+
+        /* --- Central Oscilloscope --- */
+        .oscilloscope {
+            width: 100%; height: 80px; background: rgba(0,0,0,0.5); border-radius: 8px;
+            border: 1px solid rgba(0, 243, 255, 0.3); position: relative; overflow: hidden;
+            display: flex; align-items: center;
+        }
+        .scope-line {
+            position: absolute; width: 200%; height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-purple);
+            opacity: 0.8;
+            animation: scopeMove 4s linear infinite alternate;
+             mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+        }
+        .scope-line:nth-child(2) { animation-duration: 3s; opacity: 0.5; background: var(--neon-pink); top: 45%; }
+
+        /* --- Controls --- */
+        .knob-glow {
+            width: 45px; height: 45px; border-radius: 50%;
+            border: 2px solid rgba(0, 243, 255, 0.3); position: relative;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            background: conic-gradient(var(--neon-blue) 0deg, transparent 45deg, transparent 315deg, var(--neon-blue) 360deg);
+            transform: rotate(-135deg); /* Starting position */
+            transition: transform 0.2s ease-out;
+            cursor: grab;
+        }
+        .knob-glow::after {
+            content: ''; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
+            background: #050508; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .knob-indicator {
+             position: absolute; top: -5px; left: 50%; width: 4px; height: 10px;
+             background: var(--neon-pink); transform: translateX(-50%); border-radius: 2px;
+             box-shadow: 0 0 8px var(--neon-pink); z-index: 10;
         }
 
-        /* Visualizer */
-        .spectrum-bar {
-            flex: 1;
-            background: var(--neon-purple);
-            opacity: 0.6;
-            border-radius: 2px 2px 0 0;
-            transform-origin: bottom;
-            transform: scaleY(0.1);
-            transition: transform 0.05s ease;
+        .liquid-fader {
+            width: 12px; height: 140px; background: rgba(0,0,0,0.6); border-radius: 6px;
+            border: 1px solid rgba(0, 243, 255, 0.2); position: relative; overflow: hidden;
+        }
+        .fader-level {
+            position: absolute; bottom: 0; width: 100%; height: 60%;
+            background: linear-gradient(to top, var(--neon-purple), var(--neon-blue));
+            box-shadow: 0 0 20px var(--neon-blue);
+            filter: blur(1px);
+        }
+        .fader-cap {
+            position: absolute; bottom: 60%; left: -4px; width: 20px; height: 10px;
+            background: var(--neon-blue); border-radius: 2px;
+            box-shadow: 0 0 15px var(--neon-blue); cursor: ns-resize;
         }
 
-        /* --- Animations --- */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        /* --- Pads --- */
+        .hex-pad {
+            aspect-ratio: 1; background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            clip-path: polygon(10% 0%, 90% 0%, 100% 25%, 100% 75%, 90% 100%, 10% 100%, 0% 75%, 0% 25%);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5);
+            cursor: pointer; transition: all 0.05s;
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.0);
         }
-        
-        .glow-text {
-            text-shadow: 0 0 10px var(--neon-cyan);
+        .hex-pad:active, .hex-pad.hit {
+            background: rgba(0, 243, 255, 0.15); border-color: var(--neon-pink);
+            color: #fff; box-shadow: 0 0 20px var(--neon-pink), inset 0 0 15px var(--neon-pink);
+            transform: scale(0.98);
         }
+
+        /* --- Animations & Utils --- */
+        @keyframes bgScroll { from { background-position: 0 0; } to { background-position: 100% 100%; } }
+        @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spinFast { from { transform: rotate(0deg); } to { transform: rotate(720deg); } }
+        @keyframes scopeMove { 
+            0% { transform: translateY(-10%) translateX(-5%); } 
+            100% { transform: translateY(10%) translateX(5%); } 
+        }
+        .text-glow { text-shadow: 0 0 10px currentColor; }
+        .border-glow { box-shadow: 0 0 15px rgba(0,243,255,0.3); }
 
     </style>
 </head>
 <body>
 
-    <div class="dj-container">
-        <div class="grid-bg"></div>
+    <div class="main-chassis">
+        <div class="bg-scanner"></div>
+        <div class="bg-waves"></div>
 
-        <!-- Header / HUD -->
-        <div class="relative z-20 flex justify-between items-start mb-4 border-b border-white/10 pb-2">
-            <div>
-                <h1 class="text-2xl font-bold tracking-widest glow-text italic">CYBER-DJ <span class="text-xs not-italic font-mono text-white/50">X-RAY SERIES</span></h1>
-                <div class="text-[10px] font-mono text-cyan-300/60 mt-1">SYSTEM READY // AUDIO BUFFER LOADED</div>
-            </div>
-            <div class="flex gap-4">
-                <div class="text-right">
-                    <div class="text-[10px] text-purple-400 font-mono">MASTER OUT</div>
-                    <div class="flex gap-0.5 items-end h-8 w-24 bg-black/40 p-1 rounded border border-white/10" id="visualizer">
-                        <!-- Bars injected by JS -->
-                    </div>
+        <div class="relative z-20 flex justify-between items-end mb-6 pb-2 border-b border-cyan-500/20">
+            <div class="flex flex-col">
+                <h1 class="text-3xl font-bold tracking-widest text-glow italic bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500">WAVE//SYS <span class="text-sm not-italic font-mono text-white/50">QUANTUM DJ</span></h1>
+                <div class="flex gap-4 mt-1 font-mono text-[10px] text-cyan-300/60">
+                    <span>CPU: <span class="text-pink-500">45%</span></span>
+                    <span>SYNC: <span class="text-cyan-400 glow">AUTO</span></span>
+                    <span>BUFFER: OK</span>
                 </div>
+            </div>
+            <div class="text-right font-mono text-xs text-purple-400/80">
+                MASTER OUTPUT // VISUALIZER LINKED
             </div>
         </div>
 
-        <!-- Main Deck Area -->
         <div class="flex-1 flex gap-6 relative z-10 min-h-0">
             
-            <!-- LEFT DECK -->
-            <div class="w-1/3 flex flex-col items-center justify-center relative p-4 border border-white/5 rounded-xl bg-white/5 backdrop-blur-sm">
-                <div class="absolute top-2 left-2 text-[10px] font-mono opacity-50">DECK A</div>
-                <div class="turntable" id="deck-a">
-                    <div class="spindle"></div>
-                    <!-- Stylus Arm simplified -->
-                    <div class="absolute top-0 right-0 w-2 h-24 bg-gray-600 origin-top rotate-12 opacity-50" style="transform: rotate(25deg);"></div>
+            <div class="w-1/3 cyber-panel flex flex-col p-6">
+                <div class="flex justify-between text-xs font-mono text-cyan-400/70 mb-4">
+                    <span>DECK A // LOADED</span>
+                    <span>BPM: 128.00</span>
                 </div>
                 
-                <div class="w-full mt-6 flex justify-between px-8">
-                    <button class="w-8 h-8 rounded-full bg-gray-800 border border-white/20 hover:bg-cyan-900/50 flex items-center justify-center transition-colors" onclick="toggleDeck('deck-a')">
-                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <div class="holo-deck-container">
+                    <div class="holo-platter" id="deck-a">
+                        <div class="holo-waveform"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-24 h-24 rounded-full bg-black/80 border border-cyan-500/50 flex flex-col items-center justify-center text-center z-20 backdrop-blur">
+                                <span class="text-[9px] text-purple-400">TRACK</span>
+                                <span class="text-xs font-bold text-cyan-100">NEON DUST</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-auto flex items-center justify-between">
+                    <button class="w-12 h-12 rounded-lg bg-cyan-950 border border-cyan-400/30 hover:bg-cyan-800 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(0,243,255,0.4)] flex items-center justify-center transition-all group" onclick="toggleDeck('deck-a')">
+                        <svg class="w-6 h-6 fill-cyan-500 group-hover:fill-white transition-colors" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
-                    <div class="h-2 w-32 bg-gray-800 rounded-full mt-3 overflow-hidden relative">
-                         <div class="absolute top-0 left-0 h-full w-1/2 bg-cyan-500 opacity-50"></div>
+                    <div class="h-3 flex-1 ml-4 bg-black/50 rounded overflow-hidden relative border border-cyan-900">
+                         <div class="absolute top-0 left-0 h-full w-2/3 bg-gradient-to-r from-cyan-800 to-cyan-400 opacity-70 animate-pulse"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- MIXER (CENTER) -->
-            <div class="w-1/3 flex flex-col gap-2">
-                <!-- EQ Section -->
-                <div class="flex-1 flex justify-around items-center bg-black/20 rounded-lg border border-white/5 p-2">
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="knob-circle" style="transform: rotate(45deg);"><div class="knob-indicator"></div></div>
-                        <span class="text-[9px] font-mono opacity-60">HI</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="knob-circle" style="transform: rotate(0deg);"><div class="knob-indicator"></div></div>
-                        <span class="text-[9px] font-mono opacity-60">MID</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="knob-circle" style="transform: rotate(-45deg);"><div class="knob-indicator"></div></div>
-                        <span class="text-[9px] font-mono opacity-60">LOW</span>
+            <div class="w-1/3 flex flex-col gap-4">
+                <div class="cyber-panel p-2 flex flex-col justify-center">
+                    <div class="text-[10px] font-mono text-center text-purple-300/60 mb-1">MASTER WAVE SCOPE</div>
+                    <div class="oscilloscope">
+                        <div class="scope-line" style="transform: rotate(2deg) translateY(5px);"></div>
+                        <div class="scope-line" style="transform: rotate(-1deg) translateY(-5px);"></div>
+                        <div class="absolute bottom-0 left-0 right-0 h-full flex items-end justify-between px-4 opacity-30 mix-blend-overlay" id="visualizer-bars"></div>
                     </div>
                 </div>
 
-                <!-- Faders Section -->
-                <div class="flex-[2] flex justify-center gap-8 items-center bg-black/20 rounded-lg border border-white/5 p-4">
-                    <div class="fader-track"><div class="fader-knob" style="bottom: 70%"></div></div>
-                    
-                    <!-- Volume Meter in middle -->
-                    <div class="w-4 h-32 flex flex-col justify-between py-1 bg-black/40 rounded border border-white/10">
-                         <div class="w-full h-[5%] bg-red-500 opacity-80"></div>
-                         <div class="w-full h-[5%] bg-yellow-500 opacity-80"></div>
-                         <div class="w-full h-[80%] bg-gradient-to-t from-green-900 to-green-400 opacity-60"></div>
+                <div class="flex-1 flex gap-4">
+                    <div class="cyber-panel w-1/2 py-4 flex flex-col justify-around items-center">
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="knob-glow"><div class="knob-indicator"></div></div>
+                            <span class="text-[9px] font-mono text-cyan-300/60">HI/FILT</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2">
+                             <div class="knob-glow" style="transform: rotate(-45deg); --neon-blue: var(--neon-purple);"><div class="knob-indicator"></div></div>
+                            <span class="text-[9px] font-mono text-cyan-300/60">MID</span>
+                        </div>
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="knob-glow" style="transform: rotate(-180deg);"><div class="knob-indicator"></div></div>
+                            <span class="text-[9px] font-mono text-cyan-300/60">LOW</span>
+                        </div>
                     </div>
 
-                    <div class="fader-track"><div class="fader-knob" style="bottom: 70%"></div></div>
+                    <div class="cyber-panel w-1/2 flex justify-center gap-6 items-center py-4">
+                        <div class="liquid-fader">
+                            <div class="fader-level" style="height: 75%"></div>
+                            <div class="fader-cap" style="bottom: 75%"></div>
+                        </div>
+                        <div class="liquid-fader">
+                             <div class="fader-level" style="height: 60%; filter: hue-rotate(45deg);"></div>
+                            <div class="fader-cap" style="bottom: 60%; background: var(--neon-purple); box-shadow: 0 0 15px var(--neon-purple);"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Crossfader -->
-                <div class="h-12 bg-black/20 rounded-lg border border-white/5 flex items-center px-6 relative">
-                    <div class="w-full h-1 bg-white/20 rounded"></div>
-                    <div class="absolute left-1/2 w-8 h-6 bg-gray-700 border border-cyan-500/50 -translate-x-1/2 rounded cursor-grab shadow-[0_0_10px_rgba(0,243,255,0.2)]"></div>
+                <div class="h-14 cyber-panel flex items-center px-8 relative">
+                    <div class="w-full h-1 bg-cyan-900/50 rounded-full overflow-hidden">
+                        <div class="h-full w-full bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                    </div>
+                    <div class="absolute left-1/2 w-12 h-8 bg-black border-2 border-pink-500/70 -translate-x-1/2 rounded-md cursor-grab shadow-[0_0_20px_rgba(255,0,255,0.4)] flex items-center justify-center">
+                        <div class="w-1 h-4 bg-pink-500 rounded-full"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- DRUM PADS (RIGHT) -->
-            <div class="w-1/3 flex flex-col p-4 border border-white/5 rounded-xl bg-white/5 backdrop-blur-sm relative">
-                <div class="absolute top-2 left-2 text-[10px] font-mono opacity-50">SAMPLER // KIT: 808</div>
+            <div class="w-1/3 cyber-panel flex flex-col p-6 relative">
+                <div class="flex justify-between text-xs font-mono text-cyan-400/70 mb-4">
+                    <span>SAMPLER // QUANTIZED</span>
+                    <span>BANK: A</span>
+                </div>
                 
-                <div class="mt-auto pad-grid h-full max-h-[300px]">
-                    <!-- Row 1 -->
-                    <div class="drum-pad" data-key="65" data-sound="clap">A<br>CLAP</div>
-                    <div class="drum-pad" data-key="83" data-sound="hihat">S<br>HIHAT</div>
-                    <div class="drum-pad" data-key="68" data-sound="kick">D<br>KICK</div>
+                <div class="mt-auto grid grid-cols-3 gap-3 h-full max-h-[320px]">
+                    <div class="hex-pad" data-key="65" data-sound="clap">A<br>CLAP</div>
+                    <div class="hex-pad" data-key="83" data-sound="hihat">S<br>HIHAT</div>
+                    <div class="hex-pad" data-key="68" data-sound="kick">D<br>KICK</div>
                     
-                    <!-- Row 2 -->
-                    <div class="drum-pad" data-key="70" data-sound="openhat">F<br>OPEN</div>
-                    <div class="drum-pad" data-key="71" data-sound="boom">G<br>BOOM</div>
-                    <div class="drum-pad" data-key="72" data-sound="ride">H<br>RIDE</div>
+                    <div class="hex-pad" data-key="70" data-sound="openhat">F<br>OPEN</div>
+                    <div class="hex-pad" data-key="71" data-sound="boom">G<br>BOOM</div>
+                    <div class="hex-pad" data-key="72" data-sound="ride">H<br>RIDE</div>
                     
-                    <!-- Row 3 -->
-                    <div class="drum-pad" data-key="74" data-sound="snare">J<br>SNARE</div>
-                    <div class="drum-pad" data-key="75" data-sound="tom">K<br>TOM</div>
-                    <div class="drum-pad" data-key="76" data-sound="tink">L<br>TINK</div>
+                    <div class="hex-pad" data-key="74" data-sound="snare">J<br>SNARE</div>
+                    <div class="hex-pad" data-key="75" data-sound="tom">K<br>TOM</div>
+                    <div class="hex-pad" data-key="76" data-sound="tink">L<br>TINK</div>
                 </div>
+
+                 <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-20 mix-blend-screen" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 50 300 L 100 250 L 200 250" stroke="var(--neon-pink)" fill="none" stroke-width="1" stroke-dasharray="2,4"/>
+                    <circle cx="100" cy="250" r="3" fill="var(--neon-pink)"/>
+                </svg>
             </div>
 
         </div>
-        
-        <!-- X-Ray Wiring Decor (Behind components) -->
-        <svg class="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-40">
-            <!-- Wires from Deck A to Mixer -->
-            <path d="M 20% 50% C 25% 50%, 30% 60%, 40% 60%" stroke="var(--neon-cyan)" stroke-width="2" fill="none" stroke-dasharray="5,5" />
-            <!-- Wires from Pads to Mixer -->
-            <path d="M 80% 50% C 75% 50%, 70% 60%, 60% 60%" stroke="var(--neon-purple)" stroke-width="2" fill="none" stroke-dasharray="5,5" />
-        </svg>
-
     </div>
 
-    <!-- Audio Logic -->
     <script>
-        // Sound Mapping
         const sounds = {
             'clap': 'https://dotehacker.github.io/drum/sounds/clap.wav',
             'hihat': 'https://dotehacker.github.io/drum/sounds/hihat.wav',
@@ -326,72 +313,72 @@
             'tink': 'https://dotehacker.github.io/drum/sounds/tink.wav',
         };
 
-        // Preload Audio
         const audioCache = {};
         Object.keys(sounds).forEach(key => {
             audioCache[key] = new Audio(sounds[key]);
         });
 
-        // Initialize Visualizer Bars
-        const vizContainer = document.getElementById('visualizer');
+        // Fill subtle visualizer bars in the central scope
+        const vizContainer = document.getElementById('visualizer-bars');
         const bars = [];
-        for(let i=0; i<12; i++) {
+        for(let i=0; i<16; i++) {
             const bar = document.createElement('div');
-            bar.className = 'spectrum-bar';
+            bar.className = 'flex-1 bg-cyan-400 mx-px rounded-t-sm transition-all duration-75 ease-out';
+            bar.style.height = '5%';
             vizContainer.appendChild(bar);
             bars.push(bar);
         }
 
-        // Play Sound Function
         function playSound(key) {
-            const pad = document.querySelector(`.drum-pad[data-key="${key}"]`);
+            const pad = document.querySelector(`.hex-pad[data-key="${key}"]`);
             if(!pad) return;
 
             const soundName = pad.dataset.sound;
             const audio = audioCache[soundName];
             
-            // Clone node to allow overlapping plays of same sound
             if (audio) {
                 const clone = audio.cloneNode();
                 clone.volume = 0.8;
+                // Pitch shift slightly based on key for variety (simulation)
+                clone.playbackRate = 0.95 + (Math.random() * 0.1);
                 clone.play();
-                triggerVisualizer();
+                triggerVisualizer(key);
             }
 
-            // Visual Feedback
             pad.classList.add('hit');
-            setTimeout(() => pad.classList.remove('hit'), 100);
+            setTimeout(() => pad.classList.remove('hit'), 150);
         }
 
-        // Visualizer Animation (Simulated)
-        function triggerVisualizer() {
-            bars.forEach(bar => {
-                const height = Math.random() * 0.8 + 0.2; // random height
-                bar.style.transform = `scaleY(${height})`;
-                bar.style.background = '#fff'; // Flash white
+        function triggerVisualizer(key) {
+            // Makes the central scope jitter
+            const scopeLines = document.querySelectorAll('.scope-line');
+            scopeLines.forEach(line => {
+                line.style.transform = `translateY(${Math.random() * 10 - 5}px) scaleY(${1 + Math.random()})`;
+                setTimeout(() => { scopeLines.forEach(l => l.style.transform = ''); }, 100)
+            });
+
+            // Pops the bars up
+            bars.forEach((bar, index) => {
+                // Create a "wave" effect across the bars based on keycode
+                const intensity = 1 - (Math.abs(index - (key % 16)) / 16);
+                const height = Math.max(10, (Math.random() * 80 * intensity) + 20);
+                bar.style.height = `${height}%`;
+                bar.style.backgroundColor = key % 2 === 0 ? 'var(--neon-pink)' : 'var(--neon-blue)';
+                
                 setTimeout(() => {
-                    bar.style.transform = `scaleY(0.1)`;
-                    bar.style.background = 'var(--neon-purple)';
-                }, 100);
+                    bar.style.height = '5%';
+                    bar.style.backgroundColor = 'var(--neon-blue)';
+                }, 150);
             });
         }
 
-        // Keyboard Listener
-        window.addEventListener('keydown', (e) => {
-            playSound(e.keyCode);
+        window.addEventListener('keydown', (e) => { playSound(e.keyCode); });
+        document.querySelectorAll('.hex-pad').forEach(pad => {
+            pad.addEventListener('mousedown', () => { playSound(pad.dataset.key); });
         });
 
-        // Click Listener for Pads
-        document.querySelectorAll('.drum-pad').forEach(pad => {
-            pad.addEventListener('mousedown', () => {
-                playSound(pad.dataset.key);
-            });
-        });
-
-        // Toggle Deck Animation
         function toggleDeck(id) {
-            const deck = document.getElementById(id);
-            deck.classList.toggle('active');
+            document.getElementById(id).classList.toggle('active');
         }
     </script>
 </body>
