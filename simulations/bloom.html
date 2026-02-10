@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom Filter — Interactive Visual Guide</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--surface:#12122a;--surface2:#1a1a3a;--accent:#6c5ce7;--accent2:#a29bfe;--green:#00cec9;--red:#ff6b6b;--orange:#fdcb6e;--text:#e0e0f0;--dim:#7070a0;--bit0:#1e1e3e;--bit1:#6c5ce7;--glow:0 0 20px rgba(108,92,231,0.3)}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;line-height:1.6}
+.hero{text-align:center;padding:60px 20px 40px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at center,rgba(108,92,231,0.08) 0%,transparent 60%);animation:pulse 8s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.1);opacity:1}}
+.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;background:linear-gradient(135deg,#a29bfe,#6c5ce7,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;position:relative}
+.hero .sub{color:var(--dim);font-size:1.1rem;max-width:600px;margin:0 auto}
+.container{max-width:1100px;margin:0 auto;padding:0 20px 60px}
+section{margin-bottom:50px}
+h2{font-size:1.6rem;font-weight:700;margin-bottom:18px;color:var(--accent2);display:flex;align-items:center;gap:10px}
+h2 .num{background:var(--accent);color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.card{background:var(--surface);border:1px solid rgba(108,92,231,0.15);border-radius:16px;padding:28px;box-shadow:var(--glow)}
+p{color:var(--dim);margin-bottom:12px;font-size:.97rem}
+.highlight{color:var(--green);font-weight:600}
+.warn{color:var(--red);font-weight:600}
+.key{color:var(--orange);font-weight:600}
+
+/* Diagram */
+.diagram{display:flex;flex-direction:column;align-items:center;gap:20px;margin:24px 0}
+.hash-funcs{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.hash-box{background:linear-gradient(135deg,var(--accent),#4834d4);padding:8px 18px;border-radius:10px;font-size:.85rem;font-weight:700;color:#fff;box-shadow:0 4px 15px rgba(108,92,231,0.3)}
+.arrow-down{width:2px;height:30px;background:linear-gradient(to bottom,var(--accent),var(--green));position:relative;margin:0 auto}
+.arrow-down::after{content:'▼';position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);color:var(--green);font-size:.7rem}
+
+/* Bit Array Visual */
+.bit-array-wrap{width:100%;overflow-x:auto;padding:10px 0}
+.bit-array{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;min-width:fit-content}
+.bit{width:32px;height:38px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;transition:all .35s cubic-bezier(.4,0,.2,1);cursor:default;position:relative;border:1px solid rgba(255,255,255,0.05)}
+.bit.off{background:var(--bit0);color:#555}
+.bit.on{background:var(--bit1);color:#fff;box-shadow:0 0 12px rgba(108,92,231,0.5);transform:scale(1.05)}
+.bit.hit{animation:bitPop .5s ease}
+.bit.query-hit{box-shadow:0 0 16px rgba(0,206,201,0.7);border-color:var(--green)}
+.bit.query-miss{box-shadow:0 0 16px rgba(255,107,107,0.7);border-color:var(--red)}
+.bit .idx{position:absolute;top:-16px;font-size:.55rem;color:var(--dim);font-weight:400}
+@keyframes bitPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1.05)}}
+
+/* Controls */
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0;align-items:center}
+input[type=text],input[type=number]{background:var(--surface2);border:1px solid rgba(108,92,231,0.3);color:var(--text);padding:10px 16px;border-radius:10px;font-size:.95rem;outline:none;transition:border .2s}
+input:focus{border-color:var(--accent)}
+button{padding:10px 22px;border-radius:10px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s}
+.btn-add{background:linear-gradient(135deg,var(--accent),#4834d4);color:#fff}
+.btn-add:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,92,231,0.4)}
+.btn-query{background:linear-gradient(135deg,var(--green),#00b894);color:#fff}
+.btn-query:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,206,201,0.4)}
+.btn-reset{background:var(--surface2);color:var(--dim);border:1px solid rgba(255,255,255,0.1)}
+.btn-reset:hover{color:var(--text)}
+
+/* Log */
+.log{background:var(--bg);border:1px solid rgba(108,92,231,0.1);border-radius:10px;padding:14px;max-height:200px;overflow-y:auto;margin-top:16px;font-family:'Courier New',monospace;font-size:.82rem;line-height:1.7}
+.log-entry{animation:fadeIn .3s ease}
+.log .add{color:var(--accent2)}.log .query-yes{color:var(--green)}.log .query-no{color:var(--red)}.log .fp{color:var(--orange)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:20px}
+.stat{background:var(--surface2);border-radius:12px;padding:16px;text-align:center}
+.stat .val{font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,var(--accent2),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat .label{font-size:.75rem;color:var(--dim);margin-top:4px}
+
+/* How it works diagram */
+.flow{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin:20px 0;padding:20px;background:var(--surface2);border-radius:14px}
+.flow-step{text-align:center;padding:14px;border-radius:12px;background:var(--surface);min-width:120px;border:1px solid rgba(108,92,231,0.15)}
+.flow-step .icon{font-size:1.8rem;margin-bottom:6px}
+.flow-step .txt{font-size:.78rem;color:var(--dim)}
+.flow-arrow{color:var(--accent);font-size:1.4rem;font-weight:700}
+
+/* Config */
+.config{display:flex;gap:16px;flex-wrap:wrap;align-items:end;margin-bottom:20px}
+.config label{font-size:.8rem;color:var(--dim);display:block;margin-bottom:4px}
+.config input[type=number]{width:80px}
+
+/* Result banner */
+.result-banner{padding:14px 20px;border-radius:12px;font-weight:700;margin-top:14px;display:none;animation:fadeIn .3s ease}
+.result-banner.yes{display:block;background:rgba(0,206,201,0.1);border:1px solid var(--green);color:var(--green)}
+.result-banner.no{display:block;background:rgba(255,107,107,0.1);border:1px solid var(--red);color:var(--red)}
+.result-banner.fp{display:block;background:rgba(253,203,110,0.1);border:1px solid var(--orange);color:var(--orange)}
+
+/* Explanation cards */
+.explain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0}
+.explain-card{background:var(--surface2);border-radius:14px;padding:22px;border-left:3px solid var(--accent)}
+.explain-card h3{font-size:1rem;margin-bottom:8px;color:var(--text)}
+.explain-card.green{border-left-color:var(--green)}
+.explain-card.red{border-left-color:var(--red)}
+.explain-card.orange{border-left-color:var(--orange)}
+
+/* FP rate chart */
+.chart-wrap{position:relative;height:200px;background:var(--surface2);border-radius:14px;padding:20px;margin-top:20px;overflow:hidden}
+canvas{width:100%!important;height:100%!important}
+
+/* Responsive */
+@media(max-width:600px){.bit{width:26px;height:32px;font-size:.65rem}.controls{flex-direction:column}.config{flex-direction:column}}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:8px}
+.tag-fp{background:rgba(253,203,110,0.15);color:var(--orange)}
+.tag-tp{background:rgba(0,206,201,0.15);color:var(--green)}
+.tag-tn{background:rgba(255,107,107,0.15);color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Bloom Filter</h1>
+  <p class="sub">A space-efficient probabilistic data structure that tells you "definitely not" or "maybe yes" — never wrong when it says no.</p>
+</div>
+
+<div class="container">
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <h2><span class="num">1</span> How It Works</h2>
+    <div class="card">
+      <p>A Bloom filter is a <span class="highlight">bit array of m bits</span> (all starting at 0) combined with <span class="key">k hash functions</span>. It supports two operations: <strong>Add</strong> and <strong>Query</strong>.</p>
+
+      <div class="flow">
+        <div class="flow-step"><div class="icon">📥</div><strong>Input</strong><div class="txt">element to add<br>e.g. "apple"</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="icon">🔀</div><strong>k Hashes</strong><div class="txt">compute k different<br>hash positions</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="icon">💡</div><strong>Set Bits</strong><div class="txt">flip those bits<br>to 1</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="icon">✅</div><strong>Done</strong><div class="txt">element is now<br>"in the filter"</div></div>
+      </div>
+
+      <div class="explain-grid">
+        <div class="explain-card green">
+          <h3>✅ "Definitely NOT in set"</h3>
+          <p>If <em>any</em> of the k bit positions is still 0, the element was <strong>never added</strong>. This answer is 100% certain — no false negatives ever.</p>
+        </div>
+        <div class="explain-card orange">
+          <h3>⚠️ "Possibly in set"</h3>
+          <p>If <em>all</em> k positions are 1, the element <em>might</em> be in the set — or other insertions coincidentally set those same bits. This is a <strong>false positive</strong>.</p>
+        </div>
+        <div class="explain-card red">
+          <h3>🚫 Cannot Remove</h3>
+          <p>Clearing a bit could break other elements that share it. Standard Bloom filters only support <strong>add</strong>, not delete.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE SIMULATOR -->
+  <section>
+    <h2><span class="num">2</span> Interactive Simulator</h2>
+    <div class="card">
+      <div class="config">
+        <div>
+          <label>Bits (m)</label>
+          <input type="number" id="cfgM" value="32" min="8" max="128" step="1">
+        </div>
+        <div>
+          <label>Hash Functions (k)</label>
+          <input type="number" id="cfgK" value="3" min="1" max="7" step="1">
+        </div>
+        <div>
+          <button class="btn-reset" onclick="initFilter()">Apply & Reset</button>
+        </div>
+      </div>
+
+      <!-- Bit Array -->
+      <div class="bit-array-wrap">
+        <div class="bit-array" id="bitArray"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <input type="text" id="inputWord" placeholder="Type a word…" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter'){event.shiftKey?queryWord():addWord()}">
+        <button class="btn-add" onclick="addWord()">➕ Add</button>
+        <button class="btn-query" onclick="queryWord()">🔍 Query</button>
+        <button class="btn-reset" onclick="initFilter()">↺ Reset</button>
+      </div>
+      <p style="font-size:.78rem;color:var(--dim);margin-top:-8px">Press <strong>Enter</strong> to add · <strong>Shift+Enter</strong> to query</p>
+
+      <div class="result-banner" id="resultBanner"></div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="val" id="stItems">0</div><div class="label">Items Added</div></div>
+        <div class="stat"><div class="val" id="stBitsOn">0</div><div class="label">Bits Set to 1</div></div>
+        <div class="stat"><div class="val" id="stFillRate">0%</div><div class="label">Fill Rate</div></div>
+        <div class="stat"><div class="val" id="stFPRate">0%</div><div class="label">≈ False Positive Rate</div></div>
+      </div>
+
+      <!-- Log -->
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <!-- FALSE POSITIVE VISUALIZATION -->
+  <section>
+    <h2><span class="num">3</span> False Positive Rate vs. Fill</h2>
+    <div class="card">
+      <p>As more items are added, more bits flip to 1, and the probability that a random query hits all 1s (a false positive) <span class="warn">grows exponentially</span>. The chart below shows the theoretical false positive rate as items increase for your current <em>m</em> and <em>k</em>.</p>
+      <div class="chart-wrap">
+        <canvas id="fpChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATH -->
+  <section>
+    <h2><span class="num">4</span> The Math Behind It</h2>
+    <div class="card">
+      <p>After inserting <strong>n</strong> elements into a filter with <strong>m</strong> bits and <strong>k</strong> hash functions, the approximate <span class="warn">false positive probability</span> is:</p>
+      <div style="text-align:center;padding:20px;font-size:1.3rem;color:var(--accent2);font-family:'Courier New',monospace;background:var(--surface2);border-radius:12px;margin:16px 0">
+        ε ≈ (1 − e<sup>−kn/m</sup>)<sup>k</sup>
+      </div>
+      <p>The <span class="key">optimal number of hash functions</span> for a given m and n is:  <strong style="color:var(--accent2)">k = (m/n) × ln 2 ≈ 0.693 × m/n</strong></p>
+      <p>For a desired false positive rate ε, you need approximately <strong style="color:var(--accent2)">m = −n × ln(ε) / (ln 2)²</strong> bits — roughly <span class="highlight">9.6 bits per element for 1% FP rate</span>, regardless of element size.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// --- Bloom Filter Engine ---
+let m, k, bits, addedItems, addedSet;
+
+function hashStr(s, seed) {
+  let h = seed ^ 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+    h ^= h >>> 16;
+  }
+  return Math.abs(h);
+}
+
+function getPositions(s) {
+  let pos = [];
+  for (let i = 0; i < k; i++) {
+    pos.push(hashStr(s, i * 0x9e3779b9 + 1) % m);
+  }
+  return pos;
+}
+
+function initFilter() {
+  m = Math.max(8, Math.min(128, parseInt(document.getElementById('cfgM').value) || 32));
+  k = Math.max(1, Math.min(7, parseInt(document.getElementById('cfgK').value) || 3));
+  document.getElementById('cfgM').value = m;
+  document.getElementById('cfgK').value = k;
+  bits = new Array(m).fill(0);
+  addedItems = 0;
+  addedSet = new Set();
+  renderBits();
+  updateStats();
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('resultBanner').className = 'result-banner';
+  document.getElementById('resultBanner').style.display = 'none';
+  drawChart();
+}
+
+function renderBits(highlights, mode) {
+  const el = document.getElementById('bitArray');
+  let html = '';
+  for (let i = 0; i < m; i++) {
+    let cls = bits[i] ? 'bit on' : 'bit off';
+    let extra = '';
+    if (highlights && highlights.includes(i)) {
+      cls += ' hit';
+      if (mode === 'add') extra = '';
+      else if (mode === 'query-yes') cls += ' query-hit';
+      else if (mode === 'query-no') cls += bits[i] ? ' query-hit' : ' query-miss';
+    }
+    html += `<div class="${cls}"><span class="idx">${i}</span>${bits[i]}</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function updateStats() {
+  const on = bits.filter(b => b).length;
+  const fill = on / m;
+  const fp = Math.pow(1 - Math.exp(-k * addedItems / m), k);
+  document.getElementById('stItems').textContent = addedItems;
+  document.getElementById('stBitsOn').textContent = on;
+  document.getElementById('stFillRate').textContent = (fill * 100).toFixed(1) + '%';
+  document.getElementById('stFPRate').textContent = addedItems === 0 ? '0%' : (fp * 100).toFixed(2) + '%';
+}
+
+function logMsg(html) {
+  const el = document.getElementById('log');
+  el.innerHTML = `<div class="log-entry">${html}</div>` + el.innerHTML;
+}
+
+function addWord() {
+  const inp = document.getElementById('inputWord');
+  const w = inp.value.trim();
+  if (!w) return;
+  const pos = getPositions(w);
+  pos.forEach(p => bits[p] = 1);
+  addedItems++;
+  addedSet.add(w);
+  renderBits(pos, 'add');
+  updateStats();
+  const posStr = pos.map(p => `<strong>${p}</strong>`).join(', ');
+  logMsg(`<span class="add">➕ ADD "${w}" → bits [${posStr}] set to 1</span>`);
+  document.getElementById('resultBanner').style.display = 'none';
+  inp.value = '';
+  inp.focus();
+  drawChart();
+}
+
+function queryWord() {
+  const inp = document.getElementById('inputWord');
+  const w = inp.value.trim();
+  if (!w) return;
+  const pos = getPositions(w);
+  const allSet = pos.every(p => bits[p] === 1);
+  const truly = addedSet.has(w);
+  const banner = document.getElementById('resultBanner');
+
+  const posStr = pos.map(p => `<strong>${p}</strong>`).join(', ');
+
+  if (allSet) {
+    if (truly) {
+      renderBits(pos, 'query-yes');
+      banner.className = 'result-banner yes';
+      banner.innerHTML = `✅ "<strong>${w}</strong>" — Probably in set (TRUE POSITIVE — it was actually added!) <span class="tag tag-tp">TP</span>`;
+      logMsg(`<span class="query-yes">🔍 QUERY "${w}" → bits [${posStr}] all 1 → ✅ Probably in set (true positive)</span>`);
+    } else {
+      renderBits(pos, 'query-yes');
+      banner.className = 'result-banner fp';
+      banner.innerHTML = `⚠️ "<strong>${w}</strong>" — Probably in set… but it was NEVER added! <span class="tag tag-fp">FALSE POSITIVE</span>`;
+      logMsg(`<span class="fp">🔍 QUERY "${w}" → bits [${posStr}] all 1 → ⚠️ FALSE POSITIVE!</span>`);
+    }
+  } else {
+    renderBits(pos, 'query-no');
+    banner.className = 'result-banner no';
+    const miss = pos.filter(p => bits[p] === 0);
+    banner.innerHTML = `❌ "<strong>${w}</strong>" — Definitely NOT in set (bit${miss.length > 1 ? 's' : ''} ${miss.join(', ')} = 0) <span class="tag tag-tn">TRUE NEGATIVE</span>`;
+    logMsg(`<span class="query-no">🔍 QUERY "${w}" → bits [${posStr}] → ❌ Not in set (0 at position${miss.length>1?'s':''} ${miss.join(', ')})</span>`);
+  }
+  banner.style.display = 'block';
+  inp.value = '';
+  inp.focus();
+}
+
+// --- FP Rate Chart (pure canvas) ---
+function drawChart() {
+  const canvas = document.getElementById('fpChart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const W = rect.width - 40;
+  const H = rect.height - 40;
+  canvas.width = (W + 40) * dpr;
+  canvas.height = (H + 40) * dpr;
+  ctx.scale(dpr, dpr);
+  canvas.style.width = (W + 40) + 'px';
+  canvas.style.height = (H + 40) + 'px';
+
+  const pad = {l:50, r:20, t:15, b:35};
+  const gw = W + 40 - pad.l - pad.r;
+  const gh = H + 40 - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W + 40, H + 40);
+
+  // Max items to show
+  const maxN = Math.max(m * 2, addedItems + 10);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(112,112,160,0.15)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.t + gh * i / 5;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gw, y); ctx.stroke();
+    ctx.fillStyle = '#7070a0';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(((5 - i) * 20) + '%', pad.l - 8, y + 4);
+  }
+
+  // X axis labels
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.l + gw * i / 5;
+    ctx.fillStyle = '#7070a0';
+    ctx.fillText(Math.round(maxN * i / 5), x, pad.t + gh + 20);
+  }
+  ctx.fillText('Items (n)', pad.l + gw / 2, pad.t + gh + 32);
+
+  // FP curve
+  ctx.beginPath();
+  ctx.strokeStyle = '#6c5ce7';
+  ctx.lineWidth = 2.5;
+  const pts = [];
+  for (let i = 0; i <= gw; i++) {
+    const n = (i / gw) * maxN;
+    const fp = Math.pow(1 - Math.exp(-k * n / m), k);
+    const x = pad.l + i;
+    const y = pad.t + gh - fp * gh;
+    pts.push({x, y, fp, n});
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + gh);
+  grad.addColorStop(0, 'rgba(108,92,231,0.25)');
+  grad.addColorStop(1, 'rgba(108,92,231,0)');
+  ctx.lineTo(pad.l + gw, pad.t + gh);
+  ctx.lineTo(pad.l, pad.t + gh);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Current position marker
+  if (addedItems > 0) {
+    const cx = pad.l + (addedItems / maxN) * gw;
+    const cfp = Math.pow(1 - Math.exp(-k * addedItems / m), k);
+    const cy = pad.t + gh - cfp * gh;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#00cec9';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#00cec9';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`n=${addedItems}, FP≈${(cfp*100).toFixed(1)}%`, cx + 10, cy - 5);
+  }
+}
+
+// Init
+initFilter();
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>
