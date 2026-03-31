@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Signals & Systems Solutions</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef2f7;color:#222;font-size:15px}
+.container{max-width:980px;margin:0 auto;padding:20px}
+h1{text-align:center;color:#0d47a1;padding:22px 0 8px;font-size:2em;letter-spacing:1px}
+.subtitle{text-align:center;color:#666;margin-bottom:20px;font-size:.95em}
+.sec{background:#fff;margin:16px 0;padding:22px 28px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.sec h2{color:#fff;font-size:1.1em;background:#1565c0;padding:8px 14px;border-radius:6px;margin-bottom:14px}
+.sec h3{color:#1565c0;margin:14px 0 6px;font-size:1em;border-left:3px solid #42a5f5;padding-left:8px}
+.mb{background:#f0f4ff;border-left:4px solid #1976d2;padding:10px 14px;margin:8px 0;font-family:'Times New Roman',serif;font-size:1.05em;line-height:1.9;border-radius:0 6px 6px 0;white-space:pre-wrap}
+.res{background:#e8f5e9;border:1px solid #66bb6a;border-radius:6px;padding:9px 14px;margin:8px 0}
+.res strong{color:#2e7d32}
+p{line-height:1.75;margin:6px 0}
+canvas{display:block;margin:10px auto;border-radius:6px;border:1px solid #e0e0e0}
+.clabel{text-align:center;font-size:.85em;color:#555;margin-bottom:6px}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.cell{flex:1;min-width:260px}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.92em}
+th{background:#1565c0;color:#fff;padding:7px 10px}
+td{padding:7px 10px;border:1px solid #ddd;text-align:center}
+tr:nth-child(even){background:#f5f5f5}
+.note{background:#fff8e1;border-left:3px solid #ffa000;padding:8px 12px;margin:8px 0;font-size:.93em;border-radius:0 4px 4px 0}
+ul{margin:6px 0 6px 20px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📡 Signals &amp; Systems — Complete Solutions</h1>
+<p class="subtitle">All questions answered with derivations, formulas, and interactive plots</p>
+
+<!-- ===== Q1 ===== -->
+<div class="sec">
+<h2>Question 1 — Energy/Power Signals &amp; Periodicity Condition</h2>
+
+<h3>Part (a) — Energy and Power Signals</h3>
+<p>Signals are classified based on their total <strong>energy</strong> and average <strong>power</strong>:</p>
+<div class="mb">Total Energy:   E = ∫₋∞^∞ |x(t)|² dt
+
+Average Power:  P = lim[T→∞]  (1/2T) ∫₋T^T |x(t)|² dt</div>
+
+<p><strong>Energy Signal:</strong> A signal where E &lt; ∞ and therefore P = 0.</p>
+<p><strong>Power Signal:</strong> A signal where 0 &lt; P &lt; ∞ and therefore E → ∞.</p>
+
+<table>
+<tr><th>Property</th><th>Energy Signal</th><th>Power Signal</th></tr>
+<tr><td>Total Energy E</td><td>Finite (E &lt; ∞)</td><td>Infinite</td></tr>
+<tr><td>Average Power P</td><td>P = 0</td><td>Finite (0 &lt; P &lt; ∞)</td></tr>
+<tr><td>Examples</td><td>x(t) = e<sup>−|t|</sup>, rect pulse</td><td>cos(ω₀t), periodic signals</td></tr>
+</table>
+
+<h3>Part (b) — Condition for e<sup>jωn</sup> to be Periodic</h3>
+<p>A discrete-time signal x[n] is periodic with period N if x[n+N] = x[n] for all n and some positive integer N.</p>
+<div class="mb">For e^{jωn} to be periodic with period N:
+  e^{jω(n+N)} = e^{jωn}  for all n
+  ⟹  e^{jωN} = 1
+  ⟹  ωN = 2πm,  for some integer m
+  ⟹  ω/2π = m/N  (a rational number)</div>
+<div class="res"><strong>Conclusion:</strong> e<sup>jωn</sup> is periodic ⟺ ω/2π is rational (ω = 2πm/N for integers m, N). If ω/2π is irrational, the signal is aperiodic.</div>
+</div>
+
+<!-- ===== Q2 ===== -->
+<div class="sec">
+<h2>Question 2 — Spectrum of Periodic Signal &amp; Parseval's Relation</h2>
+
+<h3>Part (a) — Fourier Series &amp; Spectrum</h3>
+<p>From the graph, x(t) is a <strong>sawtooth wave</strong> with period T = 1, rising linearly from 0 to 1.5:</p>
+<div class="mb">x(t) = 1.5t,   0 ≤ t &lt; 1,   periodic with T = 1 s,   ω₀ = 2π rad/s</div>
+
+<p><strong>Fourier Series Coefficients:</strong></p>
+<div class="mb">c_n = (1/T) ∫₀ᵀ x(t) e^{−j2πnt/T} dt
+
+For n = 0:
+  c₀ = (1/1)∫₀¹ 1.5t dt = 1.5 × [t²/2]₀¹ = 0.75
+
+For n ≠ 0 (integration by parts):
+  c_n = 1.5 ∫₀¹ t·e^{−j2πnt} dt = 1.5 × j/(2πn) = j·1.5/(2πn)
+
+Therefore:
+  |c_n| = 1.5/(2π|n|),   n ≠ 0;    |c₀| = 0.75
+  ∠c_n = +π/2  (n > 0),   ∠c_n = −π/2  (n < 0),   ∠c₀ = 0</div>
+
+<div class="note">The signal x(t) = Σ c_n e^{j2πnt}, the Fourier spectrum is two-sided and discrete at multiples of f₀ = 1 Hz.</div>
+
+<div class="row">
+  <div class="cell">
+    <canvas id="cSig" width="300" height="180"></canvas>
+    <p class="clabel">Original sawtooth signal x(t)</p>
+  </div>
+  <div class="cell">
+    <canvas id="cMag" width="300" height="180"></canvas>
+    <p class="clabel">Magnitude spectrum |c_n|</p>
+  </div>
+  <div class="cell">
+    <canvas id="cPhase" width="300" height="180"></canvas>
+    <p class="clabel">Phase spectrum ∠c_n</p>
+  </div>
+</div>
+
+<h3>Part (b) — Parseval's Relation for DT Periodic Signals</h3>
+<p><strong>Statement:</strong> For x[n] periodic with period N having DTFS coefficients {c_k}:</p>
+<div class="mb">(1/N) Σ_{n=0}^{N−1} |x[n]|²  =  Σ_{k=0}^{N−1} |c_k|²
+
+     Average Power         =   Sum of squared magnitudes of DTFS coefficients</div>
+
+<p><strong>Proof:</strong></p>
+<div class="mb">LHS = (1/N) Σ_n x[n]·x*[n]
+
+Substitute x*[n] = Σ_k c_k* e^{−j2πkn/N}  (conjugate of synthesis equation):
+
+= (1/N) Σ_n x[n] · Σ_k c_k* e^{−j2πkn/N}
+
+= Σ_k c_k* · [ (1/N) Σ_n x[n] e^{−j2πkn/N} ]
+
+By definition, the bracketed term is c_k (DTFS analysis equation):
+
+= Σ_k c_k* · c_k  =  Σ_k |c_k|²  =  RHS  ∎</div>
+</div>
+
+<!-- ===== Q3 ===== -->
+<div class="sec">
+<h2>Question 3 — Complex Conjugation Property of CT Fourier Transform</h2>
+<p><strong>Statement:</strong> If x(t) ↔ X(jω), then x*(t) ↔ X*(−jω).</p>
+<p><strong>Proof:</strong></p>
+<div class="mb">By definition:  X(jω) = ∫₋∞^∞ x(t) e^{−jωt} dt
+
+Take conjugate of both sides:
+  X*(jω) = ∫₋∞^∞ x*(t) e^{+jωt} dt
+
+Replace ω with −ω:
+  X*(−jω) = ∫₋∞^∞ x*(t) e^{−jωt} dt  =  FT{x*(t)}
+
+Therefore:  x*(t)  ↔  X*(−jω)  ∎</div>
+
+<h3>Conjugate Symmetry for Real Signals</h3>
+<p>If x(t) is purely real: x*(t) = x(t), so applying the property:</p>
+<div class="mb">x*(t) = x(t)  ⟹  FT{x*(t)} = FT{x(t)}  = X(jω)
+But from the property:   FT{x*(t)} = X*(−jω)
+
+Therefore:  X*(−jω) = X(jω)  ← Conjugate Symmetry
+
+This implies:
+  |X(−jω)| = |X(jω)|        (Magnitude is even)
+  ∠X(−jω) = −∠X(jω)        (Phase is odd)
+  Re{X(jω)} is even,  Im{X(jω)} is odd</div>
+<div class="res"><strong>Conclusion:</strong> The Fourier Transform of a real CT signal is always conjugate symmetric.</div>
+</div>
+
+<!-- ===== Q4 ===== -->
+<div class="sec">
+<h2>Question 4 — DTFT and 4-point DFT</h2>
+
+<h3>Part (a) — DTFT of x[n] = aⁿu[n],  0 &lt; a &lt; 1</h3>
+<div class="mb">X(e^{jω}) = Σ_{n=−∞}^{∞} x[n] e^{−jωn}
+            = Σ_{n=0}^{∞} aⁿ e^{−jωn}
+            = Σ_{n=0}^{∞} (a e^{−jω})ⁿ
+
+This is a geometric series with ratio r = ae^{−jω}. Since |a| &lt; 1, |r| &lt; 1, it converges:
+
+  X(e^{jω}) = 1 / (1 − a e^{−jω})</div>
+
+<div class="mb">Magnitude:  |X(e^{jω})| = 1 / √(1 + a² − 2a·cos(ω))
+
+Phase:      ∠X(e^{jω}) = −arctan[a·sin(ω) / (1 − a·cos(ω))]</div>
+<div class="res"><strong>Result:</strong> X(e<sup>jω</sup>) = 1/(1 − ae<sup>−jω</sup>)</div>
+
+<h3>Part (b) — 4-point DFT of x[n] = {3, −2, 1} (zero-padded)</h3>
+<p>Pad to length 4: x[n] = {3, −2, 1, 0} for n = 0, 1, 2, 3.</p>
+<div class="mb">X[k] = Σ_{n=0}^{3} x[n] W_4^{nk},   where  W_4 = e^{−j2π/4} = e^{−jπ/2} = −j
+
+Powers:  W_4^0 = 1,  W_4^1 = −j,  W_4^2 = −1,  W_4^3 = j
+
+X[0] = 3(1) + (−2)(1) + 1(1) + 0(1)        = 3 − 2 + 1 = 2
+X[1] = 3(1) + (−2)(−j) + 1(−1) + 0(j)      = 3 + 2j − 1 = 2 + 2j
+X[2] = 3(1) + (−2)(−1) + 1(1) + 0(−1)      = 3 + 2 + 1 = 6
+X[3] = 3(1) + (−2)(j) + 1(−1) + 0(−j)      = 3 − 2j − 1 = 2 − 2j</div>
+
+<table>
+<tr><th>k</th><th>X[k]</th><th>|X[k]|</th><th>∠X[k] (rad)</th></tr>
+<tr><td>0</td><td>2</td><td>2</td><td>0</td></tr>
+<tr><td>1</td><td>2 + 2j</td><td>2√2 ≈ 2.828</td><td>π/4 ≈ 0.785</td></tr>
+<tr><td>2</td><td>6</td><td>6</td><td>0</td></tr>
+<tr><td>3</td><td>2 − 2j</td><td>2√2 ≈ 2.828</td><td>−π/4 ≈ −0.785</td></tr>
+</table>
+
+<div class="row">
+  <div class="cell">
+    <canvas id="cDFTmag" width="300" height="200"></canvas>
+    <p class="clabel">DFT Magnitude |X[k]|</p>
+  </div>
+  <div class="cell">
+    <canvas id="cDFTphase" width="300" height="200"></canvas>
+    <p class="clabel">DFT Phase ∠X[k]</p>
+  </div>
+</div>
+</div>
+
+<!-- ===== Q5 ===== -->
+<div class="sec">
+<h2>Question 5 — Nyquist Sampling Theorem</h2>
+<p><strong>Statement:</strong> A band-limited signal with highest frequency f<sub>m</sub> can be perfectly reconstructed from its samples if the sampling rate f<sub>s</sub> satisfies:</p>
+<div class="mb">f_s ≥ 2f_m  (Nyquist Rate = 2f_m)</div>
+
+<h3>Finding Nyquist Rate for x(t) = (1/2π) cos(50πt) cos(500πt)</h3>
+<p>Apply the product-to-sum identity: cos A·cos B = ½[cos(A−B) + cos(A+B)]</p>
+<div class="mb">x(t) = (1/2π) · cos(50πt)·cos(500πt)
+     = (1/4π) · [cos(500πt − 50πt) + cos(500πt + 50πt)]
+     = (1/4π) · [cos(450πt) + cos(550πt)]
+
+Frequency components:
+  f₁ = 450π / (2π) = 225 Hz
+  f₂ = 550π / (2π) = 275 Hz
+
+Maximum frequency: f_m = 275 Hz</div>
+<div class="res"><strong>Nyquist Rate = 2 × f<sub>m</sub> = 2 × 275 = <em>550 Hz</em></strong> (550 samples/second minimum)</div>
+<canvas id="cNyquist" width="550" height="180"></canvas>
+<p class="clabel">Frequency spectrum of x(t) — components at ±225 Hz and ±275 Hz</p>
+</div>
+
+<!-- ===== Q6 ===== -->
+<div class="sec">
+<h2>Question 6 — LTI System Output &amp; Ideal LPF</h2>
+
+<h3>Part (a) — LTI System Output</h3>
+<p><strong>LTI System:</strong> A Linear Time-Invariant system is completely characterized by its impulse response h(t). The output is the convolution: y(t) = x(t) ∗ h(t).</p>
+<div class="mb">h(t) = e^{−2t} u(t)
+
+x(t) = { 1,  |t| &lt; 5
+        { 0,  otherwise
+
+y(t) = ∫₋∞^∞ x(τ) h(t−τ) dτ = ∫₋₅^{5} e^{−2(t−τ)} u(t−τ) dτ</div>
+
+<p><strong>Case 1 — t &lt; −5:</strong> No overlap ⟹ y(t) = 0</p>
+<div class="mb">Case 2 — −5 ≤ t &lt; 5:
+  y(t) = ∫₋₅^t e^{−2(t−τ)} dτ = e^{−2t} [e^{2τ}/2]_{−5}^{t}
+       = (1 − e^{−2(t+5)}) / 2
+
+Case 3 — t ≥ 5:
+  y(t) = ∫₋₅^5 e^{−2(t−τ)} dτ = e^{−2t} [e^{2τ}/2]_{−5}^{5}
+       = (e^{−2(t−5)} − e^{−2(t+5)}) / 2</div>
+
+<canvas id="cLTI" width="580" height="220"></canvas>
+<p class="clabel">Output y(t) of LTI system</p>
+
+<h3>Part (b) — Ideal LPF is Not Practically Realizable</h3>
+<p>The ideal LPF has frequency response: H(jω) = 1 for |ω| ≤ ω<sub>c</sub>, 0 otherwise.</p>
+<p>Its impulse response (inverse FT) is:</p>
+<div class="mb">h(t) = ω_c/π · sinc(ω_c t / π) = sin(ω_c t) / (πt)   (for all t)</div>
+<p><strong>Reasons for non-realizability:</strong></p>
+<ul>
+  <li><strong>Non-causality:</strong> h(t) ≠ 0 for t &lt; 0 — output depends on future input</li>
+  <li><strong>Infinite duration:</strong> h(t) is non-zero for all time, cannot be stored or implemented</li>
+  <li><strong>Physical impossibility:</strong> Cannot build a system that responds before excitation</li>
+</ul>
+<div class="res"><strong>Paley-Wiener Condition:</strong> For h(t) to be causal, ∫₋∞^∞ |ln|H(jω)|| / (1+ω²) dω &lt; ∞. The ideal LPF has H(jω) = 0 over a range of ω, making this integral diverge → not realizable.</div>
+</div>
+
+<!-- ===== Q7 ===== -->
+<div class="sec">
+<h2>Question 7 — Convolution Sum</h2>
+<div class="mb">x[n] = {−0.5, 1, −1, 0.5}   (n = 0,1,2,3)
+y[n] = {1, 2, −1, 0, 2, −1}  (n = 0,1,2,3,4,5)
+z[n] = x[n] ∗ y[n]  has length 4+6−1 = 9  points  (n = 0 to 8)</div>
+
+<p><strong>Computation:</strong></p>
+<div class="mb">z[n] = Σ_k x[k]·y[n−k]
+
+z[0] = (−0.5)(1)                             = −0.5
+z[1] = (−0.5)(2)+(1)(1)                      =  0
+z[2] = (−0.5)(−1)+(1)(2)+(−1)(1)             =  1.5
+z[3] = (−0.5)(0)+(1)(−1)+(−1)(2)+(0.5)(1)   = −2.5
+z[4] = (−0.5)(2)+(1)(0)+(−1)(−1)+(0.5)(2)   =  1.0
+z[5] = (−0.5)(−1)+(1)(2)+(−1)(0)+(0.5)(−1)  =  2.0
+z[6] = (1)(−1)+(−1)(2)+(0.5)(0)              = −3.0
+z[7] = (−1)(−1)+(0.5)(2)                     =  2.0
+z[8] = (0.5)(−1)                             = −0.5</div>
+
+<table>
+<tr><th>n</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
+<tr><td>z[n]</td><td>−0.5</td><td>0</td><td>1.5</td><td>−2.5</td><td>1</td><td>2</td><td>−3</td><td>2</td><td>−0.5</td></tr>
+</table>
+
+<div class="row">
+  <div class="cell">
+    <canvas id="cConvX" width="300" height="160"></canvas>
+    <p class="clabel">x[n]</p>
+  </div>
+  <div class="cell">
+    <canvas id="cConvY" width="300" height="160"></canvas>
+    <p class="clabel">y[n]</p>
+  </div>
+</div>
+<canvas id="cConvZ" width="620" height="220"></canvas>
+<p class="clabel">z[n] = x[n] ∗ y[n]</p>
+</div>
+
+<!-- ===== Q8 ===== -->
+<div class="sec">
+<h2>Question 8 — LCCDE: Transfer Function &amp; Impulse Response</h2>
+<div class="mb">Given:  y[n] = 0.4·y[n−1] + x[n]</div>
+
+<h3>Transfer Function H(z)</h3>
+<div class="mb">Take Z-transform (using time-shift property z⁻¹):
+  Y(z) = 0.4·z⁻¹·Y(z) + X(z)
+  Y(z)(1 − 0.4z⁻¹) = X(z)
+
+H(z) = Y(z)/X(z) = 1/(1 − 0.4z⁻¹) = z/(z − 0.4)
+
+Pole:  z = 0.4  (inside unit circle → stable)
+Zero:  z = 0</div>
+
+<h3>Impulse Response h[n]</h3>
+<div class="mb">H(z) = z/(z − 0.4)  is a first-order all-pole filter.
+
+Inverse Z-transform (using standard pairs):
+  H(z) = 1/(1 − 0.4z⁻¹)  ↔  h[n] = (0.4)ⁿ u[n]
+
+The system is causal and stable (|pole| = 0.4 &lt; 1).</div>
+<div class="res"><strong>h[n] = (0.4)<sup>n</sup> u[n]</strong> — decaying geometric sequence for n ≥ 0</div>
+
+<div class="row">
+  <div class="cell">
+    <canvas id="cPZ" width="280" height="280"></canvas>
+    <p class="clabel">Pole-Zero diagram in z-plane</p>
+  </div>
+  <div class="cell">
+    <canvas id="cIR" width="320" height="220"></canvas>
+    <p class="clabel">Impulse response h[n] = (0.4)<sup>n</sup>u[n]</p>
+  </div>
+</div>
+
+<h3>Frequency Response</h3>
+<div class="mb">H(e^{jω}) = H(z)|_{z=e^{jω}} = 1/(1 − 0.4e^{−jω})
+
+|H(e^{jω})| = 1/√(1 + 0.16 − 0.8cos(ω))
+
+This is a low-pass filter (gain is maximum at ω=0, rolls off toward ω=π).</div>
+<canvas id="cFreqResp" width="580" height="200"></canvas>
+<p class="clabel">Magnitude frequency response |H(e<sup>jω</sup>)|</p>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ===== UTILITY FUNCTIONS =====
+function clearCanvas(ctx, w, h){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,w,h);
+}
+function drawAxes(ctx, ox, oy, w, h, xl, xr, yb, yt, xLabel, yLabel){
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(ox+xl,oy);ctx.lineTo(ox+xr,oy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox,oy-yb);ctx.lineTo(ox,oy+yt);ctx.stroke();
+  // arrowheads
+  ctx.beginPath();ctx.moveTo(ox+xr,oy);ctx.lineTo(ox+xr-6,oy-4);ctx.lineTo(ox+xr-6,oy+4);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(ox,oy-yb);ctx.lineTo(ox-4,oy-yb+6);ctx.lineTo(ox+4,oy-yb+6);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#333';ctx.font='12px Arial';ctx.textAlign='center';
+  ctx.fillText(xLabel,ox+xr+8,oy+4);
+  ctx.fillText(yLabel,ox-4,oy-yb-6);
+}
+function stem(ctx, ox, oy, x, y, xscale, yscale, color){
+  var px=ox+x*xscale, py=oy-y*yscale;
+  ctx.strokeStyle=color||'#1565c0';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(px,oy);ctx.lineTo(px,py);ctx.stroke();
+  ctx.fillStyle=color||'#1565c0';
+  ctx.beginPath();ctx.arc(px,py,4,0,2*Math.PI);ctx.fill();
+}
+function gridLine(ctx, x1,y1,x2,y2){
+  ctx.save();ctx.strokeStyle='#e0e0e0';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();
+}
+function label(ctx,txt,x,y,align,color){
+  ctx.fillStyle=color||'#555';ctx.font='11px Arial';ctx.textAlign=align||'center';
+  ctx.fillText(txt,x,y);
+}
+
+// ===== Q2a PLOTS =====
+(function(){
+  // Sawtooth signal
+  var c=document.getElementById('cSig'),ctx=c.getContext('2d');
+  clearCanvas(ctx,300,180);
+  var ox=40,oy=130,xsc=40,ysc=60;
+  // grid
+  for(var g=-1;g<=4;g++) gridLine(ctx,ox+g*xsc,30,ox+g*xsc,160);
+  for(var g=0;g<=2;g++) gridLine(ctx,ox-20,oy-g*ysc,260,oy-g*ysc);
+  drawAxes(ctx,ox,oy,220,130,20,30,{});
+  // actual axes
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(ox-20,oy);ctx.lineTo(270,oy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox,160);ctx.lineTo(ox,25);ctx.stroke();
+  // sawtooth
+  ctx.strokeStyle='#1565c0';ctx.lineWidth=2;ctx.beginPath();
+  for(var i=0;i<4;i++){
+    var x0=ox+i*xsc,x1=ox+(i+1)*xsc;
+    ctx.moveTo(x0,oy);ctx.lineTo(x1,oy-1.5*ysc);
+    if(i<3){ctx.moveTo(x1,oy-1.5*ysc);ctx.lineTo(x1,oy);}
+  }
+  ctx.stroke();
+  // labels
+  label(ctx,'0',ox,oy+14);
+  for(var i=1;i<=4;i++) label(ctx,i,ox+i*xsc,oy+14);
+  for(var i=-3;i<0;i++) label(ctx,i,ox+i*xsc,oy+14);
+  label(ctx,'0.75',ox-18,oy-0.75*ysc+4,'right','#666');
+  label(ctx,'1.5',ox-18,oy-1.5*ysc+4,'right','#666');
+  label(ctx,'t',270,oy-6);
+  label(ctx,'x(t)',ox+5,22,'left');
+
+  // Magnitude spectrum
+  var c2=document.getElementById('cMag'),ctx2=c2.getContext('2d');
+  clearCanvas(ctx2,300,180);
+  var ox2=150,oy2=140,ns=[-5,-4,-3,-2,-1,0,1,2,3,4,5];
+  var sc=22,ymax=100;
+  ctx2.strokeStyle='#333';ctx2.lineWidth=1.5;
+  ctx2.beginPath();ctx2.moveTo(20,oy2);ctx2.lineTo(280,oy2);ctx2.stroke();
+  ctx2.beginPath();ctx2.moveTo(ox2,150);ctx2.lineTo(ox2,20);ctx2.stroke();
+  // arrow
+  ctx2.beginPath();ctx2.moveTo(280,oy2);ctx2.lineTo(274,oy2-4);ctx2.lineTo(274,oy2+4);ctx2.closePath();ctx2.fill();
+  ctx2.beginPath();ctx2.moveTo(ox2,20);ctx2.lineTo(ox2-4,26);ctx2.lineTo(ox2+4,26);ctx2.closePath();ctx2.fill();
+  ns.forEach(function(n){
+    var mag = n===0 ? 0.75 : 1.5/(2*Math.PI*Math.abs(n));
+    var px=ox2+n*sc, ht=mag*ymax/0.8;
+    ctx2.strokeStyle='#e53935';ctx2.lineWidth=2;
+    ctx2.beginPath();ctx2.moveTo(px,oy2);ctx2.lineTo(px,oy2-ht);ctx2.stroke();
+    ctx2.fillStyle='#e53935';ctx2.beginPath();ctx2.arc(px,oy2-ht,3.5,0,2*Math.PI);ctx2.fill();
+    label(ctx2,n,px,oy2+14,'center','#333');
+  });
+  // y axis ticks
+  label(ctx2,'0.75',ox2-4,oy2-0.75*ymax/0.8+4,'right','#666');
+  label(ctx2,'|c_n|',ox2+5,22,'left','#333');
+  label(ctx2,'n',280,oy2-8,'center','#333');
+
+  // Phase spectrum
+  var c3=document.getElementById('cPhase'),ctx3=c3.getContext('2d');
+  clearCanvas(ctx3,300,180);
+  var oy3=90;
+  ctx3.strokeStyle='#333';ctx3.lineWidth=1.5;
+  ctx3.beginPath();ctx3.moveTo(20,oy3);ctx3.lineTo(280,oy3);ctx3.stroke();
+  ctx3.beginPath();ctx3.moveTo(ox2,160);ctx3.lineTo(ox2,20);ctx3.stroke();
+  ctx3.beginPath();ctx3.moveTo(280,oy3);ctx3.lineTo(274,oy3-4);ctx3.lineTo(274,oy3+4);ctx3.closePath();ctx3.fill();
+  ctx3.beginPath();ctx3.moveTo(ox2,20);ctx3.lineTo(ox2-4,26);ctx3.lineTo(ox2+4,26);ctx3.closePath();ctx3.fill();
+  ns.forEach(function(n){
+    var phase = n>0 ? Math.PI/2 : (n<0 ? -Math.PI/2 : 0);
+    var px=ox2+n*sc, ht=phase*50;
+    ctx3.strokeStyle='#7b1fa2';ctx3.lineWidth=2;
+    ctx3.beginPath();ctx3.moveTo(px,oy3);ctx3.lineTo(px,oy3-ht);ctx3.stroke();
+    ctx3.fillStyle='#7b1fa2';ctx3.beginPath();ctx3.arc(px,oy3-ht,3.5,0,2*Math.PI);ctx3.fill();
+    label(ctx3,n,px,oy3+14,'center','#333');
+  });
+  label(ctx3,'π/2',ox2-4,oy3-Math.PI/2*50+4,'right','#666');
+  label(ctx3,'-π/2',ox2-4,oy3+Math.PI/2*50+4,'right','#666');
+  label(ctx3,'∠c_n',ox2+5,22,'left','#333');
+  label(ctx3,'n',280,oy3-8,'center','#333');
+})();
+
+// ===== Q4b DFT PLOTS =====
+(function(){
+  var mags=[2,2*Math.sqrt(2),6,2*Math.sqrt(2)];
+  var phases=[0,Math.PI/4,0,-Math.PI/4];
+  function dftPlot(id,data,title,color,yscale,fmt){
+    var c=document.getElementById(id),ctx=c.getContext('2d');
+    clearCanvas(ctx,300,200);
+    var ox=50,oy=160,sc=50;
+    ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(30,oy);ctx.lineTo(260,oy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ox,180);ctx.lineTo(ox,20);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(260,oy);ctx.lineTo(254,oy-4);ctx.lineTo(254,oy+4);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(ox,20);ctx.lineTo(ox-4,26);ctx.lineTo(ox+4,26);ctx.closePath();ctx.fill();
+    for(var k=0;k<4;k++){
+      var px=ox+(k+0.5)*sc, ht=data[k]*yscale;
+      ctx.strokeStyle=color;ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.moveTo(px,oy);ctx.lineTo(px,oy-ht);ctx.stroke();
+      ctx.fillStyle=color;ctx.beginPath();ctx.arc(px,oy-ht,5,0,2*Math.PI);ctx.fill();
+      label(ctx,'k='+k,px,oy+14,'center','#333');
+      label(ctx,fmt(data[k]),px,oy-ht-8,'center',color);
+    }
+    label(ctx,title,ox+5,16,'left','#333');
+    label(ctx,'k',255,oy-8,'center');
+  }
+  dftPlot('cDFTmag',mags,'|X[k]|','#1565c0',20,function(v){return v.toFixed(2)});
+  dftPlot('cDFTphase',phases,'∠X[k] (rad)','#e53935',50,function(v){return v===0?'0':v>0?'π/4':'-π/4'});
+})();
+
+// ===== Q5 NYQUIST PLOT =====
+(function(){
+  var c=document.getElementById('cNyquist'),ctx=c.getContext('2d');
+  clearCanvas(ctx,550,180);
+  var ox=275,oy=90,fsc=0.5;
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(20,oy);ctx.lineTo(530,oy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox,160);ctx.lineTo(ox,20);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(530,oy);ctx.lineTo(524,oy-4);ctx.lineTo(524,oy-0);ctx.closePath();ctx.fill();
+  // components at ±225, ±275
+  var freqs=[-275,-225,225,275];
+  freqs.forEach(function(f){
+    var px=ox+f*fsc;
+    ctx.strokeStyle='#1565c0';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(px,oy);ctx.lineTo(px,oy-80);ctx.stroke();
+    ctx.fillStyle='#1565c0';ctx.beginPath();ctx.arc(px,oy-80,5,0,2*Math.PI);ctx.fill();
+    label(ctx,f+'Hz',px,oy+16,'center','#333');
+  });
+  // Nyquist rate annotation
+  ctx.strokeStyle='#e53935';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(ox+275*fsc,20);ctx.lineTo(ox+275*fsc,oy+28);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox-275*fsc,20);ctx.lineTo(ox-275*fsc,oy+28);ctx.stroke();
+  ctx.setLineDash([]);
+  label(ctx,'f_max = 275 Hz',ox+275*fsc+2,35,'left','#e53935');
+  label(ctx,'Nyquist Rate = 550 Hz',ox,16,'center','#2e7d32');
+  label(ctx,'f (Hz)',525,oy-8,'center');
+  label(ctx,'0',ox,oy+16);
+})();
+
+// ===== Q6 LTI OUTPUT =====
+(function(){
+  var c=document.getElementById('cLTI'),ctx=c.getContext('2d');
+  clearCanvas(ctx,580,220);
+  var ox=80,oy=160,xsc=30,ysc=240;
+  // grid
+  for(var t=-2;t<=16;t+=2) gridLine(ctx,ox+t*xsc,20,ox+t*xsc,180);
+  gridLine(ctx,20,oy-0.5*ysc,560,oy-0.5*ysc);
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(20,oy);ctx.lineTo(560,oy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ox,185);ctx.lineTo(ox,15);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(560,oy);ctx.lineTo(554,oy-4);ctx.lineTo(554,oy+4);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(ox,15);ctx.lineTo(ox-4,21);ctx.lineTo(ox+4,21);ctx.closePath();ctx.fill();
+  // x(t) - dashed
+  ctx.strokeStyle='#90caf9';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();
+  ctx.moveTo(ox-5*xsc,oy);ctx.lineTo(ox-5*xsc,oy-0.85*ysc);
+  ctx.lineTo(ox+5*xsc,oy-0.85*ysc);ctx.lineTo(ox+5*xsc,oy);
+  ctx.stroke();ctx.setLineDash([]);
+  // y(t)
+  ctx.strokeStyle='#e53935';ctx.lineWidth=2.5;ctx.beginPath();
+  var started=false;
+  for(var ti=-50;ti<=160;ti++){
+    var t=ti/10-5;
+    var y=0;
+    if(t>=-5&&t<5) y=(1-Math.exp(-2*(t+5)))/2;
+    else if(t>=5) y=(Math.exp(-2*(t-5))-Math.exp(-2*(t+5)))/2;
+    var px=ox+t*xsc,py=oy-y*ysc;
+    if(!started){ctx.moveTo(px,py);started=true;}
+    else ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  // labels
+  for(var i=-2;i<=14;i+=2) label(ctx,i-5,ox+(i-5)*xsc,oy+16,'center','#555');
+  label(ctx,'0.5',ox-6,oy-0.5*ysc+4,'right','#888');
+  label(ctx,'y(t)','#e53935');
+  ctx.fillStyle='#e53935';label(ctx,'y(t)',30,24,'left','#e53935');
+  ctx.fillStyle='#90caf9';label(ctx,'x(t)',30,38,'left','#90caf9');
+  label(ctx,'t',555,oy-8);
+  label(ctx,'-5',ox-5*xsc,oy+16);
+  label(ctx,'5',ox+5*xsc,oy+16);
+})();
+
+// ===== Q7 CONVOLUTION =====
+(function(){
+  function stemPlot(id,data,n0,title,color,W,H){
+    var c=document.getElementById(id),ctx=c.getContext('2d');
+    clearCanvas(ctx,W,H);
+    var N=data.length,mx=Math.max(...data.map(Math.abs))||1;
+    var pad=30,xsc=(W-2*pad)/(N+1),oy=H*0.6,ysc=(H-40)/mx/2.2;
+    var ox=pad+(0-n0)*xsc;
+    // zero line
+    ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(10,oy);ctx.lineTo(W-10,oy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ox,H-10);ctx.lineTo(ox,10);ctx.stroke();
+    for(var i=0;i<N;i++){
+      var n=i+n0,px=pad+i*xsc+xsc,ht=data[i]*ysc;
+      ctx.strokeStyle=color;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(px,oy);ctx.lineTo(px,oy-ht);ctx.stroke();
+      ctx.fillStyle=color;ctx.beginPath();ctx.arc(px,oy-ht,4,0,2*Math.PI);ctx.fill();
+      label(ctx,n,px,oy+(ht>=0?14:-22),'center','#444');
+    }
+    label(ctx,title,15,16,'left','#333');
+  }
+  stemPlot('cConvX',[-0.5,1,-1,0.5],0,'x[n]','#1565c0',300,160);
+  stemPlot('cConvY',[1,2,-1,0,2,-1],0,'y[n]','#2e7d32',300,160);
+  stemPlot('cConvZ',[-0.5,0,1.5,-2.5,1,2,-3,2,-0.5],0,'z[n] = x[n] ∗ y[n]','#e53935',620,220);
+})();
+
+// ===== Q8 POLE-ZERO + IMPULSE RESPONSE + FREQ RESP =====
+(function(){
+  // Pole-Zero
+  var c=document.getElementById('cPZ'),ctx=c.getContext('2d');
+  clearCanvas(ctx,280,280);
+  var cx=140,cy=140,r=100;
+  // unit circle
+  ctx.strokeStyle='#bbb';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.stroke();
+  ctx.setLineDash([]);
+  // axes
+  ctx.strokeStyle='#333';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(260,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,260);ctx.lineTo(cx,20);ctx.stroke();
+  // tick marks and labels
+  label(ctx,'1',cx+r,cy+14);label(ctx,'-1',cx-r,cy+14);
+  label(ctx,'j',cx+6,cy-r);label(ctx,'-j',cx+6,cy+r);
+  // Pole at z=0.4
+  var px=cx+0.4*r,py=cy;
+  ctx.fillStyle='#e53935';ctx.strokeStyle='#e53935';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(px-6,py-6);ctx.lineTo(px+6,py+6);ctx.moveTo(px+6,py-6);ctx.lineTo(px-6,py+6);ctx.stroke();
+  label(ctx,'Pole: z=0.4',px+8,py-10,'left','#e53935');
+  // Zero at z=0
+  ctx.strokeStyle='#1565c0';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(cx,cy,7,0,2*Math.PI);ctx.stroke();
+  label(ctx,'Zero: z=0',cx+10,cy-10,'left','#1565c0');
+  label(ctx,'Re(z)',255,cy-8);label(ctx,'Im(z)',cx+5,16,'left');
+  label(ctx,'Unit Circle',cx-40,cy+r+18,'center','#999');
+
+  // Impulse response
+  var c2=document.getElementById('cIR'),ctx2=c2.getContext('2d');
+  clearCanvas(ctx2,320,220);
+  var ox=40,oy=170,xsc=22,ysc=120;
+  ctx2.strokeStyle='#333';ctx2.lineWidth=1.5;
+  ctx2.beginPath();ctx2.moveTo(20,oy);ctx2.lineTo(300,oy);ctx2.stroke();
+  ctx2.beginPath();ctx2.moveTo(ox,200);ctx2.lineTo(ox,20);ctx2.stroke();
+  for(var n=0;n<=11;n++){
+    var v=Math.pow(0.4,n);
+    var px=ox+n*xsc,ht=v*ysc;
+    ctx2.strokeStyle='#1565c0';ctx2.lineWidth=2;
+    ctx2.beginPath();ctx2.moveTo(px,oy);ctx2.lineTo(px,oy-ht);ctx2.stroke();
+    ctx2.fillStyle='#1565c0';ctx2.beginPath();ctx2.arc(px,oy-ht,4,0,2*Math.PI);ctx2.fill();
+    if(n%2===0) label(ctx2,n,px,oy+14,'center','#555');
+  }
+  label(ctx2,'h[n] = (0.4)ⁿu[n]',50,18,'left','#333');
+  label(ctx2,'1',ox-4,oy-ysc+4,'right','#888');
+  label(ctx2,'n',298,oy-8,'center');
+
+  // Frequency response
+  var c3=document.getElementById('cFreqResp'),ctx3=c3.getContext('2d');
+  clearCanvas(ctx3,580,200);
+  var ox3=40,oy3=160,xsc3=150/Math.PI,ysc3=100;
+  ctx3.strokeStyle='#333';ctx3.lineWidth=1.5;
+  ctx3.beginPath();ctx3.moveTo(30,oy3);ctx3.lineTo(550,oy3);ctx3.stroke();
+  ctx3.beginPath();ctx3.moveTo(ox3,185);ctx3.lineTo(ox3,15);ctx3.stroke();
+  ctx3.strokeStyle='#1565c0';ctx3.lineWidth=2.5;ctx3.beginPath();
+  for(var i=0;i<=500;i++){
+    var w=i*2*Math.PI/500;
+    var mag=1/Math.sqrt(1+0.16-0.8*Math.cos(w));
+    var px=ox3+w*xsc3,py=oy3-mag*ysc3*0.7;
+    i===0?ctx3.moveTo(px,py):ctx3.lineTo(px,py);
+  }
+  ctx3.stroke();
+  // x-axis labels
+  var ticks=[[0,'0'],[Math.PI/2,'π/2'],[Math.PI,'π'],[3*Math.PI/2,'3π/2'],[2*Math.PI,'2π']];
+  ticks.forEach(function(t){ label(ctx3,t[1],ox3+t[0]*xsc3,oy3+15,'center','#555'); });
+  label(ctx3,'|H(eʲω)|',ox3+5,18,'left','#1565c0');
+  label(ctx3,'ω',545,oy3-8,'center');
+  // DC value
+  var dc=1/(1-0.4);
+  label(ctx3,'H(1)='+dc.toFixed(2),ox3+10,oy3-dc*ysc3*0.7-6,'left','#e53935');
+  ctx3.strokeStyle='#e53935';ctx3.lineWidth=1;ctx3.setLineDash([4,3]);
+  ctx3.beginPath();ctx3.moveTo(ox3,oy3-dc*ysc3*0.7);ctx3.lineTo(ox3+20,oy3-dc*ysc3*0.7);ctx3.stroke();
+  ctx3.setLineDash([]);
+})();
+</script>
+</body>
+</html>
