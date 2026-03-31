@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DSP Solutions</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef2f7;color:#222;padding:16px}
+h1{text-align:center;color:#1a3a5c;margin-bottom:20px;font-size:22px;border-bottom:3px solid #2874a6;padding-bottom:8px}
+.sec{background:#fff;border-radius:10px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+h2{color:#1a5276;border-bottom:2px solid #1a5276;padding-bottom:5px;margin-bottom:10px;font-size:16px}
+h3{color:#2874a6;margin:10px 0 5px;font-size:14px}
+.math{background:#eaf4fb;border-left:4px solid #2874a6;padding:10px 14px;margin:8px 0;font-family:'Courier New',monospace;font-size:12px;white-space:pre;line-height:1.6;border-radius:0 6px 6px 0}
+p{line-height:1.6;margin:5px 0;font-size:13px}
+ul{padding-left:20px;font-size:13px;line-height:1.8}
+.note{background:#fef9e7;border:1px solid #f0c040;padding:8px 12px;border-radius:6px;margin:8px 0;font-size:13px}
+.good{background:#eafaf1;border:1px solid #27ae60;padding:8px 12px;border-radius:6px;margin:8px 0;font-size:13px}
+canvas{display:block;margin:10px auto;border-radius:6px}
+table{border-collapse:collapse;margin:10px auto;font-size:12px}
+td,th{border:1px solid #aaa;padding:5px 12px;text-align:center}
+th{background:#2874a6;color:#fff}
+tr:nth-child(even){background:#f0f6fb}
+.legend{display:flex;gap:16px;justify-content:center;font-size:12px;margin:4px 0}
+.ld{display:flex;align-items:center;gap:5px}
+.lb{width:24px;height:4px;border-radius:2px}
+</style>
+</head>
+<body>
+<h1>📐 DSP Solutions — Q3 to Q10</h1>
+
+<!-- Q3a -->
+<div class="sec">
+<h2>Q3(a) Fourier Transform of x(t) = e<sup>−a|t|</sup>, a &gt; 0 — with Frequency Spectrum</h2>
+<div class="math">X(ω) = ∫₋∞^∞ e^(−a|t|)·e^(−jωt) dt
+
+Split integral at t=0:
+= ∫₋∞^0 e^(at)·e^(−jωt) dt  +  ∫₀^∞ e^(−at)·e^(−jωt) dt
+= ∫₋∞^0 e^((a−jω)t) dt  +  ∫₀^∞ e^(−(a+jω)t) dt
+= [e^((a−jω)t)/(a−jω)]₋∞^0  +  [−e^(−(a+jω)t)/(a+jω)]₀^∞
+= 1/(a−jω)  +  1/(a+jω)
+= (a+jω + a−jω) / (a²+ω²)
+
+∴  X(ω) = 2a/(a²+ω²)   ← Real, even, Lorentzian spectrum</div>
+<canvas id="c3a" width="580" height="280"></canvas>
+</div>
+
+<!-- Q3b -->
+<div class="sec">
+<h2>Q3(b) Convolution in Time ↔ Multiplication in Frequency (Proof)</h2>
+<div class="math">Let y(t) = x(t) ∗ h(t) = ∫₋∞^∞ x(τ)·h(t−τ) dτ
+
+Take Fourier Transform:
+Y(ω) = ∫₋∞^∞ [∫₋∞^∞ x(τ)·h(t−τ) dτ] e^(−jωt) dt
+
+Interchange order of integration:
+Y(ω) = ∫₋∞^∞ x(τ) [∫₋∞^∞ h(t−τ)·e^(−jωt) dt] dτ
+
+Substitute u = t − τ  →  t = u+τ,  dt = du:
+∫₋∞^∞ h(u)·e^(−jω(u+τ)) du = e^(−jωτ)·H(ω)
+
+Therefore:
+Y(ω) = ∫₋∞^∞ x(τ)·e^(−jωτ)·H(ω) dτ
+      = H(ω) · ∫₋∞^∞ x(τ)·e^(−jωτ) dτ
+      = H(ω) · X(ω)
+
+∴  x(t) ∗ h(t)  ←FT→  X(ω)·H(ω)   ✓ PROVED</div>
+</div>
+
+<!-- Q4 -->
+<div class="sec">
+<h2>Q4 Derive DTFT for Discrete-Time Aperiodic Sequence</h2>
+<div class="math">Consider aperiodic x[n]. Create periodic x̃[n] with period N → ∞.
+
+DFS of x̃[n]:  X̃[k] = Σ_{n=0}^{N−1} x̃[n]·e^(−j2πkn/N)
+
+As N→∞, let ω = 2πk/N (continuous variable):
+X̃[k] → X(e^jω) = Σ_{n=−∞}^{∞} x[n]·e^(−jωn)   ← DTFT
+
+Inverse DTFT:
+x[n] = (1/2π) ∫₋π^π X(e^jω)·e^(jωn) dω
+
+Properties of DTFT:
+• X(e^jω) is periodic in ω with period 2π
+• Exists if x[n] is absolutely summable: Σ|x[n]| < ∞  (sufficient)
+• Frequency ω ∈ [−π, π] corresponds to normalized digital freq</div>
+</div>
+
+<!-- Q5 -->
+<div class="sec">
+<h2>Q5 Sampling Theorem + Nyquist Rate for x(t) = 1 + cos(2000πt) + sin(4000πt)</h2>
+<h3>Nyquist-Shannon Sampling Theorem</h3>
+<p>A band-limited signal with maximum frequency <em>f<sub>max</sub></em> can be <strong>perfectly reconstructed</strong> from its samples if the sampling frequency satisfies:</p>
+<div class="math">  f_s ≥ 2·f_max   (Nyquist condition)</div>
+<h3>Analysis of Given Signal</h3>
+<div class="math">x(t) = 1 + cos(2000πt) + sin(4000πt)
+
+Term 1:  1              → f₀ = 0 Hz   (DC)
+Term 2:  cos(2000πt)    → 2πf = 2000π  → f₁ = 1000 Hz
+Term 3:  sin(4000πt)    → 2πf = 4000π  → f₂ = 2000 Hz
+
+f_max = 2000 Hz
+
+Nyquist Rate = 2 × f_max = 2 × 2000 = 4000 Hz</div>
+<div class="good">✅ <strong>Nyquist Rate = 4000 Hz</strong>. Sampling must be done at ≥ 4000 samples/second.</div>
+</div>
+
+<!-- Q6 -->
+<div class="sec">
+<h2>Q6 System Properties — y(t) = sin[x(t)]</h2>
+<h3>Test 1: Time-Invariance</h3>
+<div class="math">Apply delayed input x₁(t) = x(t−t₀):
+  Response:        y₁(t) = sin[x(t−t₀)]
+  Delayed output:  y(t−t₀) = sin[x(t−t₀)]
+  → y₁(t) = y(t−t₀)  ∴ TIME-INVARIANT ✓</div>
+<h3>Test 2: Linearity</h3>
+<div class="math">Input: x(t) = ax₁(t) + bx₂(t)
+  y(t) = sin[ax₁(t)+bx₂(t)]
+  ≠ a·sin[x₁(t)] + b·sin[x₂(t)]   (superposition fails)
+  ∴ NON-LINEAR ✗</div>
+<h3>Test 3: Memoryless</h3>
+<div class="math">y(t) depends only on x(t) at same instant t → MEMORYLESS ✓</div>
+<div class="note">📌 <strong>Conclusion:</strong> y(t) = sin[x(t)] is <strong>Time-Invariant, Memoryless, but Non-Linear</strong>.</div>
+</div>
+
+<!-- Q7a -->
+<div class="sec">
+<h2>Q7(a) Properties of Discrete-Time LTI Systems</h2>
+<h3>1. Linearity</h3>
+<p>If x₁[n]→y₁[n] and x₂[n]→y₂[n], then ax₁[n]+bx₂[n] → ay₁[n]+by₂[n] (superposition holds)</p>
+<h3>2. Time-Invariance</h3>
+<p>x[n−n₀] → y[n−n₀] for any integer shift n₀. System parameters do not change with time.</p>
+<h3>3. Causality</h3>
+<p>y[n] depends only on x[n], x[n−1], x[n−2],… (no future inputs). h[n] = 0 for n &lt; 0.</p>
+<h3>4. BIBO Stability</h3>
+<div class="math">|x[n]| ≤ M < ∞  →  |y[n]| ≤ B < ∞
+Condition: Σ_{n=−∞}^{∞} |h[n]| < ∞</div>
+<h3>5. Commutative, Associative, Distributive Convolution</h3>
+<div class="math">x[n]∗h[n] = h[n]∗x[n]              (Commutative)
+(x∗h₁)∗h₂ = x∗(h₁∗h₂)             (Associative)
+x∗(h₁+h₂) = x∗h₁ + x∗h₂           (Distributive)</div>
+</div>
+
+<!-- Q7b -->
+<div class="sec">
+<h2>Q7(b) Convolution: x[n] = {3,1,5} ∗ h[n] = {1,4,−2,3}</h2>
+<div class="math">Method: Tabular/Sliding (y[n] = Σ x[k]·h[n−k])
+
+y[0] = 3×1                           =  3
+y[1] = 3×4 + 1×1                     = 13
+y[2] = 3×(−2) + 1×4 + 5×1           =  3
+y[3] = 3×3 + 1×(−2) + 5×4           = 27
+y[4] = 1×3 + 5×(−2)                  = −7
+y[5] = 5×3                           = 15
+
+∴ y[n] = {3, 13, 3, 27, −7, 15}   for n = 0,1,2,3,4,5</div>
+<canvas id="c7b" width="580" height="280"></canvas>
+</div>
+
+<!-- Q8a -->
+<div class="sec">
+<h2>Q8(a) Bode Plot — H(s) = 10/(s+10)</h2>
+<p>A Bode plot shows the frequency response as two graphs: <strong>Magnitude (dB) vs log ω</strong> and <strong>Phase (°) vs log ω</strong>.</p>
+<div class="math">H(jω) = 10/(jω+10)
+|H(jω)| = 10/√(ω²+100)    → in dB: 20log₁₀|H|
+∠H(jω) = −arctan(ω/10)
+
+Corner (break) frequency: ωc = 10 rad/s
+Low freq  (ω≪10): |H|_dB ≈ 0 dB,  ∠H ≈ 0°
+High freq (ω≫10): rolls off at −20 dB/decade, ∠H → −90°
+At ωc: |H|_dB = −3 dB,  ∠H = −45°</div>
+<canvas id="c8a_mag" width="580" height="240"></canvas>
+<canvas id="c8a_ph" width="580" height="220"></canvas>
+</div>
+
+<!-- Q8b -->
+<div class="sec">
+<h2>Q8(b) Impulse Response of Ideal Low-Pass Filter</h2>
+<div class="math">Ideal LPF:  H(ω) = { e^(−jωt_d),  |ω| ≤ ωc
+                    { 0,           |ω| > ωc
+
+Inverse Fourier Transform:
+h(t) = (1/2π) ∫₋ωc^ωc e^(−jωt_d)·e^(jωt) dω
+     = (1/2π) ∫₋ωc^ωc e^(jω(t−t_d)) dω
+     = (ωc/π) · sinc[ωc(t−t_d)/π]
+     = sin(ωc(t−t_d)) / [π(t−t_d)]</div>
+<ul>
+  <li><strong>Non-causal</strong>: h(t) ≠ 0 for t &lt; 0 → physically unrealizable</li>
+  <li>Sinc shape: peak at t = t_d (group delay), oscillatory tails</li>
+  <li>Bandwidth determines sharpness; narrower main-lobe = sharper cutoff</li>
+</ul>
+<canvas id="c8b" width="580" height="280"></canvas>
+</div>
+
+<!-- Q9a -->
+<div class="sec">
+<h2>Q9(a) Time-Scaling Property of DTFS — State &amp; Prove</h2>
+<h3>Statement</h3>
+<p>If x[n] is periodic with period N and DTFS coefficients aₖ, then the time-expanded signal:</p>
+<div class="math">y[n] = { x[n/m],  n = 0, ±m, ±2m, …
+        { 0,        otherwise
+
+has period mN with DTFS coefficients: bₖ = aₖ (same coefficients)</div>
+<h3>Proof</h3>
+<div class="math">bₖ = (1/mN) Σ_{n=0}^{mN−1} y[n]·e^(−j2πkn/mN)
+
+y[n] is non-zero only when n = mq  (q = 0,1,…,N−1):
+
+bₖ = (1/mN) Σ_{q=0}^{N−1} x[q]·e^(−j2πk(mq)/mN)
+   = (1/mN) Σ_{q=0}^{N−1} x[q]·e^(−j2πkq/N)
+   = (1/m) · (1/N) Σ_{q=0}^{N−1} x[q]·e^(−j2πkq/N)
+   = (1/m) · aₖ
+
+Note: Scaling by 1/m comes from the 1/mN normalization.
+If convention uses unnormalized DFS: Cₖ = aₖ (exactly equal). ✓</div>
+</div>
+
+<!-- Q9b -->
+<div class="sec">
+<h2>Q9(b) DTFS of x[n] = {1, −0.5, 0, 0, 0.5}, N = 5</h2>
+<div class="math">X[k] = (1/N) Σ_{n=0}^{4} x[n]·e^(−j2πkn/5),  k = 0,1,2,3,4
+
+Let W = e^(−j2π/5):  W = cos72° − j·sin72° = 0.3090 − j·0.9511
+
+X[0] = (1/5)[1 − 0.5 + 0 + 0 + 0.5] = 0.200
+
+X[1] = (1/5)[1 + (−0.5)W¹ + 0 + 0 + 0.5·W⁴]
+     = (1/5)[1 + (−0.5)(0.309−j0.951) + 0.5(0.309+j0.951)]
+     = (1/5)[1 + j0.951]  =  0.200 + j0.190
+
+X[2] = (1/5)[1 + (−0.5)W² + 0 + 0 + 0.5·W³]
+     = (1/5)[1 + (−0.5)(−0.809−j0.588) + 0.5(−0.809+j0.588)]
+     = (1/5)[1 + j0.588]  =  0.200 + j0.118
+
+X[3] = X*[2] = 0.200 − j0.118   (conjugate symmetry)
+X[4] = X*[1] = 0.200 − j0.190</div>
+
+<table>
+<tr><th>k</th><th>X[k]</th><th>|X[k]|</th><th>∠X[k]</th></tr>
+<tr><td>0</td><td>0.200 + j0.000</td><td>0.200</td><td>0.0°</td></tr>
+<tr><td>1</td><td>0.200 + j0.190</td><td>0.276</td><td>43.5°</td></tr>
+<tr><td>2</td><td>0.200 + j0.118</td><td>0.232</td><td>30.5°</td></tr>
+<tr><td>3</td><td>0.200 − j0.118</td><td>0.232</td><td>−30.5°</td></tr>
+<tr><td>4</td><td>0.200 − j0.190</td><td>0.276</td><td>−43.5°</td></tr>
+</table>
+<canvas id="c9b_mag" width="580" height="260"></canvas>
+<canvas id="c9b_ph"  width="580" height="260"></canvas>
+</div>
+
+<!-- Q10 -->
+<div class="sec">
+<h2>Q10 Aliasing — Definition and Prevention</h2>
+<h3>What is Aliasing?</h3>
+<p>Aliasing occurs when a signal is sampled below the <strong>Nyquist rate</strong> (f<sub>s</sub> &lt; 2f<sub>max</sub>). Spectral copies overlap, causing high-frequency components to appear as lower-frequency <em>aliases</em> — making perfect reconstruction impossible.</p>
+<h3>Mathematical Explanation</h3>
+<div class="math">Sampled signal spectrum:  X_s(f) = fs · Σ X(f − n·fs)
+
+If fs < 2·fmax → images overlap → ALIASING
+
+Alias frequency: f_alias = |f_signal − fs|
+Example: f_signal=1000 Hz, fs=800 Hz → f_alias=200 Hz</div>
+<h3>Prevention Methods</h3>
+<ul>
+  <li><strong>Increase sampling rate:</strong> Ensure f<sub>s</sub> ≥ 2f<sub>max</sub></li>
+  <li><strong>Anti-aliasing (pre-filter):</strong> Apply LPF with cutoff at f<sub>s</sub>/2 before sampling</li>
+  <li><strong>Oversampling + decimation:</strong> Sample at very high rate, digitally filter, then downsample</li>
+</ul>
+<canvas id="c10" width="580" height="300"></canvas>
+</div>
+
+<script>
+// ── helpers ──────────────────────────────────────────────────
+function bg(ctx,W,H){ctx.fillStyle='#f8fcff';ctx.fillRect(0,0,W,H);}
+function axes(ctx,W,H,pL,pR,pT,pB,xl,yl){
+  ctx.strokeStyle='#555';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL,H-pB);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pL,H-pB);ctx.lineTo(W-pR,H-pB);ctx.stroke();
+  ctx.fillStyle='#555';
+  ctx.beginPath();ctx.moveTo(W-pR,H-pB);ctx.lineTo(W-pR-8,H-pB-4);ctx.lineTo(W-pR-8,H-pB+4);ctx.fill();
+  ctx.beginPath();ctx.moveTo(pL,pT);ctx.lineTo(pL-4,pT+8);ctx.lineTo(pL+4,pT+8);ctx.fill();
+  ctx.fillStyle='#444';ctx.font='13px Arial';
+  ctx.fillText(xl,W-pR+2,H-pB+4);ctx.fillText(yl,pL-8,pT-6);
+}
+function hgrid(ctx,vals,toY,pL,W,pR){
+  ctx.strokeStyle='#e0e8f0';ctx.lineWidth=0.6;
+  vals.forEach(v=>{ctx.beginPath();ctx.moveTo(pL,toY(v));ctx.lineTo(W-pR,toY(v));ctx.stroke();});
+}
+function vgrid(ctx,vals,toX,pT,H,pB){
+  ctx.strokeStyle='#e0e8f0';ctx.lineWidth=0.6;
+  vals.forEach(x=>{ctx.beginPath();ctx.moveTo(toX(x),pT);ctx.lineTo(toX(x),H-pB);ctx.stroke();});
+}
+
+// ── Q3a ──────────────────────────────────────────────────────
+(()=>{
+  const cv=document.getElementById('c3a'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pL=60,pR=25,pT=25,pB=45,a=1,OM=12;
+  bg(ctx,W,H);
+  const toX=o=>pL+(o+OM)/(2*OM)*(W-pL-pR);
+  const toY=v=>H-pB-(v/(2*1.1))*(H-pT-pB);
+  hgrid(ctx,[0,.5,1,1.5,2],toY,pL,W,pR);
+  vgrid(ctx,[-10,-5,0,5,10],toX,pT,H,pB);
+  // plot
+  ctx.strokeStyle='#1a6eb5';ctx.lineWidth=2.5;ctx.beginPath();
+  for(let i=0;i<=600;i++){const o=-OM+i*2*OM/600;const v=2*a/(a*a+o*o);
+    i?ctx.lineTo(toX(o),toY(v)):ctx.moveTo(toX(o),toY(v));}ctx.stroke();
+  // shade
+  ctx.fillStyle='rgba(26,110,181,.08)';ctx.beginPath();ctx.moveTo(toX(-OM),toY(0));
+  for(let i=0;i<=600;i++){const o=-OM+i*2*OM/600;ctx.lineTo(toX(o),toY(2*a/(a*a+o*o)));}
+  ctx.lineTo(toX(OM),toY(0));ctx.fill();
+  axes(ctx,W,H,pL,pR,pT,pB,'ω','|X(ω)|');
+  ctx.fillStyle='#444';ctx.font='11px Arial';
+  [-10,-5,0,5,10].forEach(v=>{ctx.fillText(v,toX(v)-8,H-pB+16);});
+  [0,.5,1,1.5,2].forEach(v=>{ctx.fillText(v.toFixed(1),pL-32,toY(v)+4);});
+  ctx.fillStyle='#1a6eb5';ctx.font='13px Arial';
+  ctx.fillText('X(ω)=2a/(a²+ω²), a=1',pL+10,pT+16);
+  // peak dot
+  ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(toX(0),toY(2),6,0,7);ctx.fill();
+  ctx.fillStyle='#c0392b';ctx.font='12px Arial';ctx.fillText('Peak=2/a',toX(0)+8,toY(2)+4);
+})();
+
+// ── Q7b: Convolution stem ─────────────────────────────────────
+(()=>{
+  const cv=document.getElementById('c7b'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pL=60,pR=20,pT=40,pB=50;
+  const yn=[3,13,3,27,-7,15];
+  bg(ctx,W,H);
+  const N=yn.length,slot=(W-pL-pR)/(N+1);
+  const yMax=30,yMin=-10,rng=yMax-yMin;
+  const toX=i=>pL+(i+1)*slot;
+  const toY=v=>H-pB-(v-yMin)/rng*(H-pT-pB);
+  // gridlines
+  hgrid(ctx,[-10,0,10,20,27],toY,pL,W,pR);
+  ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pL,toY(0));ctx.lineTo(W-pR,toY(0));ctx.stroke();
+  // stems
+  yn.forEach((v,i)=>{
+    const x=toX(i);
+    ctx.strokeStyle=v>=0?'#1a6eb5':'#8e44ad';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(x,toY(0));ctx.lineTo(x,toY(v));ctx.stroke();
+    ctx.fillStyle=v>=0?'#e74c3c':'#9b59b6';
+    ctx.beginPath();ctx.arc(x,toY(v),7,0,7);ctx.fill();
+    ctx.fillStyle='#222';ctx.font='bold 12px Arial';ctx.textAlign='center';
+    ctx.fillText(v,x,toY(v)+(v>=0?-12:16));
+    ctx.fillStyle='#555';ctx.font='12px Arial';
+    ctx.fillText('n='+i,x,H-pB+18);
+  });
+  axes(ctx,W,H,pL,pR,pT,pB,'n','y[n]');
+  ctx.fillStyle='#1a3a5c';ctx.font='13px Arial';ctx.textAlign='left';
+  ctx.fillText('y[n] = x[n]∗h[n] = {3, 13, 3, 27, −7, 15}',pL+5,pT-12);
+  [-10,0,10,20].forEach(v=>{ ctx.fillStyle='#666';ctx.font='11px Arial';ctx.textAlign='right';ctx.fillText(v,pL-5,toY(v)+4);});
+})();
+
+// ── Q8a Bode ──────────────────────────────────────────────────
+(()=>{
+  // Magnitude
+  const mc=document.getElementById('c8a_mag'),mctx=mc.getContext('2d');
+  const W=mc.width,H=mc.height,pL=65,pR=20,pT=28,pB=45;
+  bg(mctx,W,H);
+  const lMin=-1,lMax=3;
+  const toXl=o=>pL+(Math.log10(o)-lMin)/(lMax-lMin)*(W-pL-pR);
+  const dMin=-44,dMax=4,toYd=d=>H-pB-(d-dMin)/(dMax-dMin)*(H-pT-pB);
+  // grid
+  [.1,1,10,100,1000].forEach(o=>{
+    mctx.strokeStyle='#e0e8f0';mctx.lineWidth=0.6;
+    mctx.beginPath();mctx.moveTo(toXl(o),pT);mctx.lineTo(toXl(o),H-pB);mctx.stroke();});
+  [-40,-20,-10,-3,0].forEach(d=>{
+    mctx.strokeStyle='#e0e8f0';mctx.lineWidth=0.6;
+    mctx.beginPath();mctx.moveTo(pL,toYd(d));mctx.lineTo(W-pR,toYd(d));mctx.stroke();});
+  // asymptotes
+  mctx.strokeStyle='#e74c3c';mctx.lineWidth=1.5;mctx.setLineDash([6,4]);
+  mctx.beginPath();
+  mctx.moveTo(toXl(.1),toYd(0));mctx.lineTo(toXl(10),toYd(0));
+  mctx.moveTo(toXl(10),toYd(0));mctx.lineTo(toXl(1000),toYd(-40));
+  mctx.stroke();mctx.setLineDash([]);
+  // actual
+  mctx.strokeStyle='#1a6eb5';mctx.lineWidth=2.5;mctx.beginPath();
+  for(let i=0;i<=400;i++){
+    const o=Math.pow(10,lMin+i*(lMax-lMin)/400);
+    const db=20*Math.log10(10/Math.sqrt(o*o+100));
+    i?mctx.lineTo(toXl(o),toYd(db)):mctx.moveTo(toXl(o),toYd(db));}
+  mctx.stroke();
+  // corner
+  mctx.strokeStyle='#27ae60';mctx.lineWidth=1.2;mctx.setLineDash([3,3]);
+  mctx.beginPath();mctx.moveTo(toXl(10),pT);mctx.lineTo(toXl(10),H-pB);mctx.stroke();
+  mctx.setLineDash([]);
+  // labels
+  axes(mctx,W,H,pL,pR,pT,pB,'ω','dB');
+  mctx.fillStyle='#444';mctx.font='11px Arial';mctx.textAlign='center';
+  [.1,1,10,100,1000].forEach(o=>mctx.fillText(o,toXl(o),H-pB+16));
+  mctx.textAlign='right';
+  [-40,-20,-10,-3,0].forEach(d=>mctx.fillText(d,pL-4,toYd(d)+4));
+  mctx.fillStyle='#27ae60';mctx.font='11px Arial';mctx.textAlign='left';
+  mctx.fillText('ωc=10',toXl(10)+4,H-pB-4);
+  mctx.fillStyle='#1a3a5c';mctx.font='13px Arial';
+  mctx.fillText('Bode Magnitude: H(s)=10/(s+10)',pL+8,pT-8);
+  mctx.fillStyle='#1a6eb5';mctx.fillText('— Actual',W-110,pT+14);
+  mctx.fillStyle='#e74c3c';mctx.fillText('— Asymptote',W-110,pT+28);
+  // -3dB dot
+  mctx.fillStyle='#e74c3c';mctx.beginPath();mctx.arc(toXl(10),toYd(-3),5,0,7);mctx.fill();
+  mctx.fillStyle='#333';mctx.font='11px Arial';mctx.textAlign='left';
+  mctx.fillText('−3dB',toXl(10)+6,toYd(-3)+4);
+
+  // Phase
+  const pc=document.getElementById('c8a_ph'),pctx=pc.getContext('2d');
+  const Wp=pc.width,Hp=pc.height;
+  bg(pctx,Wp,Hp);
+  const phMin=-95,phMax=5,toYp=p=>Hp-pB-(p-phMin)/(phMax-phMin)*(Hp-pT-pB);
+  const toXlp=o=>pL+(Math.log10(o)-lMin)/(lMax-lMin)*(Wp-pL-pR);
+  [.1,1,10,100,1000].forEach(o=>{
+    pctx.strokeStyle='#e0e8f0';pctx.lineWidth=0.6;
+    pctx.beginPath();pctx.moveTo(toXlp(o),pT);pctx.lineTo(toXlp(o),Hp-pB);pctx.stroke();});
+  [-90,-45,0].forEach(p=>{
+    pctx.strokeStyle='#e0e8f0';pctx.lineWidth=0.6;
+    pctx.beginPath();pctx.moveTo(pL,toYp(p));pctx.lineTo(Wp-pR,toYp(p));pctx.stroke();});
+  pctx.strokeStyle='#8e44ad';pctx.lineWidth=2.5;pctx.beginPath();
+  for(let i=0;i<=400;i++){
+    const o=Math.pow(10,lMin+i*(lMax-lMin)/400);
+    const ph=-Math.atan(o/10)*180/Math.PI;
+    i?pctx.lineTo(toXlp(o),toYp(ph)):pctx.moveTo(toXlp(o),toYp(ph));}
+  pctx.stroke();
+  axes(pctx,Wp,Hp,pL,pR,pT,pB,'ω','Phase');
+  pctx.fillStyle='#444';pctx.font='11px Arial';pctx.textAlign='center';
+  [.1,1,10,100,1000].forEach(o=>pctx.fillText(o,toXlp(o),Hp-pB+16));
+  pctx.textAlign='right';
+  [-90,-45,0].forEach(p=>pctx.fillText(p+'°',pL-4,toYp(p)+4));
+  pctx.fillStyle='#1a3a5c';pctx.font='13px Arial';pctx.textAlign='left';
+  pctx.fillText('Bode Phase',pL+8,pT-8);
+  pctx.fillStyle='#8e44ad';pctx.fillText('— Phase',Wp-90,pT+14);
+})();
+
+// ── Q8b: Ideal LPF sinc ───────────────────────────────────────
+(()=>{
+  const cv=document.getElementById('c8b'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pL=60,pR=20,pT=30,pB=45,wc=2,tM=6;
+  bg(ctx,W,H);
+  const toX=t=>pL+(t+tM)/(2*tM)*(W-pL-pR);
+  const pk=wc/Math.PI,mn=-0.25*pk;
+  const toY=v=>H-pB-(v-mn)/(pk*1.15-mn)*(H-pT-pB);
+  // zero line
+  ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pL,toY(0));ctx.lineTo(W-pR,toY(0));ctx.stroke();
+  // fill main lobe
+  const t0=-Math.PI/wc,t1=Math.PI/wc;
+  ctx.fillStyle='rgba(230,126,34,.15)';ctx.beginPath();ctx.moveTo(toX(t0),toY(0));
+  for(let i=0;i<=200;i++){const t=t0+i*(t1-t0)/200;
+    const v=Math.abs(t)<1e-9?wc/Math.PI:Math.sin(wc*t)/(Math.PI*t);
+    ctx.lineTo(toX(t),toY(v));}
+  ctx.lineTo(toX(t1),toY(0));ctx.fill();
+  // curve
+  ctx.strokeStyle='#e67e22';ctx.lineWidth=2.5;ctx.beginPath();
+  for(let i=0;i<=700;i++){const t=-tM+i*2*tM/700;
+    const v=Math.abs(t)<1e-9?wc/Math.PI:Math.sin(wc*t)/(Math.PI*t);
+    i?ctx.lineTo(toX(t),toY(v)):ctx.moveTo(toX(t),toY(v));}ctx.stroke();
+  axes(ctx,W,H,pL,pR,pT,pB,'t','h(t)');
+  ctx.fillStyle='#444';ctx.font='11px Arial';ctx.textAlign='center';
+  [-6,-4,-2,0,2,4,6].forEach(t=>ctx.fillText(t,toX(t),H-pB+16));
+  ctx.fillStyle='#e67e22';ctx.font='13px Arial';ctx.textAlign='left';
+  ctx.fillText('h(t)=sin(ωct)/(πt), ωc=2',pL+8,pT-8);
+  ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(toX(0),toY(pk),5,0,7);ctx.fill();
+  ctx.fillStyle='#555';ctx.font='11px Arial';ctx.textAlign='left';
+  ctx.fillText('ωc/π',toX(0)+7,toY(pk)+4);
+  ctx.fillStyle='#888';ctx.font='11px Arial';
+  ctx.fillText('Non-causal: extends to −∞',pL+8,H-pB-8);
+})();
+
+// ── Q9b: DTFS stem ────────────────────────────────────────────
+(()=>{
+  function stemSpec(cvId,data,yMin,yMax,title,col,fmt){
+    const cv=document.getElementById(cvId),ctx=cv.getContext('2d');
+    const W=cv.width,H=cv.height,pL=65,pR=20,pT=40,pB=48;
+    bg(ctx,W,H);
+    const N=data.length,slot=(W-pL-pR)/(N+1),rng=yMax-yMin;
+    const toX=i=>pL+(i+1)*slot;
+    const toY=v=>H-pB-(v-yMin)/rng*(H-pT-pB);
+    // grid
+    const step=(yMax-yMin)/4;
+    for(let i=0;i<=4;i++){const v=yMin+i*step;
+      ctx.strokeStyle='#e0e8f0';ctx.lineWidth=0.6;
+      ctx.beginPath();ctx.moveTo(pL,toY(v));ctx.lineTo(W-pR,toY(v));ctx.stroke();}
+    ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pL,toY(0));ctx.lineTo(W-pR,toY(0));ctx.stroke();
+    data.forEach((v,i)=>{
+      const x=toX(i);
+      ctx.strokeStyle=col;ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(x,toY(0));ctx.lineTo(x,toY(v));ctx.stroke();
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,toY(v),7,0,7);ctx.fill();
+      ctx.fillStyle='#222';ctx.font='bold 12px Arial';ctx.textAlign='center';
+      ctx.fillText(fmt(v),x,toY(v)+(v>=0?-12:16));
+      ctx.fillStyle='#555';ctx.font='12px Arial';
+      ctx.fillText('k='+i,x,H-pB+18);});
+    axes(ctx,W,H,pL,pR,pT,pB,'k',title.split(' ')[0]);
+    ctx.fillStyle='#1a3a5c';ctx.font='13px Arial';ctx.textAlign='left';
+    ctx.fillText(title,pL+5,pT-12);
+    for(let i=0;i<=4;i++){const v=yMin+i*step;
+      ctx.fillStyle='#666';ctx.font='11px Arial';ctx.textAlign='right';
+      ctx.fillText(v.toFixed(2),pL-5,toY(v)+4);}
+  }
+  stemSpec('c9b_mag',[0.200,0.276,0.232,0.232,0.276],0,0.35,'|X[k]| — Magnitude Spectrum','#1a6eb5',v=>v.toFixed(3));
+  stemSpec('c9b_ph',[0,43.5,30.5,-30.5,-43.5],-55,55,'∠X[k] — Phase Spectrum (degrees)','#8e44ad',v=>v.toFixed(1)+'°');
+})();
+
+// ── Q10: Aliasing demo ────────────────────────────────────────
+(()=>{
+  const cv=document.getElementById('c10'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,pL=50,pR=15,pT=20,pB=15,tM=3,f=1;
+  bg(ctx,W,H);
+  const mid1=H/2-5,mid2=H-pB-55;
+  const toX=t=>pL+t/tM*(W-pL-pR);
+  const toY=(v,mid,amp)=>mid-v*amp;
+  // divider
+  ctx.strokeStyle='#ccc';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pL,H/2+5);ctx.lineTo(W-pR,H/2+5);ctx.stroke();
+
+  // === TOP: Good sampling ===
+  ctx.strokeStyle='#1a6eb5';ctx.lineWidth=2;ctx.beginPath();
+  for(let i=0;i<=500;i++){const t=i*tM/500;
+    i?ctx.lineTo(toX(t),toY(Math.sin(2*Math.PI*f*t),mid1-30,55)):
+      ctx.moveTo(toX(t),toY(Math.sin(2*Math.PI*f*t),mid1-30,55));}ctx.stroke();
+  // good samples (fs=8)
+  for(let t=0;t<=tM;t+=1/8){
+    const v=Math.sin(2*Math.PI*f*t);
+    ctx.fillStyle='#27ae60';ctx.beginPath();ctx.arc(toX(t),toY(v,mid1-30,55),5,0,7);ctx.fill();}
+  ctx.fillStyle='#1a3a5c';ctx.font='12px Arial';ctx.textAlign='left';
+  ctx.fillText('✅ Good Sampling: fs=8 Hz ≥ 2×1 Hz = 2 Hz (Nyquist)',pL,pT+12);
+  ctx.fillStyle='#27ae60';ctx.fillText('● Samples',W-95,pT+12);
+
+  // === BOTTOM: Aliasing ===
+  ctx.strokeStyle='#1a6eb5';ctx.lineWidth=1.5;ctx.beginPath();
+  for(let i=0;i<=500;i++){const t=i*tM/500;
+    i?ctx.lineTo(toX(t),toY(Math.sin(2*Math.PI*f*t),mid2,50)):
+      ctx.moveTo(toX(t),toY(Math.sin(2*Math.PI*f*t),mid2,50));}ctx.stroke();
+  // alias envelope
+  const fa=0.2;
+  ctx.strokeStyle='#e74c3c';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();
+  for(let i=0;i<=500;i++){const t=i*tM/500;
+    i?ctx.lineTo(toX(t),toY(Math.sin(2*Math.PI*fa*t),mid2,50)):
+      ctx.moveTo(toX(t),toY(Math.sin(2*Math.PI*fa*t),mid2,50));}ctx.stroke();ctx.setLineDash([]);
+  // bad samples (fs=1.2)
+  for(let t=0;t<=tM;t+=1/1.2){
+    const v=Math.sin(2*Math.PI*f*t);
+    ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(toX(t),toY(v,mid2,50),6,0,7);ctx.fill();}
+  ctx.fillStyle='#1a3a5c';ctx.font='12px Arial';ctx.textAlign='left';
+  ctx.fillText('❌ Aliasing: fs=1.2 Hz < 2 Hz. Alias = |f−fs| = 0.2 Hz appears!',pL,H/2+20);
+  ctx.fillStyle='#1a6eb5';ctx.fillText('— Original 1 Hz',W-140,H/2+20);
+  ctx.fillStyle='#e74c3c';ctx.fillText('--- Alias 0.2 Hz',W-140,H/2+34);
+})();
+</script>
+</body>
+</html>
