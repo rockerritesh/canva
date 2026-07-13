@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rain — Portfolio Background</title>
+<style>
+  :root{
+    --ink:#0a1220;          /* deep night blue */
+    --ink-2:#101b2e;
+    --mist:#8fb3d9;         /* rain highlight */
+    --text:#e8f0fa;
+    --dim:#6e86a3;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:linear-gradient(180deg,var(--ink) 0%,var(--ink-2) 70%,#0c1626 100%);
+    overflow:hidden;
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    color:var(--text);
+  }
+  canvas#rain{
+    position:fixed;inset:0;
+    width:100vw;height:100vh;
+    display:block;
+  }
+  /* ---- sample portfolio content (replace with yours) ---- */
+  .hero{
+    position:relative;z-index:2;
+    height:100vh;
+    display:flex;flex-direction:column;
+    justify-content:center;
+    padding:0 8vw;
+    pointer-events:none;      /* lets mouse reach the rain */
+  }
+  .hero .eyebrow{
+    letter-spacing:.35em;text-transform:uppercase;
+    font-size:.75rem;color:var(--dim);margin-bottom:1.2rem;
+  }
+  .hero h1{
+    font-size:clamp(2.4rem,6vw,5rem);
+    font-weight:300;line-height:1.08;
+    max-width:14ch;
+  }
+  .hero h1 b{font-weight:600;color:var(--mist)}
+  .hero p{
+    margin-top:1.4rem;max-width:44ch;
+    color:var(--dim);font-size:1.02rem;line-height:1.7;
+  }
+  .hint{
+    position:fixed;bottom:1.2rem;right:1.6rem;z-index:2;
+    font-size:.72rem;color:var(--dim);letter-spacing:.08em;
+    opacity:.7;
+  }
+  @media (prefers-reduced-motion: reduce){
+    canvas#rain{display:none}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="rain"></canvas>
+
+<!-- Replace this block with your own portfolio content -->
+<div class="hero">
+  <div class="eyebrow">Portfolio</div>
+  <h1>Your Name,<br><b>Creative Developer</b></h1>
+  <p>I build things for the web. This background is a real-time rain simulation — every drop obeys gravity, drag, and momentum.</p>
+</div>
+<div class="hint">move your mouse — wind follows it</div>
+
+<script>
+/* =========================================================
+   RAIN SIMULATION — physics notes
+   ---------------------------------------------------------
+   Drops:    dv/dt = g − k·v²   (gravity + quadratic air drag)
+             Integrated with semi-implicit Euler each frame.
+             Terminal velocity emerges naturally: v_t = √(g/k).
+   Depth:    3 parallax layers. Far drops have higher drag k
+             (small drops fall slower in reality), lower alpha,
+             thinner strokes.
+   Wind:     w(t) = base·sin(ωt) + gust, plus a mouse-driven
+             horizontal impulse eased with an exponential filter.
+   Splash:   on impact, N particles launched with speed sampled
+             from the drop's impact speed, angles biased upward.
+             Pure projectile motion: y'' = g, with restitution
+             losses. Lifetime fades quadratically.
+   Ripples:  expanding rings, radius r(t)=c·t (capillary-wave
+             style constant speed), amplitude decays ~ 1/r
+             (energy spread over circumference).
+   ========================================================= */
+
+const canvas = document.getElementById('rain');
+const ctx = canvas.getContext('2d');
+
+let W, H, DPR;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = canvas.width  = innerWidth  * DPR;
+  H = canvas.height = innerHeight * DPR;
+  canvas.style.width  = innerWidth + 'px';
+  canvas.style.height = innerHeight + 'px';
+}
+resize();
+addEventListener('resize', resize);
+
+/* ---------- tunables ---------- */
+const G            = 2200;    // px/s² gravity
+const GROUND_FRAC  = 0.94;    // water line as fraction of height
+const LAYERS = [
+  // k = drag coeff, count scales with area, visual params
+  { k: 0.0035, alpha: 0.20, width: 0.7, lenMul: 0.55, density: 1/26000 }, // far
+  { k: 0.0022, alpha: 0.42, width: 1.0, lenMul: 0.80, density: 1/30000 }, // mid
+  { k: 0.0014, alpha: 0.75, width: 1.5, lenMul: 1.10, density: 1/38000 }, // near
+];
+
+/* ---------- state ---------- */
+const drops = [], splashes = [], ripples = [];
+let wind = 0, windTarget = 0, t = 0;
+let mouseVX = 0, lastMX = null, lastMT = 0;
+
+addEventListener('pointermove', e => {
+  const now = performance.now();
+  if (lastMX !== null){
+    const dt = Math.max(now - lastMT, 8) / 1000;
+    // horizontal mouse speed becomes a wind impulse (clamped)
+    mouseVX = Math.max(-900, Math.min(900, (e.clientX - lastMX) / dt * 0.35));
+  }
+  lastMX = e.clientX; lastMT = now;
+});
+
+function groundY(){ return H * GROUND_FRAC; }
+
+function spawnDrop(layerIdx, anywhere=false){
+  const L = LAYERS[layerIdx];
+  const vt = Math.sqrt(G / L.k);              // terminal velocity for this layer
+  drops.push({
+    x: Math.random() * W,
+    y: anywhere ? Math.random() * groundY() : -20 * DPR - Math.random() * H * 0.3,
+    vx: wind * (0.5 + 0.5 * Math.random()),
+    vy: vt * (0.55 + Math.random() * 0.4),    // start partway to terminal
+    layer: layerIdx,
+  });
+}
+
+function initDrops(){
+  drops.length = 0;
+  LAYERS.forEach((L, i) => {
+    const n = Math.round(W * H * L.density / (DPR * DPR)) ;
+    for (let j = 0; j < n; j++) spawnDrop(i, true);
+  });
+}
+initDrops();
+addEventListener('resize', initDrops);
+
+function splash(x, impactSpeed, layerIdx){
+  const L = LAYERS[layerIdx];
+  const gy = groundY();
+  // splash particles — projectile motion
+  const n = layerIdx === 2 ? 6 : layerIdx === 1 ? 4 : 0; // far layer: no splash detail
+  const e = 0.18 + Math.random() * 0.1;                  // restitution
+  for (let i = 0; i < n; i++){
+    const ang = -Math.PI/2 + (Math.random() - 0.5) * 1.6; // biased upward
+    const spd = impactSpeed * e * (0.4 + Math.random() * 0.8);
+    splashes.push({
+      x, y: gy,
+      vx: Math.cos(ang) * spd + wind * 0.15,
+      vy: Math.sin(ang) * spd,
+      life: 1, decay: 1.8 + Math.random() * 1.4,
+      alpha: L.alpha,
+    });
+  }
+  // ripple ring
+  if (layerIdx > 0){
+    ripples.push({ x, y: gy, r: 1, c: 60 + impactSpeed * 0.02, life: 1, alpha: L.alpha });
+  }
+}
+
+let last = performance.now();
+function frame(now){
+  const dt = Math.min((now - last) / 1000, 0.033); // clamp to avoid spiral of death
+  last = now; t += dt;
+
+  /* ---- wind model: sinusoid + random gusts + mouse impulse ---- */
+  if (Math.random() < 0.004) windTarget = (Math.random() - 0.5) * 260;
+  const base = Math.sin(t * 0.35) * 60 + Math.sin(t * 0.11 + 2) * 40;
+  // exponential smoothing toward target (first-order filter)
+  wind += ((base + windTarget + mouseVX) - wind) * (1 - Math.exp(-dt * 1.2));
+  mouseVX *= Math.exp(-dt * 2.5); // mouse impulse decays
+
+  ctx.clearRect(0, 0, W, H);
+  const gy = groundY();
+
+  /* ---- water surface line ---- */
+  ctx.strokeStyle = 'rgba(143,179,217,0.10)';
+  ctx.lineWidth = 1 * DPR;
+  ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+  const grad = ctx.createLinearGradient(0, gy, 0, H);
+  grad.addColorStop(0, 'rgba(143,179,217,0.05)');
+  grad.addColorStop(1, 'rgba(143,179,217,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, gy, W, H - gy);
+
+  /* ---- drops ---- */
+  for (let i = drops.length - 1; i >= 0; i--){
+    const d = drops[i], L = LAYERS[d.layer];
+
+    // semi-implicit Euler: v then x
+    // vertical: gravity minus quadratic drag
+    d.vy += (G - L.k * d.vy * d.vy) * dt * DPR / DPR; // px units
+    // horizontal: relax toward wind (drag pulls drop to air speed)
+    d.vx += (wind * DPR - d.vx) * L.k * Math.abs(d.vy) * dt * 2.2;
+
+    d.x += d.vx * dt * DPR;
+    d.y += d.vy * dt * DPR;
+
+    if (d.x < -30) d.x += W + 60;
+    if (d.x > W + 30) d.x -= W + 60;
+
+    if (d.y >= gy){
+      splash(d.x, d.vy, d.layer);
+      // recycle
+      d.y = -20 * DPR - Math.random() * 80 * DPR;
+      d.x = Math.random() * W;
+      const vt = Math.sqrt(G / L.k);
+      d.vy = vt * (0.55 + Math.random() * 0.4);
+      d.vx = wind * DPR * 0.5;
+      continue;
+    }
+
+    // streak: drawn along the velocity vector (motion blur)
+    const spd = Math.hypot(d.vx, d.vy);
+    const len = spd * 0.016 * L.lenMul * DPR;
+    ctx.strokeStyle = `rgba(174,204,235,${L.alpha})`;
+    ctx.lineWidth = L.width * DPR;
+    ctx.beginPath();
+    ctx.moveTo(d.x, d.y);
+    ctx.lineTo(d.x - (d.vx / spd) * len, d.y - (d.vy / spd) * len);
+    ctx.stroke();
+  }
+
+  /* ---- splash particles ---- */
+  for (let i = splashes.length - 1; i >= 0; i--){
+    const s = splashes[i];
+    s.vy += G * dt;                 // pure projectile
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    s.life -= s.decay * dt;
+    if (s.life <= 0 || s.y > gy + 4 * DPR){ splashes.splice(i, 1); continue; }
+    const a = s.alpha * s.life * s.life;   // quadratic fade
+    ctx.fillStyle = `rgba(190,215,240,${a})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 1.1 * DPR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /* ---- ripples ---- */
+  for (let i = ripples.length - 1; i >= 0; i--){
+    const r = ripples[i];
+    r.r += r.c * dt * DPR;          // constant wave speed
+    r.life -= dt * 1.4;
+    if (r.life <= 0){ ripples.splice(i, 1); continue; }
+    const a = r.alpha * r.life * (18 * DPR / (r.r + 18 * DPR)); // ~1/r energy decay
+    ctx.strokeStyle = `rgba(174,204,235,${a * 0.6})`;
+    ctx.lineWidth = 1 * DPR;
+    ctx.beginPath();
+    // ellipse: perspective foreshortening of a circle on the water plane
+    ctx.ellipse(r.x, r.y, r.r, r.r * 0.22, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
