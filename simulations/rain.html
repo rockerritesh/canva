@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rain — Portfolio Background</title>
+<title>Sumit Yadav — AI Researcher</title>
 <style>
   :root{
     --ink:#0a1220;          /* deep night blue */
@@ -48,6 +48,28 @@
     margin-top:1.4rem;max-width:44ch;
     color:var(--dim);font-size:1.02rem;line-height:1.7;
   }
+  .links{
+    margin-top:2rem;
+    display:flex;gap:1.1rem;
+    pointer-events:auto;      /* re-enable clicks on the icons */
+  }
+  .links a{
+    width:44px;height:44px;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid rgba(143,179,217,0.25);
+    border-radius:50%;
+    color:var(--mist);
+    transition:all .25s ease;
+    backdrop-filter:blur(2px);
+  }
+  .links a svg{width:20px;height:20px}
+  .links a:hover{
+    color:#fff;
+    border-color:var(--mist);
+    background:rgba(143,179,217,0.12);
+    transform:translateY(-3px);
+    box-shadow:0 6px 18px rgba(143,179,217,0.15);
+  }
   .hint{
     position:fixed;bottom:1.2rem;right:1.6rem;z-index:2;
     font-size:.72rem;color:var(--dim);letter-spacing:.08em;
@@ -62,11 +84,21 @@
 
 <canvas id="rain"></canvas>
 
-<!-- Replace this block with your own portfolio content -->
 <div class="hero">
   <div class="eyebrow">Portfolio</div>
-  <h1>Your Name,<br><b>Creative Developer</b></h1>
-  <p>I build things for the web. This background is a real-time rain simulation — every drop obeys gravity, drag, and momentum.</p>
+  <h1>Sumit Yadav,<br><b>AI Researcher</b></h1>
+  <p>Interpretability, AI safety, and low-resource NLP. Every drop in this background obeys gravity, drag, and momentum.</p>
+  <div class="links">
+    <a href="https://www.linkedin.com/in/rockerritesh/" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+    </a>
+    <a href="https://x.com/rocker_ritesh" target="_blank" rel="noopener" aria-label="X (Twitter)" title="X">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.67l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23zm-1.16 17.52h1.83L7.08 4.13H5.12l11.96 15.64z"/></svg>
+    </a>
+    <a href="https://scholar.google.com/citations?user=ag74ytsAAAAJ&amp;hl=en" target="_blank" rel="noopener" aria-label="Google Scholar" title="Google Scholar">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 0 9.5l4.36 2.73v5.27L12 22l7.64-4.5v-5.27L22 10.9V17h2V9.5L12 2zm5.64 14.36L12 19.68l-5.64-3.32v-2.63L12 17l5.64-3.27v2.63zM12 14.68 3.9 9.62 12 4.55l8.1 5.07-8.1 5.06z"/></svg>
+    </a>
+  </div>
 </div>
 <div class="hint">move your mouse — wind follows it</div>
 
