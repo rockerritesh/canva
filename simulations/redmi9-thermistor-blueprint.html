@@ -1,0 +1,594 @@
+<title>Redmi 9 Thermistor Blueprint</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: an engineering drawing sheet on grid paper. Title block, then four plates:
+   A phone rear view, B the sensor part, C circuit + live simulator, D fault guide. */
+:root{
+  --bg:#eef3f9; --grid:rgba(29,79,138,.06); --grid2:rgba(29,79,138,.12);
+  --ink:#143c68; --line:#1d4f8a; --dim:#5b7898; --panel:#e3ebf5; --panel2:#d3dfee;
+  --accent:#c56300; --on-accent:#ffffff; --hot:#b4332a; --ok:#1c7a52; --warn:#9a6400;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f2846; --grid:rgba(200,225,255,.05); --grid2:rgba(200,225,255,.10);
+    --ink:#e4eefa; --line:#c9dcf2; --dim:#8eadd0; --panel:#14335a; --panel2:#1b3f6b;
+    --accent:#ffad42; --on-accent:#1b1100; --hot:#ff7b6c; --ok:#6fd7a7; --warn:#ffd36b;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f2846; --grid:rgba(200,225,255,.05); --grid2:rgba(200,225,255,.10);
+  --ink:#e4eefa; --line:#c9dcf2; --dim:#8eadd0; --panel:#14335a; --panel2:#1b3f6b;
+  --accent:#ffad42; --on-accent:#1b1100; --hot:#ff7b6c; --ok:#6fd7a7; --warn:#ffd36b;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(var(--grid2) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid2) 1px,transparent 1px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:100px 100px,100px 100px,20px 20px,20px 20px;
+  color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.55;
+}
+.sheet{
+  max-width:1120px; margin:0 auto; display:grid; gap:28px;
+  padding-block:28px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+h1,h2{font-family:var(--display); text-wrap:balance; margin:0; text-transform:uppercase}
+h1{font-size:clamp(2.3rem,6vw,3.8rem); font-weight:700; line-height:.95; letter-spacing:.015em}
+h2{font-size:1.5rem; font-weight:600; letter-spacing:.03em; line-height:1.1}
+p{margin:0; max-width:65ch}
+.mono{font-family:var(--mono)}
+.eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+
+/* header + title block */
+.head{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:24px; align-items:end}
+.head-text{display:grid; gap:14px; min-width:0}
+.lede{font-size:1.05rem; color:var(--ink)}
+.stamp{justify-self:start; font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--accent); border:2px solid var(--accent); padding:4px 10px; transform:rotate(-1.5deg)}
+.tblock{border:2px solid var(--line); display:grid; grid-template-columns:1fr 1fr; font-family:var(--mono); font-size:12px; min-width:0}
+.tblock div{padding:8px 10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); display:grid; gap:2px; min-width:0}
+.tblock div:nth-child(2n){border-right:0}
+.tblock div:nth-last-child(-n+2){border-bottom:0}
+.tblock dt{color:var(--dim); text-transform:uppercase; letter-spacing:.08em; font-size:10.5px}
+.tblock dd{margin:0; color:var(--ink); overflow-wrap:anywhere}
+
+/* plates */
+.plate{border:1.5px solid var(--line); background:color-mix(in srgb,var(--bg) 70%,transparent)}
+.plate-h{display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 16px; padding:9px 16px;
+  border-bottom:1.5px solid var(--line); font-family:var(--mono); font-size:12px; letter-spacing:.09em; text-transform:uppercase}
+.plate-h span:last-child{color:var(--dim)}
+.plate-b{padding:20px; display:grid; gap:22px}
+.two{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:28px; align-items:start}
+.two > *{min-width:0}
+.intro{display:grid; gap:8px}
+
+svg{display:block; width:100%; height:auto; max-width:100%}
+.fig{margin:0; display:grid; gap:8px; min-width:0}
+.fig figcaption{font-family:var(--mono); font-size:12px; color:var(--dim)}
+.phone-fig svg{max-width:440px; margin-inline:auto}
+
+/* svg classes */
+.s-body{fill:var(--panel); stroke:var(--line); stroke-width:2}
+.s-dash{fill:none; stroke:var(--dim); stroke-width:1; stroke-dasharray:4 4}
+.s-board{fill:var(--panel2); stroke:var(--line); stroke-width:1.5}
+.s-part{fill:var(--bg); stroke:var(--line); stroke-width:1.3}
+.s-batt{fill:var(--panel); stroke:var(--line); stroke-width:1.5}
+.s-hatch{fill:url(#hatch)}
+.s-hatch-line{stroke:var(--dim); stroke-width:1; opacity:.28}
+.s-ln{fill:none; stroke:var(--line); stroke-width:1.3}
+.s-thin{fill:none; stroke:var(--line); stroke-width:1}
+.s-pins{fill:none; stroke:var(--line); stroke-width:6; stroke-dasharray:2 3}
+.s-ntc{fill:var(--accent); stroke:var(--accent); stroke-width:1}
+.s-sig{fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:5 4}
+.s-lead{fill:none; stroke:var(--accent); stroke-width:1.2}
+.s-arrow{fill:var(--line)}
+.s-pad{fill:none; stroke:var(--dim); stroke-width:1.2; stroke-dasharray:4 3}
+.s-cap{fill:var(--dim); opacity:.55}
+.s-dot{fill:var(--line)}
+.s-mask{fill:var(--bg)}
+.s-bad{fill:none; stroke:var(--hot); stroke-width:2.6; stroke-linecap:round}
+.pulse{fill:none; stroke:var(--accent); stroke-width:1.5; transform-box:fill-box; transform-origin:center; animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{opacity:.9; transform:scale(.5)}100%{opacity:0; transform:scale(1.9)}}
+@media (prefers-reduced-motion: reduce){.pulse{animation:none; opacity:.5}}
+.t-lbl{font-family:var(--mono); font-size:11px; fill:var(--dim)}
+.t-part{font-family:var(--display); font-size:15px; font-weight:600; fill:var(--ink); letter-spacing:.05em}
+.t-big{font-family:var(--display); font-size:30px; font-weight:700; fill:var(--ink); letter-spacing:.14em}
+.t-live{font-family:var(--mono); font-size:12px; font-weight:500; fill:var(--accent)}
+.t-bad{font-family:var(--mono); font-size:11px; font-weight:500; fill:var(--hot); letter-spacing:.08em}
+.mid{text-anchor:middle}
+.end{text-anchor:end}
+.mk circle{fill:var(--ink)}
+.mk text{fill:var(--bg); font-family:var(--mono); font-size:11px; font-weight:500; text-anchor:middle; dominant-baseline:central}
+.mk.hl circle{fill:var(--accent)}
+.mk.hl text{fill:var(--on-accent)}
+[hidden]{display:none!important}
+
+/* legend */
+.parts{list-style:none; margin:0; padding:0; display:grid; gap:10px}
+.parts li{display:grid; grid-template-columns:26px minmax(0,1fr); gap:12px; align-items:start}
+.num{width:24px; height:24px; border-radius:50%; background:var(--ink); color:var(--bg); font-family:var(--mono);
+  font-size:11px; font-weight:500; display:grid; place-items:center; margin-top:1px}
+.parts li.hl .num{background:var(--accent); color:var(--on-accent)}
+.parts b{font-weight:600}
+.parts li.hl b{color:var(--accent)}
+.keyline{display:flex; gap:10px; align-items:center; font-family:var(--mono); font-size:12px; color:var(--dim); border-top:1px dashed var(--dim); padding-top:12px}
+.keyline i{width:34px; height:0; border-top:2px dashed var(--accent); flex:none}
+
+/* specs */
+.specs{margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); border-top:1px solid var(--line)}
+.specs dt,.specs dd{padding:8px 0; border-bottom:1px solid var(--grid2); margin:0}
+.specs dt{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); padding-right:18px}
+.specs dd{font-variant-numeric:tabular-nums}
+.note{font-family:var(--mono); font-size:12px; color:var(--dim)}
+
+/* simulator */
+.sim{display:grid; gap:18px; align-content:start}
+.ctl{display:grid; gap:8px}
+.ctl label,.ctl .lbl{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); display:flex; justify-content:space-between; gap:12px}
+.ctl output{color:var(--ink); font-variant-numeric:tabular-nums}
+input[type=range]{width:100%; accent-color:var(--accent)}
+.seg{display:flex; flex-wrap:wrap; gap:6px}
+.seg button{font-family:var(--mono); font-size:12px; letter-spacing:.04em; color:var(--ink); background:transparent;
+  border:1.5px solid var(--line); padding:7px 11px; cursor:pointer; border-radius:2px}
+.seg button:hover{background:var(--panel2)}
+.seg button[aria-pressed="true"]{background:var(--line); color:var(--bg)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.read{margin:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 18px; font-variant-numeric:tabular-nums}
+.read dt{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--dim); padding-top:2px}
+.read dd{margin:0; font-weight:500}
+.read dd.big{font-family:var(--display); font-size:1.6rem; font-weight:600; line-height:1.1}
+.verdict{border:1.5px solid var(--line); padding:14px; display:grid; gap:8px; background:var(--panel)}
+.pill{justify-self:start; display:inline-flex; align-items:center; gap:8px; padding:3px 10px; border:1.5px solid currentColor;
+  font-family:var(--mono); font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:.06em}
+.pill::before{content:""; width:8px; height:8px; border-radius:50%; background:currentColor}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .hot{color:var(--hot)}
+.modenote{font-size:.92rem; color:var(--dim)}
+
+.scale-wrap{display:grid; gap:4px}
+.scale{position:relative; height:14px; display:flex; border:1.5px solid var(--line)}
+.scale span{height:100%}
+.z-cold{background:color-mix(in srgb,var(--warn) 30%,transparent)}
+.z-slow{background:color-mix(in srgb,var(--ok) 18%,transparent)}
+.z-norm{background:color-mix(in srgb,var(--ok) 38%,transparent)}
+.z-red{background:color-mix(in srgb,var(--warn) 22%,transparent)}
+.z-stop{background:color-mix(in srgb,var(--warn) 42%,transparent)}
+.z-shut{background:color-mix(in srgb,var(--hot) 40%,transparent)}
+.mark{position:absolute; top:-7px; bottom:-7px; width:3px; transform:translateX(-50%); transition:left .25s ease}
+.mark.real{background:var(--dim)}
+.mark.seen{background:var(--ink); width:4px}
+@media (prefers-reduced-motion: reduce){.mark{transition:none}}
+.ticks{position:relative; height:16px; font-family:var(--mono); font-size:10.5px; color:var(--dim); font-variant-numeric:tabular-nums}
+.ticks span{position:absolute; transform:translateX(-50%)}
+.ticks span:first-child{transform:none}
+.ticks span:last-child{transform:translateX(-100%)}
+.scale-key{display:flex; flex-wrap:wrap; gap:4px 16px; font-family:var(--mono); font-size:11px; color:var(--dim)}
+.scale-key i{display:inline-block; width:12px; height:3px; vertical-align:middle; margin-right:6px}
+
+/* table */
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; min-width:640px}
+th,td{text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid var(--grid2)}
+th{font-family:var(--mono); font-size:11.5px; font-weight:500; text-transform:uppercase; letter-spacing:.07em; color:var(--dim); border-bottom:1.5px solid var(--line)}
+td:first-child{font-weight:600}
+.tag{display:inline-block; font-family:var(--mono); font-size:11.5px; font-weight:500; padding:1px 8px; border:1.5px solid currentColor; white-space:nowrap}
+
+footer{font-family:var(--mono); font-size:12px; color:var(--dim); border-top:1.5px solid var(--line); padding-top:14px; display:grid; gap:6px}
+
+@media (max-width:820px){
+  .head,.two{grid-template-columns:minmax(0,1fr)}
+  .plate-b{padding:16px}
+}
+</style>
+
+<div class="sheet">
+
+  <header class="head">
+    <div class="head-text">
+      <span class="eyebrow">Repair drawing · battery temperature sensing</span>
+      <h1>Redmi 9 Thermistor Blueprint</h1>
+      <p class="lede">Where the battery temperature sensor sits in a Redmi 9, how it reports temperature to the phone, and why a faulty one makes the phone loop on the Mi logo and drop into fastboot.</p>
+      <span class="stamp">Illustrative · not to scale</span>
+    </div>
+    <dl class="tblock">
+      <div><dt>Device</dt><dd>Redmi 9 (lancelot)</dd></div>
+      <div><dt>Part</dt><dd>NTC thermistor 10 kΩ</dd></div>
+      <div><dt>Platform</dt><dd>MediaTek Helio G80</dd></div>
+      <div><dt>Battery</dt><dd>BN54 · 5020 mAh</dd></div>
+      <div><dt>Scale</dt><dd>NTS (not to scale)</dd></div>
+      <div><dt>Date</dt><dd>2026-11-14</dd></div>
+    </dl>
+  </header>
+
+  <!-- PLATE A -->
+  <section class="plate" aria-labelledby="pa">
+    <div class="plate-h"><span id="pa">Plate A · Rear view, back cover removed</span><span>Simplified layout</span></div>
+    <div class="plate-b two">
+      <figure class="fig phone-fig">
+        <svg viewBox="0 0 450 880" role="img" aria-label="Simplified rear view of a Redmi 9 with the back cover removed, showing the main board, battery, sub-board and the two temperature sensors highlighted in orange">
+          <defs>
+            <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="10" class="s-hatch-line"/>
+            </pattern>
+            <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="s-arrow"/>
+            </marker>
+          </defs>
+
+          <!-- dimensions -->
+          <line x1="90" y1="22" x2="90" y2="44" class="s-thin"/>
+          <line x1="410" y1="22" x2="410" y2="44" class="s-thin"/>
+          <line x1="92" y1="30" x2="408" y2="30" class="s-thin" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <rect x="216" y="20" width="68" height="18" class="s-mask"/>
+          <text x="250" y="34" class="t-lbl mid">77.1 mm</text>
+          <line x1="52" y1="50" x2="84" y2="50" class="s-thin"/>
+          <line x1="52" y1="850" x2="84" y2="850" class="s-thin"/>
+          <line x1="60" y1="52" x2="60" y2="848" class="s-thin" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <rect x="51" y="410" width="18" height="80" class="s-mask"/>
+          <text x="64" y="450" class="t-lbl mid" transform="rotate(-90 64 450)">163.3 mm</text>
+
+          <!-- body -->
+          <rect x="90" y="50" width="320" height="800" rx="44" class="s-body"/>
+          <rect x="104" y="64" width="292" height="772" rx="34" class="s-dash"/>
+
+          <!-- main board -->
+          <rect x="116" y="78" width="268" height="250" rx="12" class="s-board"/>
+          <!-- camera -->
+          <rect x="130" y="92" width="64" height="168" rx="12" class="s-part"/>
+          <circle cx="162" cy="122" r="15" class="s-ln"/>
+          <circle cx="162" cy="162" r="15" class="s-ln"/>
+          <circle cx="162" cy="202" r="15" class="s-ln"/>
+          <circle cx="162" cy="238" r="7" class="s-ln"/>
+          <!-- SoC shield -->
+          <rect x="214" y="96" width="154" height="112" rx="6" class="s-part"/>
+          <rect x="214" y="96" width="154" height="112" rx="6" class="s-hatch"/>
+          <text x="291" y="150" class="t-part mid">SoC</text>
+          <text x="291" y="168" class="t-lbl mid">under RF shield</text>
+          <!-- PMIC / CHG -->
+          <rect x="214" y="222" width="72" height="50" rx="4" class="s-part"/>
+          <text x="250" y="252" class="t-part mid">PMIC</text>
+          <rect x="298" y="222" width="70" height="50" rx="4" class="s-part"/>
+          <text x="333" y="252" class="t-part mid">CHG IC</text>
+          <!-- battery connector -->
+          <rect x="214" y="290" width="90" height="24" rx="3" class="s-part"/>
+          <line x1="222" y1="302" x2="296" y2="302" class="s-pins"/>
+          <!-- board thermistor T1 -->
+          <circle cx="325" cy="300" r="10" class="pulse"/>
+          <rect x="318" y="296" width="14" height="8" rx="1" class="s-ntc"/>
+
+          <!-- battery -->
+          <rect x="116" y="342" width="240" height="396" rx="12" class="s-batt"/>
+          <rect x="116" y="342" width="240" height="396" rx="12" class="s-hatch"/>
+          <text x="236" y="560" class="t-big mid">BATTERY</text>
+          <text x="236" y="584" class="t-lbl mid">BN54 · 5020 mAh · Li-ion</text>
+          <!-- battery protection board + T2 -->
+          <rect x="156" y="350" width="160" height="30" rx="4" class="s-board"/>
+          <rect x="172" y="358" width="40" height="14" rx="2" class="s-part"/>
+          <text x="236" y="400" class="t-lbl mid">protection board</text>
+          <circle cx="287" cy="365" r="10" class="pulse"/>
+          <rect x="280" y="361" width="14" height="8" rx="1" class="s-ntc"/>
+          <!-- battery flex to BTB -->
+          <rect x="240" y="314" width="26" height="36" class="s-board"/>
+
+          <!-- main flex -->
+          <rect x="364" y="328" width="12" height="424" rx="3" class="s-board"/>
+
+          <!-- sub board -->
+          <rect x="116" y="752" width="268" height="72" rx="10" class="s-board"/>
+          <rect x="220" y="806" width="60" height="18" rx="9" class="s-part"/>
+          <text x="250" y="798" class="t-lbl mid">USB-C</text>
+          <rect x="300" y="764" width="64" height="44" rx="6" class="s-part"/>
+          <circle cx="316" cy="778" r="2" class="s-dot"/><circle cx="332" cy="778" r="2" class="s-dot"/><circle cx="348" cy="778" r="2" class="s-dot"/>
+          <circle cx="316" cy="794" r="2" class="s-dot"/><circle cx="332" cy="794" r="2" class="s-dot"/><circle cx="348" cy="794" r="2" class="s-dot"/>
+          <circle cx="150" cy="806" r="4" class="s-ln"/>
+
+          <!-- thermistor signal path -->
+          <path d="M287 361 V334 H272 V314" class="s-sig"/>
+          <path d="M259 290 V272" class="s-sig"/>
+          <path d="M325 296 V282 H272 V272" class="s-sig"/>
+
+          <!-- leaders -->
+          <line x1="333" y1="300" x2="345" y2="300" class="s-lead"/>
+          <line x1="295" y1="365" x2="322" y2="365" class="s-lead"/>
+
+          <!-- markers -->
+          <g class="mk" transform="translate(360 104)"><circle r="10"/><text>1</text></g>
+          <g class="mk" transform="translate(214 222)"><circle r="10"/><text>2</text></g>
+          <g class="mk" transform="translate(368 222)"><circle r="10"/><text>3</text></g>
+          <g class="mk" transform="translate(204 302)"><circle r="10"/><text>4</text></g>
+          <g class="mk hl" transform="translate(356 300)"><circle r="10"/><text>5</text></g>
+          <g class="mk hl" transform="translate(333 365)"><circle r="10"/><text>6</text></g>
+          <g class="mk" transform="translate(134 360)"><circle r="10"/><text>7</text></g>
+          <g class="mk" transform="translate(370 540)"><circle r="10"/><text>8</text></g>
+          <g class="mk" transform="translate(134 770)"><circle r="10"/><text>9</text></g>
+          <g class="mk" transform="translate(130 92)"><circle r="10"/><text>10</text></g>
+        </svg>
+        <figcaption>Fig. A1 · Outline 163.3 × 77.1 mm (approx.). Part positions simplified.</figcaption>
+      </figure>
+
+      <div class="intro">
+        <h2>Parts on this plate</h2>
+        <ol class="parts">
+          <li><span class="num">1</span><span><b>SoC (Helio G80)</b> under the metal RF shield. The phone's main processor.</span></li>
+          <li><span class="num">2</span><span><b>PMIC</b>, the power chip. Reads the thermistor voltage and decides whether the phone may keep running.</span></li>
+          <li><span class="num">3</span><span><b>Charging IC.</b> Sets charging current based on the temperature the PMIC reports.</span></li>
+          <li><span class="num">4</span><span><b>Battery connector (BTB).</b> Carries battery +, −, and the thermistor line. A loose or corroded one causes the same symptoms as a bad sensor.</span></li>
+          <li class="hl"><span class="num">5</span><span><b>T1 · Board thermistor.</b> Near the charger and connector, watches board heat.</span></li>
+          <li class="hl"><span class="num">6</span><span><b>T2 · Battery thermistor.</b> On the battery's own protection board. This is the main battery temperature sensor.</span></li>
+          <li><span class="num">7</span><span><b>Battery BN54</b>, 5020 mAh. Replacing it also replaces T2.</span></li>
+          <li><span class="num">8</span><span><b>Main flex cable</b> linking the main board to the sub-board.</span></li>
+          <li><span class="num">9</span><span><b>Sub-board</b> with USB-C port, microphone and loudspeaker.</span></li>
+          <li><span class="num">10</span><span><b>Rear camera module.</b></span></li>
+        </ol>
+        <div class="keyline"><i></i>Thermistor signal path to the PMIC</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATE B -->
+  <section class="plate" aria-labelledby="pb">
+    <div class="plate-h"><span id="pb">Plate B · The sensor part</span><span>Typical values</span></div>
+    <div class="plate-b two">
+      <div class="fig">
+        <svg viewBox="0 0 360 210" role="img" aria-label="Magnified 0402 chip thermistor, 1.0 by 0.5 millimetres, with its two solder pads">
+          <defs>
+            <marker id="arr2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="s-arrow"/>
+            </marker>
+          </defs>
+          <text x="180" y="24" class="t-lbl mid">0402 chip thermistor · shown ×40</text>
+          <rect x="70" y="112" width="74" height="50" rx="2" class="s-pad"/>
+          <rect x="216" y="112" width="74" height="50" rx="2" class="s-pad"/>
+          <rect x="95" y="60" width="170" height="80" rx="4" class="s-board"/>
+          <rect x="95" y="60" width="38" height="80" rx="4" class="s-cap"/>
+          <rect x="227" y="60" width="38" height="80" rx="4" class="s-cap"/>
+          <text x="180" y="106" class="t-part mid">NTC</text>
+          <line x1="95" y1="146" x2="95" y2="194" class="s-thin"/>
+          <line x1="265" y1="146" x2="265" y2="194" class="s-thin"/>
+          <line x1="97" y1="188" x2="263" y2="188" class="s-thin" marker-start="url(#arr2)" marker-end="url(#arr2)"/>
+          <text x="180" y="181" class="t-lbl mid">1.0 mm</text>
+          <line x1="270" y1="60" x2="310" y2="60" class="s-thin"/>
+          <line x1="270" y1="140" x2="310" y2="140" class="s-thin"/>
+          <line x1="302" y1="62" x2="302" y2="138" class="s-thin" marker-start="url(#arr2)" marker-end="url(#arr2)"/>
+          <text x="308" y="104" class="t-lbl">0.5 mm</text>
+          <text x="107" y="155" class="t-lbl mid">pad</text>
+          <text x="253" y="155" class="t-lbl mid">pad</text>
+        </svg>
+
+        <svg viewBox="0 0 360 160" role="img" aria-label="Top edge of the battery pack showing the protection board with protection chip, thermistor, and a three-line connector">
+          <rect x="20" y="64" width="320" height="86" rx="8" class="s-batt"/>
+          <rect x="20" y="64" width="320" height="86" rx="8" class="s-hatch"/>
+          <text x="180" y="128" class="t-part mid">CELL</text>
+          <rect x="70" y="46" width="220" height="40" rx="4" class="s-board"/>
+          <rect x="90" y="56" width="50" height="20" rx="2" class="s-part"/>
+          <text x="115" y="70" class="t-lbl mid">PROT</text>
+          <circle cx="247" cy="66" r="10" class="pulse"/>
+          <rect x="240" y="62" width="14" height="8" rx="1" class="s-ntc"/>
+          <text x="262" y="70" class="t-lbl">T2</text>
+          <rect x="168" y="26" width="24" height="22" class="s-board"/>
+          <rect x="146" y="4" width="68" height="24" rx="2" class="s-part"/>
+          <text x="160" y="20" class="t-lbl mid">+</text>
+          <text x="180" y="20" class="t-live mid">T</text>
+          <text x="200" y="20" class="t-lbl mid">−</text>
+          <path d="M247 62 V40 H188 V28" class="s-sig"/>
+        </svg>
+        <p class="note">Battery pack top edge: + and − power lines, plus T, the thermistor line to the phone. Some packs add an ID pin, and pin order varies.</p>
+      </div>
+
+      <div class="intro">
+        <h2>What the sensor is</h2>
+        <p>A thermistor is a tiny resistor whose resistance changes with heat. An <b>NTC</b> type has lower resistance when hot and higher when cold. The phone measures that resistance to know the battery temperature.</p>
+        <dl class="specs">
+          <dt>Type</dt><dd>NTC thermistor</dd>
+          <dt>At 25 °C</dt><dd>10 kΩ</dd>
+          <dt>At 0 °C</dt><dd>≈ 31 kΩ</dd>
+          <dt>At 60 °C</dt><dd>≈ 2.9 kΩ</dd>
+          <dt>B-constant</dt><dd>≈ 3435 K</dd>
+          <dt>Package</dt><dd>0402 · 1.0 × 0.5 mm</dd>
+          <dt>Location</dt><dd>Battery protection board (T2), plus 1–2 on the main board (T1)</dd>
+          <dt>Reports to</dt><dd>PMIC temperature input via the battery connector</dd>
+        </dl>
+        <p class="note">Values are typical for this class of phone, not read from Xiaomi's schematics.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATE C -->
+  <section class="plate" aria-labelledby="pc">
+    <div class="plate-h"><span id="pc">Plate C · Circuit and fault simulator</span><span>Interactive</span></div>
+    <div class="plate-b">
+      <div class="intro">
+        <h2>How a bad sensor causes a bootloop</h2>
+        <p>The thermistor and a fixed resistor form a voltage divider. The PMIC reads the middle voltage and converts it to a temperature. If the sensor breaks, the voltage is wrong, the phone thinks the battery is dangerous, and it cuts power during boot. Change the temperature and the fault below to see what the phone sees.</p>
+      </div>
+      <div class="two">
+        <figure class="fig">
+          <svg viewBox="0 0 420 320" role="img" aria-label="Voltage divider schematic: 1.8 volt reference, 24 kilo-ohm pull-up resistor, measuring node to the PMIC ADC, NTC thermistor to ground">
+            <text x="120" y="22" class="t-lbl mid">VREF 1.8 V</text>
+            <line x1="104" y1="34" x2="136" y2="34" class="s-ln"/>
+            <line x1="120" y1="34" x2="120" y2="56" class="s-ln"/>
+            <polyline points="120,56 120,62 131,67 109,77 131,87 109,97 131,107 120,112 120,120" class="s-ln"/>
+            <text x="144" y="84" class="t-part">R_PU</text>
+            <text x="144" y="100" class="t-lbl">24 kΩ pull-up</text>
+            <line x1="120" y1="120" x2="120" y2="196" class="s-ln"/>
+            <circle cx="120" cy="158" r="4.5" class="s-dot"/>
+            <line x1="120" y1="158" x2="270" y2="158" class="s-ln"/>
+            <text id="svgV" x="196" y="148" class="t-live mid">V = 0.46 V</text>
+            <rect x="270" y="130" width="130" height="56" rx="4" class="s-part"/>
+            <text x="335" y="155" class="t-part mid">PMIC ADC</text>
+            <text x="335" y="173" class="t-lbl mid">battery temp input</text>
+            <polyline points="120,196 120,204 131,209 109,219 131,229 109,239 131,249 120,254 120,262" class="s-ln"/>
+            <polyline points="92,258 100,258 140,202" class="s-ln"/>
+            <text x="150" y="222" class="t-part">NTC</text>
+            <text id="svgR" x="150" y="240" class="t-live">R = 8.27 kΩ</text>
+            <line x1="120" y1="262" x2="120" y2="290" class="s-ln"/>
+            <line x1="104" y1="290" x2="136" y2="290" class="s-ln"/>
+            <line x1="110" y1="297" x2="130" y2="297" class="s-ln"/>
+            <line x1="116" y1="304" x2="124" y2="304" class="s-ln"/>
+            <g id="ovOpen" hidden>
+              <rect x="104" y="220" width="32" height="18" class="s-mask"/>
+              <line x1="113" y1="222" x2="127" y2="236" class="s-bad"/>
+              <line x1="127" y1="222" x2="113" y2="236" class="s-bad"/>
+              <text x="60" y="233" class="t-bad end">OPEN</text>
+            </g>
+            <g id="ovShort" hidden>
+              <path d="M120 186 H72 V274 H120" class="s-bad"/>
+              <text x="62" y="234" class="t-bad end">SHORT</text>
+            </g>
+          </svg>
+          <figcaption>V = 1.8 V × R_NTC ÷ (24 kΩ + R_NTC)</figcaption>
+        </figure>
+
+        <div class="sim">
+          <div class="ctl">
+            <label for="temp"><span>Real battery temperature</span><output id="tempOut" for="temp">30 °C</output></label>
+            <input id="temp" type="range" min="-20" max="80" step="1" value="30">
+          </div>
+          <div class="ctl">
+            <span class="lbl" id="modeLbl">Sensor condition</span>
+            <div class="seg" role="group" aria-labelledby="modeLbl">
+              <button type="button" id="m-healthy" data-mode="healthy" aria-pressed="true">Healthy</button>
+              <button type="button" id="m-drift" data-mode="drift" aria-pressed="false">Drifted</button>
+              <button type="button" id="m-open" data-mode="open" aria-pressed="false">Broken (open)</button>
+              <button type="button" id="m-short" data-mode="short" aria-pressed="false">Shorted</button>
+            </div>
+            <p class="modenote" id="modeNote">Sensor reads the true temperature.</p>
+          </div>
+
+          <dl class="read">
+            <dt>Sensor resistance</dt><dd id="rOut">8.27 kΩ</dd>
+            <dt>Voltage at ADC</dt><dd id="vOut">0.461 V</dd>
+            <dt>Phone thinks</dt><dd id="seenOut" class="big">30.0 °C</dd>
+          </dl>
+
+          <div class="scale-wrap" aria-hidden="true">
+            <div class="scale">
+              <span class="z-cold" style="width:28.571%"></span>
+              <span class="z-slow" style="width:7.143%"></span>
+              <span class="z-norm" style="width:25%"></span>
+              <span class="z-red" style="width:7.143%"></span>
+              <span class="z-stop" style="width:3.571%"></span>
+              <span class="z-shut" style="width:28.571%"></span>
+              <i class="mark real" id="mkReal" style="left:50%"></i>
+              <i class="mark seen" id="mkSeen" style="left:50%"></i>
+            </div>
+            <div class="ticks">
+              <span style="left:0">−40</span><span style="left:28.571%">0</span><span style="left:60.714%">45</span><span style="left:71.429%">60</span><span style="left:100%">100 °C</span>
+            </div>
+            <div class="scale-key"><span><i style="background:var(--dim)"></i>real temperature</span><span><i style="background:var(--ink)"></i>what the phone sees</span></div>
+          </div>
+
+          <div class="verdict" aria-live="polite">
+            <span class="pill ok" id="pill">Normal</span>
+            <p id="verdict">Phone boots and charges normally.</p>
+          </div>
+          <p class="note">Thresholds are typical for MediaTek phones. Exact values depend on Xiaomi's firmware.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATE D -->
+  <section class="plate" aria-labelledby="pd">
+    <div class="plate-h"><span id="pd">Plate D · Fault guide for a Mi-logo bootloop</span><span>Cheapest check first</span></div>
+    <div class="plate-b">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Likely cause</th><th>What you notice</th><th>Fix</th><th>Data kept?</th></tr></thead>
+          <tbody>
+            <tr><td>Worn battery or bad battery thermistor (T2)</td><td>Loops at the Mi logo, wrong battery %, odd charging when off</td><td>Replace the battery (BN54)</td><td><span class="tag ok">Yes</span></td></tr>
+            <tr><td>Loose or dirty battery connector</td><td>Started after a drop or water; sometimes boots if pressed</td><td>Reseat, clean or replace the BTB connector</td><td><span class="tag ok">Yes</span></td></tr>
+            <tr><td>Cracked board thermistor (T1)</td><td>"Overheating" shutdown even when the phone is cool</td><td>Replace the 0402 thermistor (micro-soldering)</td><td><span class="tag ok">Yes</span></td></tr>
+            <tr><td>PMIC or charging IC fault</td><td>Won't charge, gets warm, random shutdowns</td><td>Board-level repair</td><td><span class="tag warn">Usually</span></td></tr>
+            <tr><td>Corrupted software</td><td>Loop started right after an update; recovery opens fine</td><td>Same-version reflash at a service centre, or factory reset</td><td><span class="tag warn">Reflash: often</span> <span class="tag hot">Reset: no</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>If a shop says it's the temperature sensor, ask for a <b>hardware repair only, with no flashing or reset</b>. Hardware repairs leave your photos and chats in place.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Illustrative drawing. Part placement, resistor values and thresholds are typical for MediaTek phones of this class and are not taken from Xiaomi's schematics.</span>
+    <span>Not an official Xiaomi document.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var B=3435, R0=10000, T0=298.15, RPU=24000, VREF=1.8, LO=-40, HI=100;
+  var $=function(id){return document.getElementById(id)};
+  var mode='healthy';
+  var notes={
+    healthy:'Sensor reads the true temperature.',
+    drift:'The sensor has aged or cracked and its resistance has dropped, so the phone thinks the battery is hotter than it really is.',
+    open:'The sensor, its solder joint or the connector pin is broken, so no current flows through it.',
+    short:'The sensor pins are bridged (water, corrosion or a solder bridge), so the line reads zero resistance.'
+  };
+  function rOf(t){return R0*Math.exp(B*(1/(t+273.15)-1/T0))}
+  function fmtR(r){
+    if(!isFinite(r)) return '∞ (open circuit)';
+    if(r<1) return '≈ 0 Ω (shorted)';
+    if(r>=1000) return (r/1000).toFixed(r>=10000?1:2)+' kΩ';
+    return Math.round(r)+' Ω';
+  }
+  function verdict(tr){
+    if(tr===null) return ['hot','Battery not detected','The ADC sees the full 1.8 V, so the phone thinks there is no battery sensor. It refuses to charge and cuts power during boot. You see the Mi logo blink and restart, then fastboot.'];
+    if(tr>=60) return ['hot','Forced shutdown','The phone thinks the battery is dangerously hot and cuts power to protect it. When that happens on every boot, it looks exactly like a Mi-logo bootloop.'];
+    if(tr>=55) return ['warn','Charging stopped (hot)','Charging is blocked until the battery cools. The phone still runs.'];
+    if(tr>=45) return ['warn','Reduced charging','Charging current drops to keep the battery cool. The phone works normally.'];
+    if(tr>=10) return ['ok','Normal','The phone boots and charges normally.'];
+    if(tr>=0)  return ['ok','Slow charging','The battery is cool, so charging is slowed. The phone works normally.'];
+    return ['warn','Charging stopped (cold)','Below 0 °C the phone refuses to charge. Very low readings can also trigger a shutdown.'];
+  }
+  function pct(t){return ((Math.max(LO,Math.min(HI,t))-LO)/(HI-LO)*100).toFixed(2)+'%'}
+  function render(){
+    var t=+$('temp').value;
+    $('tempOut').textContent=t+' °C';
+    var r = mode==='open' ? Infinity : mode==='short' ? 0 : rOf(t)*(mode==='drift'?0.4:1);
+    var v = isFinite(r) ? VREF*r/(RPU+r) : VREF;
+    var tr;
+    if(!isFinite(r)) tr=null;
+    else if(r<1) tr=Infinity;
+    else tr=1/(1/T0+Math.log(r/R0)/B)-273.15;
+
+    $('rOut').textContent=fmtR(r);
+    $('vOut').textContent=v.toFixed(3)+' V';
+    $('svgV').textContent='V = '+v.toFixed(2)+' V';
+    $('svgR').textContent=(mode==='open'?'R = ∞':mode==='short'?'R ≈ 0 Ω':'R = '+fmtR(r));
+    $('seenOut').textContent = tr===null ? 'No reading' : tr===Infinity ? 'Above 125 °C' : tr.toFixed(1)+' °C';
+
+    var vd=verdict(tr);
+    var pill=$('pill'); pill.className='pill '+vd[0]; pill.textContent=vd[1];
+    $('verdict').textContent=vd[2];
+    $('modeNote').textContent=notes[mode];
+
+    $('mkReal').style.left=pct(t);
+    $('mkSeen').style.left = tr===null ? '0%' : tr===Infinity ? '100%' : pct(tr);
+
+    if(mode==='open') $('ovOpen').removeAttribute('hidden'); else $('ovOpen').setAttribute('hidden','');
+    if(mode==='short') $('ovShort').removeAttribute('hidden'); else $('ovShort').setAttribute('hidden','');
+  }
+  $('temp').addEventListener('input',render);
+  document.querySelectorAll('.seg button').forEach(function(b){
+    b.addEventListener('click',function(){
+      mode=b.getAttribute('data-mode');
+      document.querySelectorAll('.seg button').forEach(function(x){x.setAttribute('aria-pressed', x===b?'true':'false')});
+      render();
+    });
+  });
+  render();
+})();
+</script>
