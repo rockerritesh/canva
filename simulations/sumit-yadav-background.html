@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Sumit Yadav — AI Safety & Mechanistic Interpretability</title>
+<meta name="description" content="Sumit Yadav (aka rockerritesh) — AI researcher working on interpretability, AI safety, and low-resource NLP." />
+<meta name="theme-color" content="#04050c" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500&display=swap" rel="stylesheet" />
+
+<!--
+  ============================================================
+  "Representation Space" — interactive Three.js background
+  for sumityadav.com.np
+
+  The scene is a 3D latent space: concept clusters (refusal,
+  harmful, benign, मैथिली, नेपाली, हिन्दी, english) drawn as
+  blobs, rings and helices (representation geometry), each with
+  its own constellation of "neurons" (SafeConstellations).
+  Every few seconds a steering vector sweeps through the space
+  and visibly shifts one concept cluster. Click anywhere to
+  steer the nearest cluster yourself.
+
+  Themes: night / day / rain / snow (matches the site's switcher).
+  Keys: B = show background only, 1–4 = themes, Space = steer.
+
+  To reuse on another page: copy the <canvas id="bg">, the
+  .grain/.vignette/#labels elements, the CSS marked
+  "BACKGROUND", the importmap and the module script.
+  ============================================================
+-->
+
+<style>
+/* ---------- BACKGROUND + THEME TOKENS ---------- */
+:root{
+  --bg:#04050c; --fg:#e9ecf7; --muted:#8a93ad; --accent:#ffd166; --accent-2:#7aa2ff;
+  --card:rgba(10,14,30,.46); --card-border:rgba(255,255,255,.08); --hair:rgba(255,255,255,.10);
+  --serif:"Instrument Serif", ui-serif, Georgia, serif;
+  --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --deva:"Noto Sans Devanagari", var(--sans);
+}
+[data-theme="day"]{
+  --bg:#f2eee6; --fg:#15192b; --muted:#5d6478; --accent:#c2410c; --accent-2:#1d4ed8;
+  --card:rgba(255,255,255,.58); --card-border:rgba(21,25,43,.10); --hair:rgba(21,25,43,.14);
+}
+[data-theme="rain"]{
+  --bg:#050b12; --fg:#e3f1f7; --muted:#7f97a6; --accent:#7dd3fc; --accent-2:#5eead4;
+  --card:rgba(6,16,26,.5); --card-border:rgba(125,211,252,.10); --hair:rgba(125,211,252,.14);
+}
+[data-theme="snow"]{
+  --bg:#0b1020; --fg:#f1f5ff; --muted:#9aa6c4; --accent:#e0f2fe; --accent-2:#c7d2fe;
+  --card:rgba(14,20,40,.48); --card-border:rgba(224,242,254,.12); --hair:rgba(224,242,254,.14);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;background:var(--bg);color:var(--fg);transition:background-color .9s ease,color .6s ease}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.55}
+
+#bg{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;touch-action:pan-y}
+
+/* film grain + vignette sit on top of the canvas, under the content */
+.grain,.vignette{position:fixed;inset:0;pointer-events:none;z-index:1}
+.grain{opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");}
+[data-theme="day"] .grain{opacity:.12;mix-blend-mode:multiply}
+.vignette{background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.55) 100%)}
+[data-theme="day"] .vignette{background:radial-gradient(120% 90% at 50% 45%,transparent 60%,rgba(120,100,70,.18) 100%)}
+
+/* fallback when WebGL is unavailable */
+.no-webgl #bg{display:none}
+.no-webgl body{background:
+  radial-gradient(60% 50% at 30% 30%,rgba(122,162,255,.18),transparent 70%),
+  radial-gradient(50% 45% at 75% 65%,rgba(167,139,250,.16),transparent 70%), var(--bg);
+  background-attachment:fixed}
+
+/* floating concept labels projected from 3D */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.clabel{position:absolute;left:0;top:0;font:500 11px/1 var(--mono);letter-spacing:.06em;color:var(--fg);
+  white-space:nowrap;will-change:transform,opacity;display:flex;align-items:center;gap:6px;opacity:0}
+.clabel::before{content:"";width:14px;height:1px;background:currentColor;opacity:.6}
+.clabel .dv{font-family:var(--deva);font-size:12px;letter-spacing:0}
+.clabel.active{color:var(--accent)}
+.clabel.steer{color:var(--accent);font-size:10.5px}
+.clabel.steer::before{display:none}
+
+/* ---------- PAGE CONTENT (demo overlay) ---------- */
+main{position:relative;z-index:2;transition:opacity .6s ease}
+body.bg-only main,body.bg-only .hud{opacity:0;pointer-events:none}
+
+.topbar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;
+  padding:18px clamp(18px,4vw,44px);pointer-events:none}
+.topbar > *{pointer-events:auto}
+.mark{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fg);text-decoration:none;
+  display:flex;align-items:center;gap:10px}
+.mark i{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.6);opacity:.5}}
+
+.controls{display:flex;gap:6px;align-items:center;padding:5px;border-radius:999px;background:var(--card);
+  border:1px solid var(--card-border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.controls button{all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:var(--muted);
+  transition:background .25s,color .25s}
+.controls button:hover{color:var(--fg)}
+.controls button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.controls .sep{width:1px;height:18px;background:var(--hair);margin:0 2px}
+.controls svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+.wrap{width:min(1180px,100% - clamp(36px,8vw,88px));margin-inline:auto}
+
+.hero{min-height:100svh;display:grid;align-content:end;padding:120px 0 clamp(56px,10vh,110px)}
+.kicker{font:500 12px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:22px}
+.kicker b{color:var(--accent);font-weight:500}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(4rem,13.5vw,12.5rem);line-height:.86;letter-spacing:-.025em;margin:0}
+h1 em{font-style:italic;color:var(--accent);padding-right:.04em}
+.role{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:end;margin-top:34px;border-top:1px solid var(--hair);padding-top:22px}
+.role p{margin:0;max-width:46ch;color:var(--muted);font-size:clamp(1rem,1.25vw,1.12rem)}
+.role p strong{color:var(--fg);font-weight:500}
+.links{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.links a{font:500 12px/1 var(--mono);letter-spacing:.04em;color:var(--fg);text-decoration:none;padding:11px 14px;border-radius:999px;
+  border:1px solid var(--card-border);background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:border-color .25s,transform .25s}
+.links a:hover{border-color:var(--accent);transform:translateY(-2px)}
+.links a.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+
+.scrollcue{margin-top:46px;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px}
+.scrollcue span{display:block;width:44px;height:1px;background:var(--hair);position:relative;overflow:hidden}
+.scrollcue span::after{content:"";position:absolute;inset:0;width:40%;background:var(--accent);animation:slide 2.2s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+
+section{padding:clamp(80px,14vh,160px) 0}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 18px}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.4rem,5.6vw,4.6rem);line-height:.98;letter-spacing:-.02em;margin:0 0 44px;max-width:16ch}
+h2 em{font-style:italic;color:var(--muted)}
+
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--card-border);border-radius:18px;padding:26px 24px 24px;
+  backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%)}
+.card .idx{font:500 11px/1 var(--mono);color:var(--muted);letter-spacing:.1em}
+.card h3{font-family:var(--serif);font-weight:400;font-size:1.9rem;line-height:1.05;margin:44px 0 12px}
+.card p{margin:0;color:var(--muted);font-size:.96rem}
+.card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.card .tags span{font:400 11px/1 var(--mono);padding:6px 8px;border-radius:6px;border:1px solid var(--hair);color:var(--fg)}
+.dv{font-family:var(--deva)}
+
+.results{border-top:1px solid var(--hair)}
+.result{display:grid;grid-template-columns:minmax(150px,.7fr) minmax(0,1.6fr) minmax(0,1fr);gap:24px;align-items:baseline;
+  padding:26px 0;border-bottom:1px solid var(--hair)}
+.result .num{font-family:var(--serif);font-size:clamp(2.6rem,5vw,4rem);line-height:1;letter-spacing:-.02em}
+.result .num small{font-size:.45em;color:var(--muted);margin-left:2px}
+.result h4{margin:0 0 4px;font-weight:500;font-size:1.06rem}
+.result p{margin:0;color:var(--muted);font-size:.95rem}
+.result .venue{font:500 11px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right}
+
+footer{padding:90px 0 140px}
+footer .big{font-family:var(--serif);font-size:clamp(2rem,4.8vw,3.8rem);line-height:1.02;letter-spacing:-.02em;margin:0 0 26px;max-width:20ch}
+footer .big a{color:var(--accent);text-decoration:none;font-style:italic}
+footer .meta{font:400 12px/1.7 var(--mono);color:var(--muted)}
+kbd{font:500 11px/1 var(--mono);border:1px solid var(--hair);border-bottom-width:2px;border-radius:5px;padding:2px 6px;color:var(--fg)}
+
+/* live "probe readout" in the corner */
+.hud{position:fixed;left:clamp(18px,4vw,44px);bottom:22px;z-index:4;font:400 11px/1.65 var(--mono);color:var(--muted);
+  pointer-events:none;transition:opacity .6s;min-width:210px}
+.hud .row{display:flex;justify-content:space-between;gap:20px}
+.hud .row b{color:var(--fg);font-weight:500}
+.hud .row b.hot{color:var(--accent)}
+.hud .bar{height:2px;background:var(--hair);margin:7px 0 6px;position:relative;overflow:hidden}
+.hud .bar i{position:absolute;inset:0;width:0;background:var(--accent);transition:width .15s linear}
+.hud .title{color:var(--fg);letter-spacing:.12em;text-transform:uppercase;font-size:10px;margin-bottom:4px}
+
+.bgonly-hint{position:fixed;right:clamp(18px,4vw,44px);bottom:22px;z-index:4;font:400 11px/1 var(--mono);color:var(--muted);
+  opacity:0;transition:opacity .6s;pointer-events:none}
+body.bg-only .bgonly-hint{opacity:1}
+
+@media (max-width:860px){
+  .role{grid-template-columns:1fr}
+  .links{justify-content:flex-start}
+  .grid3{grid-template-columns:1fr}
+  .result{grid-template-columns:1fr;gap:8px}
+  .result .venue{text-align:left}
+  .hud{display:none}
+  .clabel{font-size:9.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<!-- BACKGROUND -->
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div id="labels" aria-hidden="true"></div>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <a class="mark" href="https://sumityadav.com.np"><i></i>sumityadav.com.np</a>
+  <div class="controls" role="toolbar" aria-label="Background theme">
+    <button data-theme-btn="day" aria-label="Day theme" title="Day (1)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button data-theme-btn="night" aria-label="Night theme" title="Night (2)">
+      <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+    </button>
+    <button data-theme-btn="rain" aria-label="Rain theme" title="Rain (3)">
+      <svg viewBox="0 0 24 24"><path d="M7 15a4.5 4.5 0 1 1 1-8.9A6 6 0 0 1 19 9a3.5 3.5 0 0 1-1 6.9"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/></svg>
+    </button>
+    <button data-theme-btn="snow" aria-label="Snow theme" title="Snow (4)">
+      <svg viewBox="0 0 24 24"><path d="M12 2v20M4 6.5l16 11M20 6.5l-16 11"/><path d="M9.5 3.5L12 6l2.5-2.5M9.5 20.5L12 18l2.5 2.5"/></svg>
+    </button>
+    <span class="sep"></span>
+    <button id="bgToggle" aria-label="View background only" title="Background only (B)" aria-pressed="false">
+      <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="kicker"><span>aka <b>rockerritesh</b></span><span>AI Researcher @ Astha.ai</span><span>Kathmandu · Pulchowk Campus, TU</span></div>
+      <h1>Sumit<br><em>Yadav</em></h1>
+      <div class="role">
+        <p><strong>AI Safety &amp; Mechanistic Interpretability Researcher.</strong> I study how language models represent behaviour, and how to read, steer and trace it, across English and low-resource languages like <span class="dv">मैथिली</span>.</p>
+        <nav class="links" aria-label="Profiles">
+          <a class="primary" href="https://sumityadav.com.np">Full profile ↗</a>
+          <a href="https://github.com/rockerritesh">GitHub</a>
+          <a href="https://huggingface.co/rockerritesh">Hugging Face</a>
+          <a href="https://x.com/rocker_ritesh">X</a>
+          <a href="https://www.youtube.com/@Audio-Obsession">YouTube</a>
+        </nav>
+      </div>
+      <div class="scrollcue"><span></span>Click the space to steer a concept</div>
+    </header>
+  </div>
+
+  <!-- RESEARCH -->
+  <section id="research">
+    <div class="wrap">
+      <p class="eyebrow">Research directions</p>
+      <h2>Interpretability, safety, and <em>languages that models forget.</em></h2>
+      <div class="grid3">
+        <article class="card">
+          <div class="idx">01 / READ · STEER</div>
+          <h3>Interpretability &amp; safety</h3>
+          <p>Mechanistic interpretability, representation steering and the geometry of concepts inside language models.</p>
+          <div class="tags"><span>steering vectors</span><span>over-refusal</span><span>representation geometry</span></div>
+        </article>
+        <article class="card">
+          <div class="idx">02 / TRANSFER</div>
+          <h3>Low-resource NLP</h3>
+          <p>Models and benchmarks for Maithili and other Devanagari-script languages, plus Tirhuta script recognition.</p>
+          <div class="tags"><span class="dv">मैथिली</span><span class="dv">नेपाली</span><span class="dv">हिन्दी</span><span>Tirhuta</span></div>
+        </article>
+        <article class="card">
+          <div class="idx">03 / SECURE</div>
+          <h3>AI security &amp; agents</h3>
+          <p>Model Context Protocol security, zero-trust agent identity and LLM compliance agents at Astha.ai.</p>
+          <div class="tags"><span>MCP security</span><span>agent identity</span><span>compliance</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results">
+    <div class="wrap">
+      <p class="eyebrow">Selected results</p>
+      <h2>Small vectors, <em>measurable effects.</em></h2>
+      <div class="results">
+        <div class="result">
+          <div class="num">73<small>%</small></div>
+          <div><h4>SafeConstellations</h4><p>Up to 73% fewer over-refusals, without retraining the model.</p></div>
+          <div class="venue">ACL 2026 · Main</div>
+        </div>
+        <div class="result">
+          <div class="num">95–100<small>%</small></div>
+          <div><h4>Your Intervention Was Too Narrow</h4><p>Widened interventions recover 95–100% of the achievable causal effect.</p></div>
+          <div class="venue">NeurIPS 2026 · Interp4Discovery</div>
+        </div>
+        <div class="result">
+          <div class="num">87<small>%</small></div>
+          <div><h4>maiBERT</h4><p>The first BERT for Maithili, at 87% news-classification accuracy.</p></div>
+          <div class="venue">Low-resource NLP</div>
+        </div>
+        <div class="result">
+          <div class="num">97<small>%</small></div>
+          <div><h4>Tirhuta character recognition</h4><p>Character recognition for the Tirhuta script at 97% accuracy.</p></div>
+          <div class="venue">Vision · Script OCR</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <p class="big">Let's trace where behaviours come from. <a href="https://sumityadav.com.np">sumityadav.com.np</a></p>
+      <p class="meta">Background: an interactive latent space. Each cluster is a concept; links are neuron constellations; the sweeping plane is a steering vector.<br>
+      <kbd>click</kbd> steer the nearest concept · <kbd>space</kbd> random steer · <kbd>1</kbd>–<kbd>4</kbd> themes · <kbd>B</kbd> background only</p>
+    </div>
+  </footer>
+</main>
+
+<!-- live probe readout -->
+<div class="hud" aria-hidden="true">
+  <div class="title">probe · residual stream</div>
+  <div class="row"><span>layer</span><b id="hLayer">L17</b></div>
+  <div class="row"><span>concept</span><b id="hConcept" class="hot">—</b></div>
+  <div class="row"><span>α (steer)</span><b id="hAlpha">+0.00</b></div>
+  <div class="row"><span>‖Δh‖</span><b id="hDelta">0.000</b></div>
+  <div class="bar"><i id="hBar"></i></div>
+</div>
+<div class="bgonly-hint">press <kbd>B</kbd> to bring the page back</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* ---------------------------------------------------------------
+   Setup
+---------------------------------------------------------------- */
+const root = document.documentElement;
+const canvas = document.getElementById('bg');
+const isMobile = matchMedia('(max-width: 760px)').matches || matchMedia('(pointer: coarse)').matches;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TIME_SCALE = reduceMotion ? 0.25 : 1;
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
+} catch (e) {
+  root.classList.add('no-webgl');
+  throw e;
+}
+const PR = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
+renderer.setPixelRatio(PR);
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 220);
+camera.position.set(0, 0, 26);
+
+const world = new THREE.Group();     // rotates; holds the latent space
+scene.add(world);
+
+/* seeded RNG so the space looks the same on every visit */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rand = mulberry32(20261109);
+const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const V3 = THREE.Vector3;
+let glyphBlend = THREE.AdditiveBlending;
+
+/* ---------------------------------------------------------------
+   Themes (sRGB hex; three converts to linear)
+   palette index: 0 refusal, 1 harmful, 2 benign, 3 maithili,
+                  4 nepali, 5 hindi, 6 english, 7 dust
+---------------------------------------------------------------- */
+const THEMES = {
+  night: { bg:'#04050c', nebA:'#1a2a6e', nebB:'#4b1c6e', neb:1.0, accent:'#fff1c4', line:'#7aa2ff', glyph:'#9fb3ff',
+           palette:['#ff7a59','#ff4d8d','#6ff0c3','#ffd166','#5ee7ff','#a78bfa','#7aa2ff','#8696c4'],
+           light:0, bloom:0.95, pOpacity:1.0, rain:0, snow:0 },
+  day:   { bg:'#f2eee6', nebA:'#c8d4ef', nebB:'#f0d6c4', neb:0.9, accent:'#111827', line:'#475569', glyph:'#334155',
+           palette:['#c2410c','#be185d','#047857','#b45309','#0369a1','#6d28d9','#1d4ed8','#7c8597'],
+           light:1, bloom:0.0, pOpacity:0.9, rain:0, snow:0 },
+  rain:  { bg:'#050b12', nebA:'#0d3a4a', nebB:'#112743', neb:1.0, accent:'#d6f6ff', line:'#5eead4', glyph:'#7dd3fc',
+           palette:['#fb923c','#f472b6','#5eead4','#fde68a','#7dd3fc','#a5b4fc','#38bdf8','#6b8a9a'],
+           light:0, bloom:0.85, pOpacity:0.95, rain:1, snow:0 },
+  snow:  { bg:'#0b1020', nebA:'#2a3a6a', nebB:'#3a3f78', neb:1.0, accent:'#ffffff', line:'#c7d2fe', glyph:'#e0e7ff',
+           palette:['#fecaca','#fbcfe8','#ccfbf1','#fef3c7','#bae6fd','#ddd6fe','#c7d2fe','#aab6d3'],
+           light:0, bloom:0.8, pOpacity:0.95, rain:0, snow:1 },
+};
+
+/* live (lerped) theme state */
+const live = {
+  bg: new THREE.Color(THEMES.night.bg), nebA: new THREE.Color(), nebB: new THREE.Color(),
+  accent: new THREE.Color(), line: new THREE.Color(), glyph: new THREE.Color(),
+  palette: Array.from({ length: 8 }, () => new THREE.Color()),
+  neb: 1, light: 0, bloom: 0.95, pOpacity: 1, rain: 0, snow: 0,
+};
+let target = THEMES.night;
+
+/* ---------------------------------------------------------------
+   Shared uniforms (same objects referenced by every material)
+---------------------------------------------------------------- */
+const U = {
+  uTime:     { value: 0 },
+  uPR:       { value: PR },
+  uSteerDir: { value: new V3(1, 0, 0) },
+  uWave:     { value: -40 },
+  uWaveAmp:  { value: 0 },
+  uSteer:    { value: 0 },
+  uTarget:   { value: -1 },
+  uAccent:   { value: live.accent },
+  uLight:    { value: 0 },
+};
+
+const DISPLACE = /* glsl */`
+  uniform float uTime; uniform vec3 uSteerDir; uniform float uWave; uniform float uWaveAmp;
+  uniform float uSteer; uniform float uTarget;
+  vec3 displace(vec3 p, float r, float cl, out float glow){
+    p += 0.18 * vec3(sin(uTime*0.31 + r*6.2831), cos(uTime*0.27 + r*11.0), sin(uTime*0.23 + r*17.0));
+    float d = dot(p, uSteerDir);
+    float w = exp(-(d - uWave)*(d - uWave) / 2.2) * uWaveAmp;   // travelling steering wavefront
+    p += uSteerDir * w * 0.9;
+    float isT = 1.0 - step(0.5, abs(cl - uTarget));               // the steered concept
+    p += uSteerDir * isT * uSteer * 2.6;
+    glow = w + isT * uSteer * 0.55;
+    return p;
+  }
+`;
+
+/* ---------------------------------------------------------------
+   Nebula backdrop (fbm noise on an inverted sphere)
+---------------------------------------------------------------- */
+const nebulaMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false,
+  uniforms: { uTime: U.uTime, uBg: { value: live.bg }, uA: { value: live.nebA }, uB: { value: live.nebB }, uAmt: { value: 1 } },
+  vertexShader: /* glsl */`
+    varying vec3 vDir;
+    void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+    uniform float uTime; uniform vec3 uBg; uniform vec3 uA; uniform vec3 uB; uniform float uAmt;
+    varying vec3 vDir;
+    float hash(vec3 p){ p = fract(p*0.3183099 + 0.1); p *= 17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+    float noise(vec3 x){
+      vec3 i = floor(x); vec3 f = fract(x); f = f*f*(3.0-2.0*f);
+      return mix(mix(mix(hash(i),               hash(i+vec3(1,0,0)), f.x),
+                     mix(hash(i+vec3(0,1,0)),   hash(i+vec3(1,1,0)), f.x), f.y),
+                 mix(mix(hash(i+vec3(0,0,1)),   hash(i+vec3(1,0,1)), f.x),
+                     mix(hash(i+vec3(0,1,1)),   hash(i+vec3(1,1,1)), f.x), f.y), f.z);
+    }
+    float fbm(vec3 p){ float v = 0.0, a = 0.5; for(int i=0;i<5;i++){ v += a*noise(p); p = p*2.03 + 1.7; a *= 0.5; } return v; }
+    void main(){
+      vec3 d = normalize(vDir);
+      float n1 = fbm(d*2.2 + vec3(0.0, 0.0, uTime*0.012));
+      float n2 = fbm(d*4.4 - vec3(uTime*0.009, 0.0, 0.0) + 7.0);
+      float band = exp(-pow(d.y*2.2 + 0.25*sin(d.x*3.0), 2.0));           // a soft galactic band
+      vec3 col = uBg;
+      col += uA * smoothstep(0.42, 0.95, n1) * (0.55 + 0.6*band) * uAmt;
+      col += uB * smoothstep(0.50, 1.00, n2) * 0.75 * uAmt;
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(110, 48, 32), nebulaMat));
+
+/* ---------------------------------------------------------------
+   Latent space: concept clusters + dust
+---------------------------------------------------------------- */
+const CONCEPTS = [
+  { name: 'refusal', shape: 'blob'  },
+  { name: 'harmful', shape: 'blob'  },
+  { name: 'benign',  shape: 'ring'  },
+  { name: 'मैथिली',  shape: 'helix', deva: true },
+  { name: 'नेपाली',  shape: 'blob',  deva: true },
+  { name: 'हिन्दी',   shape: 'ring',  deva: true },
+  { name: 'english', shape: 'helix' },
+];
+const K = CONCEPTS.length;
+
+const N = isMobile ? 5200 : 11000;
+const perCluster = Math.floor(N * 0.105);
+const centers = [];
+for (let i = 0; i < K; i++) {               // fibonacci sphere, flattened a bit
+  const y = 1 - (i + 0.5) / K * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963;
+  centers.push(new V3(Math.cos(th) * r * 10, y * 6.2, Math.sin(th) * r * 10).add(new V3(gauss(), gauss(), gauss()).multiplyScalar(0.6)));
+}
+
+const pos = new Float32Array(N * 3), aCluster = new Float32Array(N), aRand = new Float32Array(N), aSize = new Float32Array(N);
+const clusterRange = [];
+let idx = 0;
+const tmp = new V3(), q = new THREE.Quaternion(), e = new THREE.Euler();
+
+for (let c = 0; c < K; c++) {
+  e.set(rand() * Math.PI * 2, rand() * Math.PI * 2, rand() * Math.PI * 2); q.setFromEuler(e);
+  const start = idx;
+  for (let j = 0; j < perCluster; j++, idx++) {
+    const shape = CONCEPTS[c].shape;
+    if (shape === 'blob') {
+      tmp.set(gauss() * 2.1, gauss() * 1.05, gauss() * 0.75);
+    } else if (shape === 'ring') {                      // circular features
+      const th = rand() * Math.PI * 2, R = 2.7 + gauss() * 0.22;
+      tmp.set(Math.cos(th) * R, gauss() * 0.18, Math.sin(th) * R);
+    } else {                                            // 1-D manifold
+      const s = rand() * 2 - 1;
+      tmp.set(Math.cos(s * 9) * 1.35 + gauss() * 0.17, s * 4.2, Math.sin(s * 9) * 1.35 + gauss() * 0.17);
+    }
+    tmp.applyQuaternion(q).add(centers[c]);
+    pos.set([tmp.x, tmp.y, tmp.z], idx * 3);
+    aCluster[idx] = c; aRand[idx] = rand();
+    aSize[idx] = rand() < 0.03 ? 3.4 : 0.7 + rand() * 1.5;
+  }
+  clusterRange.push([start, idx]);
+}
+for (; idx < N; idx++) {                               // background dust
+  tmp.set(gauss(), gauss() * 0.7, gauss()).normalize().multiplyScalar(13 + Math.pow(rand(), 0.7) * 34);
+  pos.set([tmp.x, tmp.y, tmp.z], idx * 3);
+  aCluster[idx] = 7; aRand[idx] = rand(); aSize[idx] = 0.45 + rand() * 1.0;
+}
+
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+pGeo.setAttribute('aCluster', new THREE.BufferAttribute(aCluster, 1));
+pGeo.setAttribute('aRand', new THREE.BufferAttribute(aRand, 1));
+pGeo.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1));
+
+const pointVS = /* glsl */`
+  ${DISPLACE}
+  uniform float uPR; uniform float uSize; uniform vec3 uPalette[8]; uniform float uLight;
+  attribute float aCluster; attribute float aRand; attribute float aSize;
+  varying vec3 vColor; varying float vGlow; varying float vAlpha;
+  void main(){
+    float glow;
+    vec3 p = displace(position, aRand, aCluster, glow);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * mv;
+    float tw = 0.72 + 0.28 * sin(uTime * (0.8 + aRand * 2.2) + aRand * 60.0);
+    gl_PointSize = min(uSize * aSize * uPR * tw * (60.0 / -mv.z) * (1.0 + glow * 0.9), 46.0 * uPR);
+    vec3 base = uPalette[int(aCluster + 0.5)];
+    vColor = mix(base, vec3(1.0), (1.0 - uLight) * aRand * 0.22);
+    vGlow = glow;
+    vAlpha = smoothstep(78.0, 20.0, -mv.z) * smoothstep(0.8, 5.0, -mv.z);
+  }`;
+
+const pointMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { ...U, uSize: { value: 1 }, uPalette: { value: live.palette }, uOpacity: { value: 1 } },
+  vertexShader: pointVS,
+  fragmentShader: /* glsl */`
+    uniform vec3 uAccent; uniform float uOpacity;
+    varying vec3 vColor; varying float vGlow; varying float vAlpha;
+    void main(){
+      vec2 c = gl_PointCoord - 0.5; float r = length(c);
+      if (r > 0.5) discard;
+      float a = pow(1.0 - r * 2.0, 1.8);
+      vec3 col = mix(vColor, uAccent, clamp(vGlow * 0.8, 0.0, 1.0));
+      gl_FragColor = vec4(col, a * uOpacity * vAlpha * (1.0 + vGlow));
+    }`,
+});
+const points = new THREE.Points(pGeo, pointMat);
+world.add(points);
+
+/* ---------------------------------------------------------------
+   Neuron constellations: nodes + pulsing edges
+---------------------------------------------------------------- */
+const NODES_PER = isMobile ? 9 : 13;
+const nodeIdx = [];
+for (let c = 0; c < K; c++) {
+  const [s, eIdx] = clusterRange[c], picks = new Set();
+  while (picks.size < NODES_PER) picks.add(s + Math.floor(rand() * (eIdx - s)));
+  nodeIdx.push([...picks]);
+}
+const allNodes = nodeIdx.flat();
+const nPos = new Float32Array(allNodes.length * 3), nCl = new Float32Array(allNodes.length), nRand = new Float32Array(allNodes.length), nSize = new Float32Array(allNodes.length);
+allNodes.forEach((pi, i) => {
+  nPos.set(pos.subarray(pi * 3, pi * 3 + 3), i * 3);
+  nCl[i] = aCluster[pi]; nRand[i] = aRand[pi]; nSize[i] = 2.6 + rand() * 1.8;
+});
+const nGeo = new THREE.BufferGeometry();
+nGeo.setAttribute('position', new THREE.BufferAttribute(nPos, 3));
+nGeo.setAttribute('aCluster', new THREE.BufferAttribute(nCl, 1));
+nGeo.setAttribute('aRand', new THREE.BufferAttribute(nRand, 1));
+nGeo.setAttribute('aSize', new THREE.BufferAttribute(nSize, 1));
+const nodeMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { ...U, uSize: { value: 1 }, uPalette: { value: live.palette }, uOpacity: { value: 1 } },
+  vertexShader: pointVS,
+  fragmentShader: /* glsl */`
+    uniform vec3 uAccent; uniform float uOpacity;
+    varying vec3 vColor; varying float vGlow; varying float vAlpha;
+    void main(){
+      vec2 c = gl_PointCoord - 0.5; float r = length(c);
+      if (r > 0.5) discard;
+      float ring = smoothstep(0.5, 0.42, r) * smoothstep(0.28, 0.36, r);
+      float core = smoothstep(0.16, 0.0, r);
+      vec3 col = mix(vColor, uAccent, clamp(0.35 + vGlow, 0.0, 1.0));
+      gl_FragColor = vec4(col, (ring * 0.75 + core) * uOpacity * vAlpha);
+    }`,
+});
+world.add(new THREE.Points(nGeo, nodeMat));
+
+// edges: 2-NN inside each constellation + a few cross-concept links
+const edges = [];
+const key = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+const seen = new Set();
+const P = i => new V3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+for (let c = 0; c < K; c++) {
+  const ids = nodeIdx[c];
+  ids.forEach(a => {
+    ids.filter(b => b !== a).map(b => [b, P(a).distanceToSquared(P(b))]).sort((x, y) => x[1] - y[1]).slice(0, 2)
+      .forEach(([b]) => { const k = key(a, b); if (!seen.has(k)) { seen.add(k); edges.push([a, b]); } });
+  });
+}
+for (let c = 0; c < K; c++) {
+  edges.push([nodeIdx[c][0], nodeIdx[(c + 1) % K][0]]);
+  if (c % 2 === 0) edges.push([nodeIdx[c][1], nodeIdx[(c + 3) % K][2]]);
+}
+const E = edges.length;
+const ePos = new Float32Array(E * 6), eCl = new Float32Array(E * 2), eRand = new Float32Array(E * 2), eT = new Float32Array(E * 2), eSeed = new Float32Array(E * 2);
+edges.forEach(([a, b], i) => {
+  ePos.set(pos.subarray(a * 3, a * 3 + 3), i * 6); ePos.set(pos.subarray(b * 3, b * 3 + 3), i * 6 + 3);
+  eCl[i * 2] = aCluster[a]; eCl[i * 2 + 1] = aCluster[b];
+  eRand[i * 2] = aRand[a];  eRand[i * 2 + 1] = aRand[b];
+  eT[i * 2] = 0; eT[i * 2 + 1] = 1;
+  const s = rand(); eSeed[i * 2] = s; eSeed[i * 2 + 1] = s;
+});
+const eGeo = new THREE.BufferGeometry();
+eGeo.setAttribute('position', new THREE.BufferAttribute(ePos, 3));
+eGeo.setAttribute('aCluster', new THREE.BufferAttribute(eCl, 1));
+eGeo.setAttribute('aRand', new THREE.BufferAttribute(eRand, 1));
+eGeo.setAttribute('aT', new THREE.BufferAttribute(eT, 1));
+eGeo.setAttribute('aSeed', new THREE.BufferAttribute(eSeed, 1));
+const lineMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { ...U, uLineColor: { value: live.line }, uOpacity: { value: 1 } },
+  vertexShader: /* glsl */`
+    ${DISPLACE}
+    attribute float aCluster; attribute float aRand; attribute float aT; attribute float aSeed;
+    varying float vT; varying float vSeed; varying float vGlow; varying float vAlpha;
+    void main(){
+      float glow;
+      vec3 p = displace(position, aRand, aCluster, glow);
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      vT = aT; vSeed = aSeed; vGlow = glow;
+      vAlpha = smoothstep(70.0, 18.0, -mv.z);
+    }`,
+  fragmentShader: /* glsl */`
+    uniform vec3 uLineColor; uniform vec3 uAccent; uniform float uOpacity; uniform float uTime;
+    varying float vT; varying float vSeed; varying float vGlow; varying float vAlpha;
+    void main(){
+      float ph = fract(uTime * 0.16 + vSeed * 7.0);
+      float pulse = smoothstep(0.08, 0.0, abs(vT - ph));         // activation travelling along the edge
+      vec3 col = mix(uLineColor, uAccent, clamp(pulse + vGlow * 0.5, 0.0, 1.0));
+      float a = (0.14 + pulse * 0.85 + vGlow * 0.35) * uOpacity * vAlpha;
+      gl_FragColor = vec4(col, a);
+    }`,
+});
+world.add(new THREE.LineSegments(eGeo, lineMat));
+
+/* ---------------------------------------------------------------
+   Steering vector (line + arrowhead)
+---------------------------------------------------------------- */
+const arrowGeo = new THREE.BufferGeometry().setFromPoints([new V3(), new V3(1, 0, 0)]);
+const arrowMat = new THREE.LineBasicMaterial({ color: live.accent, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+const arrowLine = new THREE.Line(arrowGeo, arrowMat);
+const coneMat = new THREE.MeshBasicMaterial({ color: live.accent, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.75, 18), coneMat);
+arrowLine.frustumCulled = false;
+world.add(arrowLine, cone);
+const arrowTip = new V3();
+
+/* ---------------------------------------------------------------
+   Floating tokens / glyphs (Devanagari + interpretability notation)
+---------------------------------------------------------------- */
+const glyphGroup = new THREE.Group();
+world.add(glyphGroup);
+const GLYPHS = ['अ','क','ष','ज्ञ','ऋ','ॐ','म','थ','ळ','मैथिली','नेपाली','हिन्दी','<v, h>','h[17]','∂L/∂h','SAE','α·v̂','attn','logit','<|refuse|>','W_U','resid','PCA₁','steer'];
+const glyphSprites = [];
+async function buildGlyphs() {
+  try {
+    await Promise.race([
+      Promise.all([document.fonts.load('500 80px "Noto Sans Devanagari"', 'अमैथिली'), document.fonts.load('500 80px "IBM Plex Mono"', 'steer')]),
+      new Promise(r => setTimeout(r, 1800)),
+    ]);
+  } catch (_) {}
+  const count = isMobile ? 14 : GLYPHS.length;
+  for (let i = 0; i < count; i++) {
+    const text = GLYPHS[i];
+    const deva = /[ऀ-ॿ]/.test(text);
+    const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+    const fs = 84;
+    ctx.font = `500 ${fs}px ${deva ? '"Noto Sans Devanagari"' : '"IBM Plex Mono"'}, sans-serif`;
+    const w = Math.ceil(ctx.measureText(text).width) + 40, h = Math.ceil(fs * 1.7);
+    cv.width = w; cv.height = h;
+    ctx.font = `500 ${fs}px ${deva ? '"Noto Sans Devanagari"' : '"IBM Plex Mono"'}, sans-serif`;
+    ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+    ctx.fillText(text, w / 2, h / 2);
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    const mat = new THREE.SpriteMaterial({ map: tex, color: live.glyph, transparent: true, opacity: 0, depthWrite: false, blending: glyphBlend });
+    const sp = new THREE.Sprite(mat);
+    const s = (deva && text.length < 3 ? 1.9 : 1.15) * (0.75 + rand() * 0.6);
+    sp.scale.set(s * w / h, s, 1);
+    const dir = new V3(gauss(), gauss() * 0.6, gauss()).normalize();
+    sp.userData = { base: dir.multiplyScalar(12 + rand() * 13), phase: rand() * 10, amp: 0.4 + rand() * 0.8, op: 0.16 + rand() * 0.22 };
+    sp.position.copy(sp.userData.base);
+    glyphGroup.add(sp); glyphSprites.push(sp);
+  }
+}
+buildGlyphs();
+
+/* ---------------------------------------------------------------
+   Weather: rain streaks & snow (camera space volume)
+---------------------------------------------------------------- */
+const RAIN_N = isMobile ? 700 : 1600;
+const rPos = new Float32Array(RAIN_N * 6), rEnd = new Float32Array(RAIN_N * 2), rSpeed = new Float32Array(RAIN_N * 2);
+for (let i = 0; i < RAIN_N; i++) {
+  const x = (rand() - 0.5) * 70, y = (rand() - 0.5) * 60, z = -18 + rand() * 36, s = 18 + rand() * 16;
+  rPos.set([x, y, z, x, y, z], i * 6); rEnd[i * 2] = 0; rEnd[i * 2 + 1] = 1; rSpeed[i * 2] = s; rSpeed[i * 2 + 1] = s;
+}
+const rGeo = new THREE.BufferGeometry();
+rGeo.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
+rGeo.setAttribute('aEnd', new THREE.BufferAttribute(rEnd, 1));
+rGeo.setAttribute('aSpeed', new THREE.BufferAttribute(rSpeed, 1));
+const rainMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uTime: U.uTime, uOn: { value: 0 }, uColor: { value: new THREE.Color('#9fdcf5') } },
+  vertexShader: /* glsl */`
+    uniform float uTime; attribute float aEnd; attribute float aSpeed; varying float vA;
+    void main(){
+      vec3 p = position;
+      p.y = mod(p.y - uTime * aSpeed + 30.0, 60.0) - 30.0;
+      p.y += aEnd * aSpeed * 0.05; p.x += aEnd * 0.12;
+      vA = 1.0 - aEnd * 0.95;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    }`,
+  fragmentShader: /* glsl */`
+    uniform float uOn; uniform vec3 uColor; varying float vA;
+    void main(){ gl_FragColor = vec4(uColor, vA * 0.35 * uOn); }`,
+});
+const rain = new THREE.LineSegments(rGeo, rainMat);
+rain.frustumCulled = false;
+scene.add(rain);
+
+const SNOW_N = isMobile ? 900 : 2200;
+const sPos = new Float32Array(SNOW_N * 3), sSeed = new Float32Array(SNOW_N);
+for (let i = 0; i < SNOW_N; i++) { sPos.set([(rand() - 0.5) * 70, (rand() - 0.5) * 60, -18 + rand() * 36], i * 3); sSeed[i] = rand(); }
+const sGeo = new THREE.BufferGeometry();
+sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+sGeo.setAttribute('aSeed', new THREE.BufferAttribute(sSeed, 1));
+const snowMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uTime: U.uTime, uPR: U.uPR, uOn: { value: 0 } },
+  vertexShader: /* glsl */`
+    uniform float uTime; uniform float uPR; attribute float aSeed; varying float vS;
+    void main(){
+      vec3 p = position;
+      float sp = 0.9 + aSeed * 1.6;
+      p.y = mod(p.y - uTime * sp + 30.0, 60.0) - 30.0;
+      p.x += sin(uTime * (0.4 + aSeed) + aSeed * 30.0) * 0.9;
+      p.z += cos(uTime * 0.3 + aSeed * 20.0) * 0.5;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = min((1.2 + aSeed * 3.2) * uPR * (40.0 / -mv.z), 12.0 * uPR);
+      vS = aSeed;
+    }`,
+  fragmentShader: /* glsl */`
+    uniform float uOn; varying float vS;
+    void main(){
+      float r = length(gl_PointCoord - 0.5); if (r > 0.5) discard;
+      gl_FragColor = vec4(vec3(1.0), smoothstep(0.5, 0.0, r) * (0.35 + vS * 0.5) * uOn);
+    }`,
+});
+const snow = new THREE.Points(sGeo, snowMat);
+snow.frustumCulled = false;
+scene.add(snow);
+
+/* ---------------------------------------------------------------
+   Post-processing
+---------------------------------------------------------------- */
+const composer = new EffectComposer(renderer);
+composer.setPixelRatio(PR);
+composer.setSize(innerWidth, innerHeight);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.95, 0.65, 0.12);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ---------------------------------------------------------------
+   HTML labels projected from the concept centres
+---------------------------------------------------------------- */
+const labelLayer = document.getElementById('labels');
+const labels = CONCEPTS.map((c, i) => {
+  const el = document.createElement('div');
+  el.className = 'clabel';
+  el.innerHTML = c.deva ? `<span class="dv">${c.name}</span>` : c.name;
+  labelLayer.appendChild(el);
+  return el;
+});
+const steerLabel = document.createElement('div');
+steerLabel.className = 'clabel steer';
+steerLabel.textContent = 'v̂ steer';
+labelLayer.appendChild(steerLabel);
+
+/* ---------------------------------------------------------------
+   Steering controller
+---------------------------------------------------------------- */
+const steer = { t: -1, dur: 3.0, hold: 2.6, target: -1, last: -1, layer: 17, goal: 0 };
+function startSteer(dir, tgt) {
+  steer.t = 0; steer.target = tgt; steer.last = tgt; steer.goal = 0;
+  steer.layer = 8 + Math.floor(Math.random() * 20);
+  U.uSteerDir.value.copy(dir).normalize();
+  U.uTarget.value = tgt;
+  const c = centers[tgt], d = U.uSteerDir.value;
+  const a = c.clone().addScaledVector(d, -6.5), b = c.clone().addScaledVector(d, 7.5);
+  arrowGeo.setFromPoints([a, b]);
+  arrowTip.copy(b);
+  cone.position.copy(b);
+  cone.quaternion.setFromUnitVectors(new V3(0, 1, 0), d);
+  labels.forEach((l, i) => l.classList.toggle('active', i === tgt));
+}
+function randomSteer() {
+  let t; do { t = Math.floor(Math.random() * K); } while (t === steer.last);
+  const d = new V3(Math.random() - 0.5, (Math.random() - 0.5) * 0.6, Math.random() - 0.5);
+  if (d.lengthSq() < 1e-3) d.set(1, 0, 0);
+  startSteer(d, t);
+}
+function updateSteer(dt) {
+  if (steer.t < 0) return;
+  steer.t += dt;
+  const k = Math.min(steer.t / steer.dur, 1);
+  const ease = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  U.uWave.value = -26 + 52 * ease;
+  U.uWaveAmp.value = Math.sin(k * Math.PI) * 1.0;
+  const proj = centers[steer.target].dot(U.uSteerDir.value);
+  if (U.uWave.value > proj && steer.t < steer.dur + steer.hold) steer.goal = 1;
+  if (steer.t > steer.dur + steer.hold) steer.goal = 0;
+  U.uSteer.value += (steer.goal - U.uSteer.value) * (1 - Math.exp(-dt * 3.2));
+  if (steer.t > steer.dur + steer.hold + 2.4) {
+    steer.t = -1; U.uSteer.value = 0; U.uWaveAmp.value = 0; U.uTarget.value = -1;
+    labels.forEach(l => l.classList.remove('active'));
+  }
+}
+
+/* ---------------------------------------------------------------
+   Input
+---------------------------------------------------------------- */
+const mouse = new THREE.Vector2(0, 0), mouseSmooth = new THREE.Vector2(0, 0);
+addEventListener('pointermove', ev => {
+  mouse.set(ev.clientX / innerWidth * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
+}, { passive: true });
+
+const raycaster = new THREE.Raycaster();
+addEventListener('pointerdown', ev => {
+  if (ev.target.closest('a, button, .card, .result, nav, input, textarea')) return;
+  const ndc = new THREE.Vector2(ev.clientX / innerWidth * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const worldPt = raycaster.ray.at(camera.position.length(), new V3());
+  const local = world.worldToLocal(worldPt.clone());
+  let best = 0, bestD = Infinity;
+  centers.forEach((c, i) => { const d = c.distanceToSquared(local); if (d < bestD) { bestD = d; best = i; } });
+  const dir = centers[best].clone().sub(local);           // push the concept away from the click
+  if (dir.lengthSq() < 0.25) dir.set(Math.random() - 0.5, 0.2, Math.random() - 0.5);
+  startSteer(dir, best);
+  nextAuto = elapsed + 9;
+});
+
+let scrollP = 0;
+const onScroll = () => {
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  scrollP = Math.min(1, Math.max(0, scrollY / max));
+};
+addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+/* themes */
+const themeBtns = [...document.querySelectorAll('[data-theme-btn]')];
+function setTheme(name, instant = false) {
+  if (!THEMES[name]) name = 'night';
+  target = THEMES[name];
+  root.dataset.theme = name;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', target.bg);
+  themeBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeBtn === name)));
+  const blend = target.light ? THREE.NormalBlending : THREE.AdditiveBlending;
+  [pointMat, nodeMat, lineMat, arrowMat, coneMat].forEach(m => { m.blending = blend; m.needsUpdate = true; });
+  glyphSprites.forEach(s => { s.material.blending = blend; s.material.needsUpdate = true; });
+  glyphBlend = blend;
+  try { localStorage.setItem('sy-bg-theme', name); } catch (_) {}
+  if (instant) applyTheme(1);
+}
+function applyTheme(a) {
+  const T = target;
+  live.bg.lerp(tmpC.set(T.bg), a); live.nebA.lerp(tmpC.set(T.nebA), a); live.nebB.lerp(tmpC.set(T.nebB), a);
+  live.accent.lerp(tmpC.set(T.accent), a); live.line.lerp(tmpC.set(T.line), a); live.glyph.lerp(tmpC.set(T.glyph), a);
+  live.palette.forEach((c, i) => c.lerp(tmpC.set(T.palette[i]), a));
+  for (const k of ['neb', 'light', 'bloom', 'pOpacity', 'rain', 'snow']) live[k] += (T[k] - live[k]) * a;
+}
+const tmpC = new THREE.Color();
+themeBtns.forEach(b => b.addEventListener('click', () => setTheme(b.dataset.themeBtn)));
+
+let saved = 'night';
+try { saved = localStorage.getItem('sy-bg-theme') || 'night'; } catch (_) {}
+setTheme(saved, true);
+
+/* background-only mode */
+const bgToggle = document.getElementById('bgToggle');
+function toggleBgOnly(force) {
+  const on = typeof force === 'boolean' ? force : !document.body.classList.contains('bg-only');
+  document.body.classList.toggle('bg-only', on);
+  bgToggle.setAttribute('aria-pressed', String(on));
+}
+bgToggle.addEventListener('click', () => toggleBgOnly());
+addEventListener('keydown', ev => {
+  if (ev.target.closest('input, textarea, [contenteditable]')) return;
+  const k = ev.key.toLowerCase();
+  if (k === 'b') toggleBgOnly();
+  else if (k === ' ') { if (document.body.classList.contains('bg-only') || scrollY < 10) { ev.preventDefault(); randomSteer(); nextAuto = elapsed + 9; } }
+  else if (['1','2','3','4'].includes(k)) setTheme(['day','night','rain','snow'][+k - 1]);
+});
+
+/* resize */
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = innerWidth < innerHeight ? 68 : 55;       // portrait: widen view
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+  bloom.setSize(innerWidth, innerHeight);
+});
+dispatchEvent(new Event('resize'));
+
+/* ---------------------------------------------------------------
+   HUD
+---------------------------------------------------------------- */
+const hLayer = document.getElementById('hLayer'), hConcept = document.getElementById('hConcept'),
+      hAlpha = document.getElementById('hAlpha'), hDelta = document.getElementById('hDelta'), hBar = document.getElementById('hBar');
+let hudT = 0;
+function updateHUD() {
+  const active = steer.t >= 0;
+  hLayer.textContent = 'L' + steer.layer;
+  hConcept.textContent = active ? CONCEPTS[steer.target].name : 'idle';
+  hConcept.classList.toggle('dv', active && !!CONCEPTS[steer.target].deva);
+  const alpha = U.uSteer.value * 4;
+  hAlpha.textContent = (alpha >= 0 ? '+' : '') + alpha.toFixed(2);
+  hDelta.textContent = (U.uSteer.value * 2.6 + U.uWaveAmp.value * 0.9).toFixed(3);
+  hBar.style.width = (Math.min(1, U.uSteer.value) * 100).toFixed(1) + '%';
+}
+
+/* ---------------------------------------------------------------
+   Loop
+---------------------------------------------------------------- */
+const clock = new THREE.Clock();
+let elapsed = 0, nextAuto = reduceMotion ? Infinity : 2.2, running = true;
+const proj = new V3(), steerOffset = new V3();
+
+function frame() {
+  if (!running) return;
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.05) * TIME_SCALE;
+  elapsed += dt;
+  U.uTime.value = elapsed;
+
+  // theme easing
+  applyTheme(1 - Math.exp(-dt / TIME_SCALE * 3.2));
+  renderer.setClearColor(live.bg);
+  nebulaMat.uniforms.uAmt.value = live.neb;
+  U.uLight.value = live.light;
+  pointMat.uniforms.uOpacity.value = live.pOpacity;
+  nodeMat.uniforms.uOpacity.value = live.pOpacity;
+  lineMat.uniforms.uOpacity.value = 0.6 + 0.4 * (1 - live.light);
+  bloom.strength = live.bloom;
+  bloom.enabled = live.bloom > 0.02;
+  rainMat.uniforms.uOn.value = live.rain; rain.visible = live.rain > 0.01;
+  snowMat.uniforms.uOn.value = live.snow; snow.visible = live.snow > 0.01;
+
+  // steering
+  if (elapsed > nextAuto && steer.t < 0) { randomSteer(); nextAuto = elapsed + 7.5 + Math.random() * 3; }
+  updateSteer(dt);
+  const arrowOp = Math.min(1, U.uWaveAmp.value * 0.9 + U.uSteer.value * 0.7);
+  arrowMat.opacity = arrowOp * 0.9; coneMat.opacity = arrowOp;
+  arrowMat.color.copy(live.accent); coneMat.color.copy(live.accent);
+
+  // glyphs
+  glyphSprites.forEach(s => {
+    const u = s.userData;
+    s.position.set(u.base.x + Math.sin(elapsed * 0.17 + u.phase) * u.amp, u.base.y + Math.sin(elapsed * 0.23 + u.phase * 2) * u.amp, u.base.z + Math.cos(elapsed * 0.13 + u.phase) * u.amp);
+    s.material.color.copy(live.glyph);
+    s.material.opacity += (u.op * (live.light ? 1.6 : 1) - s.material.opacity) * 0.03;
+  });
+
+  // camera: slow orbit + scroll dolly + mouse parallax
+  mouseSmooth.lerp(mouse, 1 - Math.exp(-dt / TIME_SCALE * 2.5));
+  world.rotation.y = elapsed * 0.035 + scrollP * Math.PI * 0.9;
+  world.rotation.x = 0.18 + Math.sin(elapsed * 0.05) * 0.06 - scrollP * 0.35;
+  const camZ = 26 - scrollP * 9;
+  camera.position.x += (mouseSmooth.x * 2.6 - camera.position.x) * 0.06;
+  camera.position.y += (mouseSmooth.y * 1.7 - scrollP * 2 - camera.position.y) * 0.06;
+  camera.position.z += (camZ - camera.position.z) * 0.06;
+  camera.lookAt(0, 0, 0);
+  rain.position.copy(camera.position).setZ(camera.position.z - 18);
+  snow.position.copy(rain.position);
+
+  composer.render();
+
+  // labels (after render so matrices are fresh)
+  world.updateMatrixWorld();
+  const w = innerWidth, h = innerHeight;
+  centers.forEach((c, i) => {
+    proj.copy(c);
+    if (i === steer.target) proj.add(steerOffset.copy(U.uSteerDir.value).multiplyScalar(U.uSteer.value * 2.6));
+    proj.y += 2.2;
+    proj.applyMatrix4(world.matrixWorld);
+    const dist = proj.distanceTo(camera.position);
+    proj.project(camera);
+    const vis = proj.z < 1 && Math.abs(proj.x) < 1.1 && Math.abs(proj.y) < 1.1;
+    const el = labels[i];
+    if (!vis) { el.style.opacity = 0; return; }
+    const x = (proj.x * 0.5 + 0.5) * w, y = (-proj.y * 0.5 + 0.5) * h;
+    const fade = THREE.MathUtils.clamp((40 - dist) / 22, 0.15, 0.9);
+    el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    el.style.opacity = (i === steer.target && steer.t >= 0 ? 1 : fade).toFixed(2);
+  });
+  if (arrowOp > 0.05) {
+    proj.copy(arrowTip).applyMatrix4(world.matrixWorld).project(camera);
+    steerLabel.style.transform = `translate3d(${((proj.x * 0.5 + 0.5) * w + 10).toFixed(1)}px, ${((-proj.y * 0.5 + 0.5) * h - 6).toFixed(1)}px, 0)`;
+    steerLabel.style.opacity = (proj.z < 1 ? arrowOp : 0).toFixed(2);
+  } else steerLabel.style.opacity = 0;
+
+  hudT += dt;
+  if (hudT > 0.08) { hudT = 0; updateHUD(); }
+}
+frame();
+
+document.addEventListener('visibilitychange', () => {
+  running = !document.hidden;
+  if (running) { clock.getDelta(); frame(); }
+});
+</script>
+</body>
+</html>
